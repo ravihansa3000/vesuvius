@@ -118,10 +118,14 @@ require_once($global['approot'].'inc/lib_paging.inc');
 
  		$result = $this->execute("select opt_id_type, serial from identity_to_person where p_uuid = '" . $id. "'");
  		$info["ids"]= array();
- 		while(!$result->EOF)
+ 		
+ 		if( !empty( $result ) )
  		{
- 			$info["ids"][$result->fields["opt_id_type"]] = $result->fields["serial"];
- 			$result->moveNext();
+      while(!$result->EOF)
+      {
+        $info["ids"][$result->fields["opt_id_type"]] = $result->fields["serial"];
+        $result->moveNext();
+      }
  		}
 
 		// locations
@@ -149,10 +153,13 @@ require_once($global['approot'].'inc/lib_paging.inc');
 		$info['proj_id'] = $info['pos_id'] = array();
 		$result = $this->execute("select pos_id, proj_id from vm_vol_assignment_active where p_uuid = '$id'");
 
-		while(!$result->EOF) {
-			$info['pos_id' ][] = $result->fields['pos_id'];
-			$info['proj_id'][] = $result->fields['proj_id'];
-			$result->MoveNext();
+		if( !empty( $result ) )
+		{
+      while(!$result->EOF) {
+        $info['pos_id' ][] = $result->fields['pos_id'];
+        $info['proj_id'][] = $result->fields['proj_id'];
+        $result->MoveNext();
+      }
 		}
 
 
@@ -184,11 +191,16 @@ require_once($global['approot'].'inc/lib_paging.inc');
 				"where pgoc_uuid = '$id'");
 
 		$contacts=array();
-		while(!$result->EOF)
+		
+		if( !empty( $result ) )
 		{
-			$contacts[$result->fields['opt_contact_type']] = $result->fields['contact_value'];
-			$result->moveNext();
+      while(!$result->EOF)
+      {
+        $contacts[$result->fields['opt_contact_type']] = $result->fields['contact_value'];
+        $result->moveNext();
+      }
 		}
+		
 		$info['contact'] = $contacts;
 
 		//number of unread messages
@@ -202,9 +214,13 @@ require_once($global['approot'].'inc/lib_paging.inc');
 		//get skills
 		$info['skills'] = array();
 		$result = $this->execute("SELECT opt_skill_code, option_description FROM vm_vol_skills JOIN field_options ON (opt_skill_code = option_code AND field_name = 'opt_skill_type') WHERE p_uuid = '$id'");
-		while(!$result->EOF) {
-			$info['skills'][$result->fields['opt_skill_code']] = $result->fields['option_description'];
-			$result->moveNext();
+		
+		if( !empty( $result ) )
+		{
+      while(!$result->EOF) {
+        $info['skills'][$result->fields['opt_skill_code']] = $result->fields['option_description'];
+        $result->moveNext();
+      }
 		}
 
  		return $info;
@@ -225,11 +241,16 @@ require_once($global['approot'].'inc/lib_paging.inc');
  		// get the ID codes and names from the 'field_options' table
  		$result = $this->execute("select option_code, option_description from field_options where field_name = 'opt_id_type'");
  		$id_types = array();
- 		while(!$result->EOF)
+ 		
+ 		if( !empty( $result ) )
  		{
- 			$id_types[$result->fields['option_code']]= $result->fields['option_description'];
- 			$result->moveNext();
- 		}
+      while(!$result->EOF)
+      {
+        $id_types[$result->fields['option_code']]= $result->fields['option_description'];
+        $result->moveNext();
+      }
+    }
+    
 		return $id_types;
  	}
 
@@ -319,11 +340,16 @@ require_once($global['approot'].'inc/lib_paging.inc');
 	{
 		$result = $this->execute("select option_code, option_description from field_options where field_name = 'opt_contact_type'");
 		$contact_types = array();
-		while(!$result->EOF)
+		
+		if( !empty( $result ) )
 		{
-			$contact_types[$result->fields['option_code']]= $result->fields['option_description'];
-			$result->moveNext();
-		}
+      while(!$result->EOF)
+      {
+        $contact_types[$result->fields['option_code']]= $result->fields['option_description'];
+        $result->moveNext();
+      }
+    }
+    
 		return $contact_types;
 	}
 
@@ -388,20 +414,23 @@ require_once($global['approot'].'inc/lib_paging.inc');
 
 		$info = array();
 
-		while(!$r->EOF)
+		if( !empty( $r ) )
 		{
-			if(!isset($info[$r->fields['proj_id']]))
-				$info[$r->fields['proj_id']] = array('project_name' => $r->fields['project_name']);
-
-			$info[$r->fields['proj_id']][$r->fields['pos_id']] = array
-			(
-				'title'		=> $r->fields['title'],
-				'payrate'	=> $r->fields['payrate'],
-				'status'	=> $r->fields['status']
-			);
-
-			$r->MoveNext();
-		}
+      while(!$r->EOF)
+      {
+        if(!isset($info[$r->fields['proj_id']]))
+          $info[$r->fields['proj_id']] = array('project_name' => $r->fields['project_name']);
+  
+        $info[$r->fields['proj_id']][$r->fields['pos_id']] = array
+        (
+          'title'		=> $r->fields['title'],
+          'payrate'	=> $r->fields['payrate'],
+          'status'	=> $r->fields['status']
+        );
+  
+        $r->MoveNext();
+      }
+    }
 
 
 		//get the volunteer's hours worked for each project position
@@ -461,10 +490,15 @@ require_once($global['approot'].'inc/lib_paging.inc');
 
 		// put all information into an array for returning
 		$volunteers = array();
-		while(!$result->EOF) {
-			$volunteers[] = new Volunteer($result->fields['p_uuid']);
-			$result->moveNext();
-		}
+		
+		if( !empty( $result ) )
+		{
+      while(!$result->EOF) {
+        $volunteers[] = new Volunteer($result->fields['p_uuid']);
+        $result->moveNext();
+      }
+    }
+    
 		return $volunteers;
 	}
 
@@ -525,24 +559,29 @@ require_once($global['approot'].'inc/lib_paging.inc');
 		// put all information into an array for returning
 
 		$volunteers = array();
-		while(!$result->EOF)
+		
+		if( !empty( $result ) )
 		{
-			if(empty($result->fields['location_id']))
-				$locations = array();
-			else
-				$locations = $this->getParentLocations($result->fields['location_id']);
-
-			$volunteers[$result->fields['p_uuid']] = array
-			(
-				'full_name'		=> $result->fields['full_name'],
-				'locations'		=> $locations,
-				'affiliation'	=> ($result->fields['org_name']==null)?'':$result->fields['org_name'],
-				'pay_info'		=> $this->getVolHoursAndRate($result->fields['p_uuid'], $proj_id),
-				'status'		=> $result->fields['status']
-			);
-
-			$result->moveNext();
-		}
+      while(!$result->EOF)
+      {
+        if(empty($result->fields['location_id']))
+          $locations = array();
+        else
+          $locations = $this->getParentLocations($result->fields['location_id']);
+  
+        $volunteers[$result->fields['p_uuid']] = array
+        (
+          'full_name'		=> $result->fields['full_name'],
+          'locations'		=> $locations,
+          'affiliation'	=> ($result->fields['org_name']==null)?'':$result->fields['org_name'],
+          'pay_info'		=> $this->getVolHoursAndRate($result->fields['p_uuid'], $proj_id),
+          'status'		=> $result->fields['status']
+        );
+  
+        $result->moveNext();
+      }
+    }
+    
 		return $volunteers;
 	}
 
@@ -720,11 +759,15 @@ require_once($global['approot'].'inc/lib_paging.inc');
 
 		$result = $this->execute("SELECT pos_id, proj_id,project_name, ptype_id, slots, title, description, ptype_title, ptype_description, skill_code FROM vm_vol_assignment $whereClause ORDER BY proj_id ");
 		$positions = array();
-		while(!$result->EOF) {
-
-			$this->remove_keys($result->fields);
-			$positions[] = $result->fields;
-			$result->moveNext();
+		
+		if( !empty( $result ) )
+		{
+      while(!$result->EOF) {
+  
+        $this->remove_keys($result->fields);
+        $positions[] = $result->fields;
+        $result->moveNext();
+      }
 		}
 
 		$result = $this->execute("select pos_id, count(*) numVolunteers FROM vm_vol_assignment_active group by pos_id");
@@ -784,11 +827,16 @@ require_once($global['approot'].'inc/lib_paging.inc');
 
 		$result = $this->execute($query);
 		$position = array();
-		while(!$result->EOF)
+		
+		if( !empty( $result ) )
 		{
-			$position[$result->fields['pos_id']] = array('title' => $result->fields['title'],'skill_code' => $result->fields['skill_code'], 'payrate' => $result->fields['payrate'], 'description' => $result->fields['description'],'slots' => $result->fields['slots']);
-			$result->moveNext();
+      while(!$result->EOF)
+      {
+        $position[$result->fields['pos_id']] = array('title' => $result->fields['title'],'skill_code' => $result->fields['skill_code'], 'payrate' => $result->fields['payrate'], 'description' => $result->fields['description'],'slots' => $result->fields['slots']);
+        $result->moveNext();
+      }
 		}
+		
 		return $position;
 	}
 
@@ -814,11 +862,16 @@ require_once($global['approot'].'inc/lib_paging.inc');
 	function listPositionTypes() {
 		$result = $this->execute("select ptype_id, title, description, skill_code from vm_positiontype");
 		$ptypes = array();
-		while(!$result->EOF) {
-			$this->remove_keys($result->fields);
-			$ptypes[] = $result->fields;
-			$result->moveNext();
-		}
+		
+		if( !empty( $result ) )
+		{
+      while(!$result->EOF) {
+        $this->remove_keys($result->fields);
+        $ptypes[] = $result->fields;
+        $result->moveNext();
+      }
+    }
+    
 		return $ptypes;
 	}
 
@@ -936,14 +989,18 @@ require_once($global['approot'].'inc/lib_paging.inc');
 			$result = $this->execute($query);
 		}
 		$projects = array();
-		while(!$result->EOF)
+		
+		if( !empty( $result ) )
 		{
-			if($simple)
-				$projects[$result->fields['proj_id']] = $result->fields['name'];
-			else
-				$projects[$result->fields['proj_id']] = array('name' => $result->fields['name'], 'description' => $result->fields['description']);
-			$result->moveNext();
-		}
+      while(!$result->EOF)
+      {
+        if($simple)
+          $projects[$result->fields['proj_id']] = $result->fields['name'];
+        else
+          $projects[$result->fields['proj_id']] = array('name' => $result->fields['name'], 'description' => $result->fields['description']);
+        $result->moveNext();
+      }
+    }
 
 		return $projects;
  	}
@@ -978,13 +1035,17 @@ require_once($global['approot'].'inc/lib_paging.inc');
 				"from vm_position_active where proj_id = '$proj_id'");
 
 		$proj['positions'] = array();
-		while(!$result->EOF) {
-			$this->remove_keys($result->fields);
-			$result->fields['pos_id'] = $result->fields['this_pos_id'];
-			unset($result->fields['this_pos_id']);
-			$proj['positions'][$result->fields['pos_id']] = $result->fields;
-			$result->moveNext();
-		}
+		
+		if( !empty( $result ) )
+		{
+      while(!$result->EOF) {
+        $this->remove_keys($result->fields);
+        $result->fields['pos_id'] = $result->fields['this_pos_id'];
+        unset($result->fields['this_pos_id']);
+        $proj['positions'][$result->fields['pos_id']] = $result->fields;
+        $result->moveNext();
+      }
+    }
 
 		return $proj;
  	}
@@ -1104,45 +1165,48 @@ require_once($global['approot'].'inc/lib_paging.inc');
 	    $tree = new Tree("?mod=vm&amp;stream=text&amp;act=display_js&amp;js=");
 	    $tree->setRoot(new Node(_('Skills and Work Restrictions')));
 
-	    while(!$result->EOF)
+	    if( !empty( $result ) )
 	    {
-	        $split = preg_split('/'. VM_SKILLS_DELIMETER .'/', $result->fields['option_description']);
-	        $cur_parent = $tree->root;
-
-	        foreach($split as $index => $name)
-	        {
-	            $name = trim($name);
-	            if($name != '') 
-	            {
-		            if($index < (count($split) - 1))
-		            {
-		                $search_result = $tree->findNodeAux($cur_parent, $name);
-		                if($search_result == null)
-		                {
-		                    $tmp_child = new Node($name, 'CheckboxNode', array('input_name' => 'null'));
-		                    $cur_parent->addChild($tmp_child);
-		                    $cur_parent = $tmp_child;
-		                }
-		                else
-		                {
-		                    $cur_parent = $search_result;
-		                }
-		            }
-		            else
-		            {
-		            	$extra_info = array('input_name' => "'SKILL_{$result->fields['option_code']}'");
-	
-		            	if(in_array($result->fields['option_code'], $skills_array))
-		            		$extra_info['checked'] = true;
-	
-		                $tmp_child = new Node($name, 'CheckboxNode', $extra_info);
-		                $cur_parent->addChild($tmp_child);
-		            }
-	            }
-	        }
-
-	        $result->MoveNext();
-	    }
+        while(!$result->EOF)
+        {
+            $split = preg_split('/'. VM_SKILLS_DELIMETER .'/', $result->fields['option_description']);
+            $cur_parent = $tree->root;
+  
+            foreach($split as $index => $name)
+            {
+                $name = trim($name);
+                if($name != '') 
+                {
+                  if($index < (count($split) - 1))
+                  {
+                      $search_result = $tree->findNodeAux($cur_parent, $name);
+                      if($search_result == null)
+                      {
+                          $tmp_child = new Node($name, 'CheckboxNode', array('input_name' => 'null'));
+                          $cur_parent->addChild($tmp_child);
+                          $cur_parent = $tmp_child;
+                      }
+                      else
+                      {
+                          $cur_parent = $search_result;
+                      }
+                  }
+                  else
+                  {
+                    $extra_info = array('input_name' => "'SKILL_{$result->fields['option_code']}'");
+    
+                    if(in_array($result->fields['option_code'], $skills_array))
+                      $extra_info['checked'] = true;
+    
+                      $tmp_child = new Node($name, 'CheckboxNode', $extra_info);
+                      $cur_parent->addChild($tmp_child);
+                  }
+                }
+            }
+  
+            $result->MoveNext();
+        }
+      }
 
 	    return $tree;
 	}
@@ -1160,10 +1224,13 @@ require_once($global['approot'].'inc/lib_paging.inc');
 		$skills_array = array();
 		$result = $this->execute("SELECT opt_skill_code FROM vm_vol_skills WHERE p_uuid = '$p_uuid'");
 
-		while(!$result->EOF)
+		if( !empty( $result ) )
 		{
-			$skills_array[] = $result->fields['opt_skill_code'];
-			$result->MoveNext();
+      while(!$result->EOF)
+      {
+        $skills_array[] = $result->fields['opt_skill_code'];
+        $result->MoveNext();
+      }
 		}
 
 		return $skills_array;
@@ -1192,32 +1259,35 @@ require_once($global['approot'].'inc/lib_paging.inc');
 
 		// now store the skills in a Tree structure
 
-	    while(!$result->EOF)
-	    {
-	        $split = preg_split('/'. VM_SKILLS_DELIMETER .'/', $result->fields['option_description']);
-	        $cur_parent = $tree->root;
-
-	        foreach($split as $index => $name)
-	        {
-                $name = trim($name);
-                if($name != '') {
-	                $search_result = $tree->findNodeAux($cur_parent, $name);
-	                if($search_result == null)
-	                {
-	                    $tmp_child = new Node($name);
-	                    $cur_parent->addChild($tmp_child);
-	                    $cur_parent = $tmp_child;
-	                }
-	                else
-	                {
-	                    $cur_parent = $search_result;
-	                }
-                }
-
-	        }
-
-	        $result->MoveNext();
-	    }
+		  if( !empty( $result ) )
+		  {
+        while(!$result->EOF)
+        {
+            $split = preg_split('/'. VM_SKILLS_DELIMETER .'/', $result->fields['option_description']);
+            $cur_parent = $tree->root;
+  
+            foreach($split as $index => $name)
+            {
+                  $name = trim($name);
+                  if($name != '') {
+                    $search_result = $tree->findNodeAux($cur_parent, $name);
+                    if($search_result == null)
+                    {
+                        $tmp_child = new Node($name);
+                        $cur_parent->addChild($tmp_child);
+                        $cur_parent = $tmp_child;
+                    }
+                    else
+                    {
+                        $cur_parent = $search_result;
+                    }
+                  }
+  
+            }
+  
+            $result->MoveNext();
+        }
+      }
 
 	    return $tree;
 	}
@@ -1235,11 +1305,16 @@ require_once($global['approot'].'inc/lib_paging.inc');
 	{
 		$result = $this->execute("SELECT option_code FROM field_options WHERE field_name = 'opt_skill_type'");
 		$skill_ids = array();
-		while(!$result->EOF)
+		
+		if( !empty( $result ) )
 		{
-			$skill_ids[] = $result->fields['option_code'];
-			$result->MoveNext();
-		}
+      while(!$result->EOF)
+      {
+        $skill_ids[] = $result->fields['option_code'];
+        $result->MoveNext();
+      }
+    }
+    
 		return $skill_ids;
 	}
 
@@ -1247,10 +1322,15 @@ require_once($global['approot'].'inc/lib_paging.inc');
 		$result = $this->execute("select option_code code, option_description skill from field_options where field_name = 'opt_skill_type' order by option_description asc");
 		if(!$result->EOF) {
 			$skills = array();
-			while(!$result->EOF) {
-				$skills[$result->fields['code']] = $result->fields['skill'];
-				$result->moveNext();
+			
+			if( !empty( $result ) )
+			{
+        while(!$result->EOF) {
+          $skills[$result->fields['code']] = $result->fields['skill'];
+          $result->moveNext();
+        }
 			}
+			
 			return $skills;
 		} else
 			return false;
@@ -1297,11 +1377,16 @@ require_once($global['approot'].'inc/lib_paging.inc');
 
 		$result = $this->execute($q);
 		$orgs = array();
-		while(!$result->EOF)
+		
+		if( !empty( $result ) )
 		{
-			$orgs[$result->fields['o_uuid']] = $result->fields['name'];
-			$result->MoveNext();
-		}
+      while(!$result->EOF)
+      {
+        $orgs[$result->fields['o_uuid']] = $result->fields['name'];
+        $result->MoveNext();
+      }
+    }
+    
 		return $orgs;
 	}
 
@@ -1382,11 +1467,16 @@ require_once($global['approot'].'inc/lib_paging.inc');
 									 ORDER BY status");
 
 		$vols = array();
-		while(!$result->EOF)
+		
+		if( !empty( $result ) )
 		{
-			$vols[$result->fields['p_uuid']] = array('name' => $result->fields['full_name'], 'status' => $result->fields['status']);
-			$result->moveNext();
+      while(!$result->EOF)
+      {
+        $vols[$result->fields['p_uuid']] = array('name' => $result->fields['full_name'], 'status' => $result->fields['status']);
+        $result->moveNext();
+      }
 		}
+		
 		return $vols;
 	}
 
@@ -1486,11 +1576,16 @@ require_once($global['approot'].'inc/lib_paging.inc');
 
  	 	$result = $this->getCurrentPage($query);
  		$messages = array();
- 		while(!$result->EOF) {
- 			$this->remove_keys($result->fields);
- 			$messages[]= $result->fields;
- 			$result->moveNext();
+ 		
+ 		if( !empty( $result ) )
+ 		{
+      while(!$result->EOF) {
+        $this->remove_keys($result->fields);
+        $messages[]= $result->fields;
+        $result->moveNext();
+      }
  		}
+ 		
  		return $messages;
  	 }
 
@@ -1507,11 +1602,16 @@ require_once($global['approot'].'inc/lib_paging.inc');
  	 {
  	 	$result = $this->execute("SELECT to_id, full_name FROM vm_courier, person_uuid WHERE p_uuid = to_id AND message_id = $msg_id");
  	 	$list = array();
- 	 	while(!$result->EOF && $result != null)
+ 	 	
+ 	 	if( !empty( $result ) )
  	 	{
- 	 		$list[$result->fields['to_id']] = $result->fields['full_name'];
- 	 		$result->MoveNext();
+      while(!$result->EOF && $result != null)
+      {
+        $list[$result->fields['to_id']] = $result->fields['full_name'];
+        $result->MoveNext();
+      }
  	 	}
+ 	 	
  	 	return $list;
  	 }
 
@@ -1811,9 +1911,12 @@ require_once($global['approot'].'inc/lib_paging.inc');
 
 			$search_results = array();
 
-			while(!$result->EOF) {
-				$search_results[] = new Volunteer($result->fields['p_uuid']);
-				$result->MoveNext();
+			if( !empty( $result ) )
+			{
+        while(!$result->EOF) {
+          $search_results[] = new Volunteer($result->fields['p_uuid']);
+          $result->MoveNext();
+        }
 			}
 
 	        return $search_results;
@@ -1830,6 +1933,8 @@ require_once($global['approot'].'inc/lib_paging.inc');
 		{
 		    $result = $this->execute("SELECT p_uuid, full_name FROM person_uuid WHERE p_uuid IN (SELECT p_uuid FROM vm_vol_active)");
 
+		    if( !empty( $result ) )
+		    {
 	        while(!$result->EOF)
 	        {
 	            $p_uuid = $result->fields['p_uuid'];
@@ -1845,6 +1950,7 @@ require_once($global['approot'].'inc/lib_paging.inc');
 
 	            $result->MoveNext();
 	        }
+	      }
 		}
 
 		/**
@@ -1936,11 +2042,16 @@ require_once($global['approot'].'inc/lib_paging.inc');
 		{
 			$result = $this->execute("SELECT constraint_id, description FROM vm_access_constraint");
 			$constraints = array();
-			while(!$result->EOF)
+			
+			if( !empty( $result ) )
 			{
-				$constraints[$result->fields['constraint_id']] = $result->fields['description'];
-				$result->MoveNext();
+        while(!$result->EOF)
+        {
+          $constraints[$result->fields['constraint_id']] = $result->fields['description'];
+          $result->MoveNext();
+        }
 			}
+			
 			return $constraints;
 		}
 
@@ -1958,26 +2069,29 @@ require_once($global['approot'].'inc/lib_paging.inc');
 										 AND 		vm_access_constraint.constraint_id = vm_access_constraint_to_request.constraint_id");
 			$access = array();
 
-			while(!$result->EOF)
+			if( !empty( $result ) )
 			{
-				$act = $result->fields['act'];
-				$vm_action = $result->fields['vm_action'];
-				$constraint = $result->fields['constraint_id'];
-				$req_desc = $result->fields['req_desc'];
-
-				if(!is_array($access[$act]))
-					$access[$act] = array();
-
-				if(!is_array($access[$act][$vm_action]))
-					$access[$act][$vm_action] = array();
-
-				if(!is_array($access[$act][$vm_action]['extra']))
-					$access[$act][$vm_action]['extra'] = array();
-
-				$access[$act][$vm_action]['extra'][] = $constraint;
-
-				$result->MoveNext();
-			}
+        while(!$result->EOF)
+        {
+          $act = $result->fields['act'];
+          $vm_action = $result->fields['vm_action'];
+          $constraint = $result->fields['constraint_id'];
+          $req_desc = $result->fields['req_desc'];
+  
+          if(!is_array($access[$act]))
+            $access[$act] = array();
+  
+          if(!is_array($access[$act][$vm_action]))
+            $access[$act][$vm_action] = array();
+  
+          if(!is_array($access[$act][$vm_action]['extra']))
+            $access[$act][$vm_action]['extra'] = array();
+  
+          $access[$act][$vm_action]['extra'][] = $constraint;
+  
+          $result->MoveNext();
+        }
+      }
 
 			//next get Sahana-specific data classification constraints
 
@@ -1985,26 +2099,29 @@ require_once($global['approot'].'inc/lib_paging.inc');
 										 FROM 		vm_access_request, vm_access_classification_to_request
 										 WHERE		vm_access_request.request_id = vm_access_classification_to_request.request_id");
 
-			while(!$result->EOF)
+			if( !empty( $result ) )
 			{
-				$act = $result->fields['act'];
-				$vm_action = $result->fields['vm_action'];
-				$table_name = $result->fields['table_name'];
-				$crud = $result->fields['crud'];
-
-				if(!is_array($access[$act]))
-					$access[$act] = array();
-
-				if(!is_array($access[$act][$vm_action]))
-					$access[$act][$vm_action] = array();
-
-				if(!is_array($access[$act][$vm_action]['tables']))
-					$access[$act][$vm_action]['tables'] = array();
-
-				$access[$act][$vm_action]['tables'][$table_name] = $crud;
-
-				$result->MoveNext();
-			}
+        while(!$result->EOF)
+        {
+          $act = $result->fields['act'];
+          $vm_action = $result->fields['vm_action'];
+          $table_name = $result->fields['table_name'];
+          $crud = $result->fields['crud'];
+  
+          if(!is_array($access[$act]))
+            $access[$act] = array();
+  
+          if(!is_array($access[$act][$vm_action]))
+            $access[$act][$vm_action] = array();
+  
+          if(!is_array($access[$act][$vm_action]['tables']))
+            $access[$act][$vm_action]['tables'] = array();
+  
+          $access[$act][$vm_action]['tables'][$table_name] = $crud;
+  
+          $result->MoveNext();
+        }
+      }
 
 			return $access;
 		}
@@ -2033,20 +2150,24 @@ require_once($global['approot'].'inc/lib_paging.inc');
 		{
 			$result = $this->execute("SELECT act, vm_action, description FROM vm_access_request ORDER BY description");
 			$requests = array();
-			while(!$result->EOF)
+			
+			if( !empty( $result ) )
 			{
-				$act = $result->fields['act'];
-				$vm_action = $result->fields['vm_action'];
-				$desc = $result->fields['description'];
-
-				if(!is_array($requests[$act]))
-					$requests[$act] = array();
-
-				$requests[$act][$vm_action] = $desc;
-
-				$result->moveNext();
-			}
-			return $requests;
+        while(!$result->EOF)
+        {
+          $act = $result->fields['act'];
+          $vm_action = $result->fields['vm_action'];
+          $desc = $result->fields['description'];
+  
+          if(!is_array($requests[$act]))
+            $requests[$act] = array();
+  
+          $requests[$act][$vm_action] = $desc;
+  
+          $result->moveNext();
+        }
+        return $requests;
+      }
 		}
 
 		/**
@@ -2057,19 +2178,24 @@ require_once($global['approot'].'inc/lib_paging.inc');
 		{
 			$result = $this->execute("SELECT act, vm_action, description FROM vm_access_request ORDER BY description");
 			$requests = array();
-			while(!$result->EOF)
+			
+			if( !empty( $result ) )
 			{
-				$act = $result->fields['act'];
-				$vm_action = $result->fields['vm_action'];
-				$desc = $result->fields['description'];
-
-				$matches = array();
-				preg_match("/^\s*(\w+)(.*)/", $desc, $matches);
-
-				$requests[] = array('display_action' => $matches[1], 'partial_desc' => $matches[2], 'act' => $act, 'vm_action' => $vm_action);
-
-				$result->MoveNext();
-			}
+        while(!$result->EOF)
+        {
+          $act = $result->fields['act'];
+          $vm_action = $result->fields['vm_action'];
+          $desc = $result->fields['description'];
+  
+          $matches = array();
+          preg_match("/^\s*(\w+)(.*)/", $desc, $matches);
+  
+          $requests[] = array('display_action' => $matches[1], 'partial_desc' => $matches[2], 'act' => $act, 'vm_action' => $vm_action);
+  
+          $result->MoveNext();
+        }
+      }
+      
 			return $requests;
 		}
 
@@ -2087,10 +2213,14 @@ require_once($global['approot'].'inc/lib_paging.inc');
 										WHERE   act = '$act' AND vm_action = '$vm_action'
 										AND     vm_access_request.request_id = vm_access_constraint_to_request.request_id
 										AND     vm_access_constraint.constraint_id = vm_access_constraint_to_request.constraint_id");
-			while(!$result->EOF)
+			
+			if( !empty( $result ) )
 			{
-				$constraints['extra'][] = $result->fields['constraint_id'];
-				$result->MoveNext();
+        while(!$result->EOF)
+        {
+          $constraints['extra'][] = $result->fields['constraint_id'];
+          $result->MoveNext();
+        }
 			}
 
 			//data classification access constraints
@@ -2098,10 +2228,14 @@ require_once($global['approot'].'inc/lib_paging.inc');
 										FROM    vm_access_request, vm_access_classification_to_request
 										WHERE   act = '$act' AND vm_action = '$vm_action'
 										AND     vm_access_request.request_id = vm_access_classification_to_request.request_id");
-			while(!$result->EOF)
+			
+			if( !empty( $result ) )
 			{
-				$constraints['tables'][$result->fields['table_name']] = $result->fields['crud'];
-				$result->MoveNext();
+        while(!$result->EOF)
+        {
+          $constraints['tables'][$result->fields['table_name']] = $result->fields['crud'];
+          $result->MoveNext();
+        }
 			}
 
 			return $constraints;
@@ -2141,11 +2275,16 @@ require_once($global['approot'].'inc/lib_paging.inc');
 		{
 			$tables = array();
 			$result = $this->execute("SHOW TABLES");
-			while(!$result->EOF)
+			
+			if( !empty( $result ) )
 			{
-				$tables[] = $result->fields[0];
-				$result->MoveNext();
+        while(!$result->EOF)
+        {
+          $tables[] = $result->fields[0];
+          $result->MoveNext();
+        }
 			}
+			
 			return $tables;
 		}
 
@@ -2196,11 +2335,15 @@ require_once($global['approot'].'inc/lib_paging.inc');
 
 			$options = array();
 
-			while(!$result==NULL && !$result->EOF)
+			if( !empty( $result ) )
 			{
-			      $options[$result->fields['opt_skill_code']] = $result->fields['option_description'];
-			      $result->MoveNext();
+        while(!$result==NULL && !$result->EOF)
+        {
+              $options[$result->fields['opt_skill_code']] = $result->fields['option_description'];
+              $result->MoveNext();
+        }
 			}
+			
 			return $options;
 		}
 
@@ -2226,11 +2369,16 @@ require_once($global['approot'].'inc/lib_paging.inc');
 
 			$result = $this->execute($q);
 			$vols = array();
-			while(!$result->EOF)
+			
+			if( !empty( $result ) )
 			{
-				$vols[$result->fields['p_uuid']] = $result->fields['full_name'];
-				$result->moveNext();
+        while(!$result->EOF)
+        {
+          $vols[$result->fields['p_uuid']] = $result->fields['full_name'];
+          $result->moveNext();
+        }
 			}
+			
 			return $vols;
 		}
 
@@ -2298,11 +2446,16 @@ require_once($global['approot'].'inc/lib_paging.inc');
 		{
 			$result = $this->execute("SELECT level_id, level FROM sys_data_classifications");
 			$levels = array();
-			while(!$result->EOF)
+			
+			if( !empty( $result ) )
 			{
-				$levels[$result->fields['level_id']] = $result->fields['level'];
-				$result->moveNext();
+        while(!$result->EOF)
+        {
+          $levels[$result->fields['level_id']] = $result->fields['level'];
+          $result->moveNext();
+        }
 			}
+			
 			return $levels;
 		}
 
@@ -2384,3 +2537,4 @@ require_once($global['approot'].'inc/lib_paging.inc');
 
 
 
+?>
