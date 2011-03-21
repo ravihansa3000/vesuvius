@@ -193,7 +193,7 @@
 				$this->controlHandler(array('vm_action' => 'display_single', 'proj_id'=> $getvars['proj_id']));
 			break;
 
-			default: 
+			default:
 				$this->listProjects();
 				$this->showPagingNavigation("index.php?mod=vm&amp;act=project&amp;vm_action=default");
 			break;
@@ -203,11 +203,11 @@
 
 	/**
 	 * Gets the id of the volunteer who is being assigned.
-	 * 
+	 *
 	 * @param $getvars the getvars used to submit the form
 	 * @return the p_uuid of the volunteer who is being assigned, or null if not found
 	 */
-	 
+
 	function getAssigningVolId($getvars) {
 		//the volunteer's id is included in the name of the button used to submit the form
 		$prefix = "assigning_vol_";
@@ -311,7 +311,7 @@
 			$valid = false;
 			add_error(SHN_ERR_VM_NO_POSITION_TYPE);
 		}
-		if(!shn_vm_not_empty($getvars['payrate']) || !is_numeric($getvars['payrate']) || $getvars['payrate'] <= 0) {
+		if(!shn_vm_not_empty($getvars['payrate']) || !is_numeric($getvars['payrate']) || $getvars['payrate'] < 0) {
 			$valid = false;
 			add_error(SHN_ERR_VM_NO_PAYRATE);
 		}
