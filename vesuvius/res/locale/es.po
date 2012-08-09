@@ -7,29 +7,29 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vesuvius\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
-"POT-Creation-Date: 2012-07-19 15:49+0530\n"
+"POT-Creation-Date: 2012-08-08 11:15+0530\n"
 "PO-Revision-Date: 2012-05-18 06:01+0000\n"
 "Last-Translator: Greg Miernicki <Unknown>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2012-07-20 05:02+0000\n"
-"X-Generator: Launchpad (build 15644)\n"
+"X-Launchpad-Export-Date: 2012-08-09 05:22+0000\n"
+"X-Generator: Launchpad (build 15761)\n"
 
-#: ../www/index.php:170
+#: ../www/index.php:169
 msgid "The stream requested is not valid."
 msgstr ""
 
-#: ../www/index.php:201
+#: ../www/index.php:200
 msgid "The requested module is not installed in Vesuvius"
 msgstr ""
 
-#: ../www/index.php:220
+#: ../www/index.php:219
 msgid "The action requested is not available"
 msgstr ""
 
-#: ../www/index.php:224
+#: ../www/index.php:223
 msgid "This action does not support the stream type."
 msgstr ""
 
@@ -78,44 +78,52 @@ msgid "People Locator"
 msgstr ""
 
 #: ../inc/lib_security/acl_form.inc:27
+msgctxt "Securty-Form-Text"
 msgid "Select the Role you want to edit permissions of"
 msgstr ""
 
 #: ../inc/lib_security/acl_form.inc:33
+msgctxt "Security-Form-Text"
 msgid "Select Role"
 msgstr ""
 
 #: ../inc/lib_security/acl_form.inc:34
+msgctxt "Security-Form-Select"
 msgid "Roles"
 msgstr ""
 
 #: ../inc/lib_security/acl_form.inc:36
+msgctxt "Security-Form-Button"
 msgid "Continue"
 msgstr ""
 
 #: ../inc/lib_security/acl_form.inc:54
-msgid ""
-"Rows are Locked Users, Columns are the possible status\n"
-"\tvalues"
+msgctxt "Security-UnlockUser-Text"
+msgid "Rows are Locked Users, Columns are the possible status values"
 msgstr ""
 
-#: ../inc/lib_security/acl_form.inc:63
+#: ../inc/lib_security/acl_form.inc:62
+msgctxt "Security-UnlockUser-Text"
 msgid "Locked User"
 msgstr ""
 
-#: ../inc/lib_security/acl_form.inc:64
+#: ../inc/lib_security/acl_form.inc:63
+msgctxt "Security-UnlockUser-Text"
 msgid "Active"
 msgstr ""
 
-#: ../inc/lib_security/acl_form.inc:65
+#: ../inc/lib_security/acl_form.inc:64
+msgctxt "Security-UnlockUser-Text"
 msgid "Locked"
 msgstr ""
 
-#: ../inc/lib_security/acl_form.inc:66
+#: ../inc/lib_security/acl_form.inc:65
+msgctxt "Security-UnlockUser-Text"
 msgid "Banned"
 msgstr ""
 
-#: ../inc/lib_security/acl_form.inc:105
+#: ../inc/lib_security/acl_form.inc:104
+msgctxt "Security-UnlockUser-Button"
 msgid "Save"
 msgstr ""
 
@@ -288,9 +296,9 @@ msgstr ""
 
 #: ../inc/lib_validate.inc:109
 msgid ""
-"The postcode must begin with a string of the format\n"
-"\t\t\tA9, A99, AA9, AA99, AA9A, A9A, or AAA,and then be followed by a space "
-"and a string of the form 9AA. A is any letter and 9 is any number."
+"The postcode must begin with a string of the format A9, A99, AA9, AA99, "
+"AA9A, A9A, or AAA, and then be followed by a space and a string of the form "
+"9AA. A is any letter and 9 is any number."
 msgstr ""
 
 #: ../inc/lib_validate.inc:136
@@ -299,7 +307,7 @@ msgstr ""
 
 #: ../inc/lib_validate.inc:136
 msgid ""
-"field must be 8 digits in length, with an optional 2 or 3 digit area code"
+" field must be 8 digits in length, with an optional 2 or 3 digit area code"
 msgstr ""
 
 #: ../inc/lib_validate.inc:187
@@ -742,7 +750,8 @@ msgid "Honor No Photo Request"
 msgstr ""
 
 #: ../mod/ha/xajax.inc:513
-msgid "Hospitals-EditHospitalForm-Message"
+msgctxt "Hospitals-EditHospitalForm-Message"
+msgid "Photographer Name Required"
 msgstr ""
 
 #: ../mod/ha/xajax.inc:517
@@ -1190,7 +1199,8 @@ msgid "Username"
 msgstr ""
 
 #: ../mod/admin/main.inc:701
-msgid "Admin-ChangeUserRole-TextFieldReal Name"
+msgctxt "Admin-ChangeUserRole-TextField"
+msgid "Real Name"
 msgstr ""
 
 #: ../mod/admin/main.inc:728
@@ -1450,8 +1460,203 @@ msgstr ""
 msgid "Arrivals"
 msgstr ""
 
+#: ../mod/arrive/xajax.inc:111
+msgctxt "Arrivals-Table-Header"
+msgid "Arrival Time"
+msgstr ""
+
+#: ../mod/arrive/xajax.inc:112
+msgctxt "Arrivals-Table-Header"
+msgid "Event"
+msgstr ""
+
+#: ../mod/arrive/xajax.inc:113
+msgctxt "Arrivals-Table-Header"
+msgid "Person UUID"
+msgstr ""
+
+#: ../mod/arrive/xajax.inc:114
+msgctxt "Arrivals-Table-Header"
+msgid "Person Name"
+msgstr ""
+
+#: ../mod/arrive/xajax.inc:146
+msgctxt "Arrivals-Message"
+msgid "New person arrived >> "
+msgstr ""
+
+#: ../mod/arrive/xajax.inc:172
+msgctxt "Arrivals-Message"
+msgid "No persons have arrived thus far."
+msgstr ""
+
+#: ../mod/arrive/xajax.inc:177
+msgctxt "Arrivals-ShowArrivals-Text"
+msgid "Showing arrivals from <b>ALL events</b>."
+msgstr ""
+
+#: ../mod/arrive/xajax.inc:179
+msgctxt "Arrivals-ShowArrivals-Text"
+msgid "Showing arrivals from <b>only the current event</b>."
+msgstr ""
+
 #: ../mod/rez/conf.inc:14
 msgid "Help and Resources"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:80 ../mod/rez/xajax.inc:171 ../mod/rez/xajax.inc:467
+msgctxt "ResourcePages-Table-Header"
+msgid "Page #"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:81 ../mod/rez/xajax.inc:172 ../mod/rez/xajax.inc:468
+msgctxt "ResourcePages-Table-Header"
+msgid "Menu/Page Title"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:82
+msgctxt "ResourcePages-Table-Header"
+msgid "Visibility"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:83
+msgctxt "ResourcePages-Table-Header"
+msgid "Locale"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:84 ../mod/rez/xajax.inc:173
+msgctxt "ResourcePages-Table-Header"
+msgid "Edit"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:85
+msgctxt "ResourcePages-Table-Header"
+msgid "Delete"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:86
+msgctxt "ResourcePages-Table-Header"
+msgid "Translate"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:87
+msgctxt "ResourcePages-Table-Header"
+msgid "Move"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:128
+msgctxt "ResourcePages-Visibility-Select"
+msgid "Public"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:128
+msgctxt "ResourcePages-Visibility-Select"
+msgid "Hidden"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:128
+msgctxt "ResourcePages-Visibility-Select"
+msgid "INTERNAL"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:131 ../mod/rez/xajax.inc:211
+msgctxt "ResourcePages-Button"
+msgid "Edit"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:133
+msgctxt "ResourcePages-Delete-Confirm"
+msgid "Are you sure you want to delete this page?"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:133
+msgctxt "ResourcePages-Button"
+msgid "Delete"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:134
+msgctxt "ResourcePages-Button"
+msgid "Translate"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:158 ../mod/rez/xajax.inc:218
+msgctxt "ResourcePages-Message"
+msgid "No Pages have been created."
+msgstr ""
+
+#: ../mod/rez/xajax.inc:170
+msgctxt "ResourcePages-Heading"
+msgid "System Pages"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:226
+msgctxt "ResourcePages-Message"
+msgid "Creating a new page..."
+msgstr ""
+
+#: ../mod/rez/xajax.inc:226
+msgctxt "ResourcePages-Button"
+msgid "Create a new Page"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:262
+msgctxt "ResourcePages-Changed-Message"
+msgid "Changed visibility of page"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:262
+msgctxt "ResourcePages-Changed-Message"
+msgid "to"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:316 ../mod/rez/xajax.inc:371
+msgctxt "ResourcePages-Moved-Message"
+msgid "Moved page #"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:316
+msgctxt "ResourcePages-Moved-Message"
+msgid "down."
+msgstr ""
+
+#: ../mod/rez/xajax.inc:371
+msgctxt "ResourcePages-Moved-Message"
+msgid "up."
+msgstr ""
+
+#: ../mod/rez/xajax.inc:432
+msgctxt "ResourcePages-Saved-Message"
+msgid "Page #"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:432
+msgctxt "ResourcePages-Saved-Message"
+msgid "Saved"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:469
+msgctxt "ResourcePages-Table-Header"
+msgid "Last Modified"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:475
+msgctxt "ResourcePages-EditForm-Button"
+msgid "Save and Publish Changes"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:508
+msgctxt "ResourcePages-Deleted-Message"
+msgid "Page <b>#"
+msgstr ""
+
+#: ../mod/rez/xajax.inc:508
+msgctxt "ResourcePages-Deleted-Message"
+msgid " deleted."
+msgstr ""
+
+#: ../mod/rez/xajax.inc:510
+msgctxt "ResourcePages-Message"
+msgid "Delete operation aborted."
 msgstr ""
 
 #: ../mod/home/conf.inc:14
