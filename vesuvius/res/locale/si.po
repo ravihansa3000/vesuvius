@@ -8,14 +8,14 @@ msgstr ""
 "Project-Id-Version: vesuvius\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2013-03-30 21:12+0530\n"
-"PO-Revision-Date: 2013-03-31 17:20+0000\n"
-"Last-Translator: Ramindu Deshapriya <Unknown>\n"
+"PO-Revision-Date: 2013-04-19 18:23+0000\n"
+"Last-Translator: ishanaba <ishanaba.forums@gmail.com>\n"
 "Language-Team: Sinhala <si@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2013-04-01 05:19+0000\n"
-"X-Generator: Launchpad (build 16546)\n"
+"X-Launchpad-Export-Date: 2013-04-20 05:53+0000\n"
+"X-Generator: Launchpad (build 16567)\n"
 
 #: ../www/theme/lpf3/header.php:59
 msgid "of"
@@ -24,17 +24,17 @@ msgstr ""
 #: ../www/theme/lpf3/header.php:60 ../www/theme/lpf3/header.php:75
 #: ../www/theme/vesuvius/header.php:76
 msgid "U.S. National Library of Medicine"
-msgstr ""
+msgstr "එක්සත් ජනපද ජාතික වෛද්‍යය පුස්තකාලය"
 
 #: ../www/theme/lpf3/header.php:61 ../www/theme/lpf3/header.php:76
 #: ../www/theme/vesuvius/header.php:77
 msgid "Lister Hill National Center for Biomedical Communications"
-msgstr ""
+msgstr "ලිස්ටර් හිල් ජාතික ජෛව වෛද්‍ය සන්නිවේදන කේන්ද්‍රය"
 
 #: ../www/theme/vesuvius/header.php:59
 msgctxt "MAIN_HEADER"
 msgid "People Locator"
-msgstr ""
+msgstr "පුද්ගලයන් සෙවීම"
 
 #: ../www/theme/vesuvius/header.php:60
 msgctxt "MAIN_HEADER"
@@ -49,17 +49,17 @@ msgstr ""
 #: ../www/theme/vesuvius/header.php:62
 msgctxt "MAIN_HEADER"
 msgid "U.S. National Library of Medicine"
-msgstr ""
+msgstr "එක්සත් ජනපද ජාතික වෛද්‍යය පුස්තකාලය"
 
 #: ../www/theme/vesuvius/header.php:63
 msgctxt "MAIN_HEADER"
 msgid "Lister Hill National Center for Biomedical Communications"
-msgstr ""
+msgstr "ලිස්ටර් හිල් ජාතික ජෛව වෛද්‍ය සන්නිවේදන කේන්ද්‍රය"
 
 #: ../www/theme/vesuvius/header.php:75
 msgctxt "DUPLICATE_HEADER"
 msgid "People Locator"
-msgstr ""
+msgstr "පුද්ගලයන් සෙවීම"
 
 #: ../www/index.php:187
 msgid "The stream requested is not valid."
@@ -67,7 +67,7 @@ msgstr ""
 
 #: ../www/index.php:218
 msgid "The requested module is not installed in Vesuvius"
-msgstr ""
+msgstr "අවශ්‍ය ඒකකය විසුවියස් හි ස්ථාපනය කොට නොමැත"
 
 #: ../www/index.php:237
 msgid "The action requested is not available"
@@ -79,7 +79,7 @@ msgstr ""
 
 #: ../mod/home/conf.inc:14
 msgid "Home"
-msgstr "මුල් පිටුව"
+msgstr "නිවෙස්"
 
 #: ../mod/home/main.inc:31
 msgctxt "Home-SelectEvent-Message"
@@ -103,11 +103,12 @@ msgid ""
 "For these events you can search locally and report new information through "
 "Google :"
 msgstr ""
+"ඔබට මෙම අවස්ථා සඳහා නව දත්ත ප්‍රාදේශීයව සොයා ගූගල් හරහා වාර්තා කල හැක :"
 
 #: ../mod/home/main.inc:53
 msgctxt "Home-AvailableEvents-Text"
 msgid "For these events you can search only :"
-msgstr ""
+msgstr "මෙම අවස්ථා සඳහා ඔබට කල හැක්කේ සෙවීම් පමණි :"
 
 #: ../mod/pop/conf.inc:14
 msgid "Outbound Email"
@@ -119,7 +120,7 @@ msgstr ""
 
 #: ../mod/pop/main.inc:31
 msgid "SMTP Configuration"
-msgstr ""
+msgstr "SMTP සැකසුම්"
 
 #: ../mod/snap/xajax.inc:109
 msgctxt "Snapshot-FolderError-Message"
@@ -131,7 +132,7 @@ msgstr ""
 #: ../mod/snap/xajax.inc:109
 msgctxt "Snapshot-FolderError-Link"
 msgid "Check Again"
-msgstr ""
+msgstr "නැවත පරීක්ෂා කරන්න"
 
 #: ../mod/snap/xajax.inc:114
 msgctxt "Snapshot-FolderPermission-Message"
@@ -143,7 +144,7 @@ msgstr ""
 #: ../mod/snap/xajax.inc:114
 msgctxt "Snapshot-FolderPermission-Link"
 msgid "Check Again"
-msgstr ""
+msgstr "නැවත පරීක්ෂා කරන්න"
 
 #: ../mod/snap/xajax.inc:119
 msgctxt "Snapshot-FolderOpen-Message"
@@ -153,22 +154,22 @@ msgstr ""
 #: ../mod/snap/xajax.inc:140
 msgctxt "Snapshot-Operations-TableHeading"
 msgid "Rename"
-msgstr ""
+msgstr "නම වෙනස් කරන්න"
 
 #: ../mod/snap/xajax.inc:140
 msgctxt "Snapshot-Operations-TableHeading"
 msgid "Size"
-msgstr ""
+msgstr "ප්‍රමාණය"
 
 #: ../mod/snap/xajax.inc:140
 msgctxt "Snapshot-Operations-TableHeading"
 msgid "Delete"
-msgstr ""
+msgstr "ඉවත් කරන්න"
 
 #: ../mod/snap/xajax.inc:141
 msgctxt "Snapshot-Operations-TableHeading"
 msgid "Restore"
-msgstr ""
+msgstr "ප්‍රතිස්ථාපනය"
 
 #: ../mod/snap/xajax.inc:156
 msgctxt "Snapshot-Rename-Message"
@@ -178,12 +179,12 @@ msgstr ""
 #: ../mod/snap/xajax.inc:157
 msgctxt "Snapshot-Rename-Prompt"
 msgid "Please enter a new filename:"
-msgstr ""
+msgstr "ගොනුව සඳහා නමක් ඇතුලත් කරන්න :"
 
 #: ../mod/snap/xajax.inc:158
 msgctxt "Snapshot-Rename-Link"
 msgid "Rename"
-msgstr ""
+msgstr "නම වෙනස් කරන්න"
 
 #: ../mod/snap/xajax.inc:163
 msgctxt "Snapshot-Delete-Message"
@@ -193,12 +194,12 @@ msgstr ""
 #: ../mod/snap/xajax.inc:164
 msgctxt "Snapshot-Delete-Confirm"
 msgid "Are you sure you want to delete "
-msgstr ""
+msgstr "මකා දැමීය යුතුමද "
 
 #: ../mod/snap/xajax.inc:165
 msgctxt "Snapshot-Delete-Link"
 msgid "Delete"
-msgstr ""
+msgstr "ඉවත් කරන්න"
 
 #: ../mod/snap/xajax.inc:168
 msgctxt "Snapshot-Restore-Message"
@@ -208,7 +209,7 @@ msgstr ""
 #: ../mod/snap/xajax.inc:169
 msgctxt "Snapshot-Restore-Confirm"
 msgid "Are you sure you want to restore from the "
-msgstr ""
+msgstr "මේ මගින් ප්‍රතිස්ථාපනය කල යුතුමද "
 
 #: ../mod/snap/xajax.inc:169
 msgctxt "Snapshot-Restore-Confirm"
@@ -219,12 +220,12 @@ msgstr ""
 #: ../mod/snap/xajax.inc:170
 msgctxt "Snapshot-Restore-Link"
 msgid "Restore"
-msgstr ""
+msgstr "ප්‍රතිස්ථාපනය"
 
 #: ../mod/snap/xajax.inc:197
 msgctxt "Snapshot-Found-Message"
 msgid "Found"
-msgstr ""
+msgstr "හමුවිය"
 
 #: ../mod/snap/xajax.inc:197
 msgctxt "Snapshot-Found-Message"
@@ -239,7 +240,7 @@ msgstr ""
 #: ../mod/snap/xajax.inc:277
 msgctxt "Snapshot-Log-Message"
 msgid "Restore operation aborted."
-msgstr ""
+msgstr "ප්‍රතිස්ථාපනය නවතා දැමුණි."
 
 #: ../mod/snap/xajax.inc:334
 msgctxt "Snapshot-Log-Message"
@@ -249,7 +250,7 @@ msgstr ""
 #: ../mod/snap/xajax.inc:336
 msgctxt "Snapshot-Log-Message"
 msgid "Rename operation aborted."
-msgstr ""
+msgstr "නම වෙනස් කිරීම නවතා දැමුණි."
 
 #: ../mod/snap/main.inc:32
 msgctxt "Snapshot-Heading"
@@ -259,182 +260,182 @@ msgstr ""
 #: ../mod/ha/xajax.inc:139 ../mod/ha/xajax.inc:287 ../mod/ha/xajax.inc:322
 msgctxt "Hospitals-Add-Button"
 msgid "Add a new Hospital"
-msgstr ""
+msgstr "නව රෝහලක් ඇතුල් කරන්න"
 
 #: ../mod/ha/xajax.inc:141
 msgctxt "Hospitals-Help-Message"
 msgid "Opening Help..."
-msgstr ""
+msgstr "උපකාරකය විවෘත වෙමින්..."
 
 #: ../mod/ha/xajax.inc:141 ../mod/ha/xajax.inc:289 ../mod/ha/xajax.inc:324
 msgctxt "Hospitals-Help-Button"
 msgid "Help"
-msgstr ""
+msgstr "උපකාරකය"
 
 #: ../mod/ha/xajax.inc:154
 msgctxt "Hospitals-Log-Message"
 msgid "Found <b>"
-msgstr ""
+msgstr "<b> හමුවිය"
 
 #: ../mod/ha/xajax.inc:154
 msgctxt "Hospitals-Log-Message"
 msgid "</b> Hospital(s).<br>"
-msgstr ""
+msgstr "</b> රෝහල/රෝහල්.<br>"
 
 #: ../mod/ha/xajax.inc:170
 msgctxt "Hospitals-Help-Text"
 msgid "coming soon...."
-msgstr ""
+msgstr "ලඟදීම බලාපොරොත්තු වන්න..."
 
 #: ../mod/ha/xajax.inc:175
 msgctxt "Hospitals-Log-Message"
 msgid "Closing Help..."
-msgstr ""
+msgstr "උපකාරකය වසමින්..."
 
 #: ../mod/ha/xajax.inc:175
 msgctxt "Hospitals-Help-Button"
 msgid "Close Help"
-msgstr ""
+msgstr "උපකාරකය වසන්න"
 
 #: ../mod/ha/xajax.inc:283
 msgctxt "Hospitals-Log-Message"
 msgid "Hospital #<b>"
-msgstr ""
+msgstr "රෝහල #<b>"
 
 #: ../mod/ha/xajax.inc:283
 msgctxt "Hospitals-Log-Message"
 msgid "Saved"
-msgstr ""
+msgstr "සුරැකූ"
 
 #: ../mod/ha/xajax.inc:287
 msgctxt "Hospitals-Log-Message"
 msgid "Add a new Hospital..."
-msgstr ""
+msgstr "නව රෝහලක් ඇතුල් කරන්න..."
 
 #: ../mod/ha/xajax.inc:289 ../mod/ha/xajax.inc:324
 msgctxt "Hospitals-Log-Message"
 msgid "Opening Help..."
-msgstr ""
+msgstr "උපකාරකය විවෘත වෙමින්..."
 
 #: ../mod/ha/xajax.inc:312
 msgctxt "Hospitals-Log-Message"
 msgid "Hospital <b>#"
-msgstr ""
+msgstr "රෝහල #<b>"
 
 #: ../mod/ha/xajax.inc:312 ../mod/ha/xajax.inc:315
 msgctxt "Hospitals-Log-Message"
 msgid "removed"
-msgstr ""
+msgstr "ඉවත් කරන ලදි"
 
 #: ../mod/ha/xajax.inc:315
 msgctxt "Hospitals-Log-Message"
 msgid "Hospital"
-msgstr ""
+msgstr "රෝහල"
 
 #: ../mod/ha/xajax.inc:317
 msgctxt "Hospitals-Log-Message"
 msgid "Remove operation aborted.<br>"
-msgstr ""
+msgstr "ඉවත් කිරීම නවතා දැමුණි.<br>"
 
 #: ../mod/ha/xajax.inc:322
 msgctxt "Hospitals-Log-Message"
 msgid "Adding a new Hospital..."
-msgstr ""
+msgstr "නව රෝහලක් ඇතුල් කිරීම..."
 
 #: ../mod/ha/xajax.inc:406
 msgctxt "Hospitals-EditHospitalForm-Title"
 msgid "Hospital Information"
-msgstr ""
+msgstr "රෝහල් දත්ත"
 
 #: ../mod/ha/xajax.inc:409
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "Hospital UUID"
-msgstr ""
+msgstr "රෝහලේ UUID"
 
 #: ../mod/ha/xajax.inc:413
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "Name"
-msgstr ""
+msgstr "නම"
 
 #: ../mod/ha/xajax.inc:417
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "Short Name"
-msgstr ""
+msgstr "කෙටි නම"
 
 #: ../mod/ha/xajax.inc:421
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "Street 1"
-msgstr ""
+msgstr "පත්‍රය 1"
 
 #: ../mod/ha/xajax.inc:425
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "Street 2"
-msgstr ""
+msgstr "පත්‍රය 2"
 
 #: ../mod/ha/xajax.inc:429
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "City"
-msgstr ""
+msgstr "නගරය"
 
 #: ../mod/ha/xajax.inc:433
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "County"
-msgstr ""
+msgstr "රට"
 
 #: ../mod/ha/xajax.inc:437
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "State / Region"
-msgstr ""
+msgstr "පළාත / දිස්ත්‍රික්කය"
 
 #: ../mod/ha/xajax.inc:441
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "Postal Code"
-msgstr ""
+msgstr "තැපැල් අංකය"
 
 #: ../mod/ha/xajax.inc:445
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "Country"
-msgstr ""
+msgstr "රට"
 
 #: ../mod/ha/xajax.inc:449
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "Phone"
-msgstr ""
+msgstr "දුරකථනය"
 
 #: ../mod/ha/xajax.inc:453
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "Fax"
-msgstr ""
+msgstr "ෆැක්ස්"
 
 #: ../mod/ha/xajax.inc:457
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "Email"
-msgstr ""
+msgstr "ඊ මේල්"
 
 #: ../mod/ha/xajax.inc:461
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "Web Address"
-msgstr ""
+msgstr "වෙබ් ලිපිනය"
 
 #: ../mod/ha/xajax.inc:465
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "NPI #"
-msgstr ""
+msgstr "NPI #"
 
 #: ../mod/ha/xajax.inc:470
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "Enter a Street Address: "
-msgstr ""
+msgstr "මාවතේ ලිපිනය ඇතුලත් කරන්න : "
 
 #: ../mod/ha/xajax.inc:471
 msgctxt "Hospitals-Info-Form"
 msgid "Detect My Current Location"
-msgstr ""
+msgstr "මම දැන් සිටින ස්ථානය සොයන්න"
 
 #: ../mod/ha/xajax.inc:490
 msgctxt "Hospitals-EditHospitalForm-Text"
 msgid "Hospital Policies"
-msgstr ""
+msgstr "රෝහල් ප්‍රතිපත්ති"
 
 #: ../mod/ha/xajax.inc:493
 msgctxt "Hospitals-EditHospitalForm-TextField"
@@ -454,7 +455,7 @@ msgstr ""
 #: ../mod/ha/xajax.inc:505
 msgctxt "Hospitals-EditHospitalForm-Message"
 msgid "Photo Required"
-msgstr ""
+msgstr "ඡායාරූපයක් අවශ්‍යයි"
 
 #: ../mod/ha/xajax.inc:509
 msgctxt "Hospitals-EditHospitalForm-Text"
@@ -464,7 +465,7 @@ msgstr ""
 #: ../mod/ha/xajax.inc:513
 msgctxt "Hospitals-EditHospitalForm-Message"
 msgid "Photographer Name Required"
-msgstr ""
+msgstr "ඡායාරූප ශිල්පියාගේ නම අවශ්‍යයි"
 
 #: ../mod/ha/xajax.inc:517
 msgctxt "Hospitals-EditHospitalForm-TextField"
@@ -489,90 +490,90 @@ msgstr ""
 #: ../mod/ha/xajax.inc:539
 msgctxt "Hospitals-Log-Message"
 msgid "Canceling Changes..."
-msgstr ""
+msgstr "වෙනස් කම් අවලංගු කරමින්..."
 
 #: ../mod/ha/xajax.inc:539
 msgctxt "Hospitals-Edit-Button"
 msgid "Cancel Edit / Close"
-msgstr ""
+msgstr "සංස්කරණය අවලංගු කරන්න / වසන්න"
 
 #: ../mod/ha/xajax.inc:540
 msgctxt "Hospitals-Log-Message"
 msgid "Saving Changes..."
-msgstr ""
+msgstr "වෙනස්කම් සුරැකමින්..."
 
 #: ../mod/ha/xajax.inc:540
 msgctxt "Hospitals-Edit-Button"
 msgid "Save Changes"
-msgstr ""
+msgstr "වෙනස්කම් සුරැකින්න."
 
 #: ../mod/ha/xajax.inc:541
 msgctxt "Hospitals-Log-Message"
 msgid "Saving Changes...<br>"
-msgstr ""
+msgstr "වෙනස්කම් සුරැකමින්..."
 
 #: ../mod/ha/xajax.inc:541
 msgctxt "Hospitals-Edit-Button"
 msgid "Save Changes and Close"
-msgstr ""
+msgstr "වෙනස්කම් සුරැකිම සහ වැසීම"
 
 #: ../mod/ha/xajax.inc:542
 msgctxt "Hospitals-Log-Message"
 msgid "Canceling Changes...<br>"
-msgstr ""
+msgstr "වෙනස් කම් අවලංගු කරමින්..."
 
 #: ../mod/ha/xajax.inc:542
 msgctxt "Hospitals-Edit-Button"
 msgid "Cancel Editing and Close"
-msgstr ""
+msgstr "සංස්කරණය අවලංගු කර වසන්න"
 
 #: ../mod/ha/xajax.inc:554
 msgctxt "Hospitals-Remove-Button"
 msgid "Remove this Hospital"
-msgstr ""
+msgstr "මෙම රෝහල ඉවත් කරන්න"
 
 #: ../mod/ha/conf.inc:15
 msgid "Hospital Administration"
-msgstr ""
+msgstr "රෝහල් පරිපාලනය"
 
 #: ../mod/admin/conf.inc:15
 msgid "Administration"
-msgstr ""
+msgstr "පරිපාලනය"
 
 #: ../mod/admin/main.inc:38
 msgctxt "Admin-Menu"
 msgid "Version"
-msgstr ""
+msgstr "පිටපත"
 
 #: ../mod/admin/main.inc:39
 msgctxt "Admin-Menu"
 msgid "Resource Pages"
-msgstr ""
+msgstr "සම්පත් අඩංගු පිටු"
 
 #: ../mod/admin/main.inc:40
 msgctxt "Admin-Menu"
 msgid "Add User"
-msgstr ""
+msgstr "පරිශීලකයකු එක් කරන්න"
 
 #: ../mod/admin/main.inc:41
 msgctxt "Admin-Menu"
 msgid "Remove User"
-msgstr ""
+msgstr "පරිශීලකයකු ඉවත් කරන්න"
 
 #: ../mod/admin/main.inc:42
 msgctxt "Admin-Menu"
 msgid "User Roles"
-msgstr ""
+msgstr "පරිශීලක භූමිකා"
 
 #: ../mod/admin/main.inc:43
 msgctxt "Admin-Menu"
 msgid "Password Reset"
-msgstr ""
+msgstr "මුරපදය නැවත සකසන්න"
 
 #: ../mod/admin/main.inc:44
 msgctxt "Admin-Menu"
 msgid "User Status"
-msgstr ""
+msgstr "පරිශීලකගේ තත්වය"
 
 #: ../mod/admin/main.inc:45
 msgctxt "Admin-Menu"
@@ -610,12 +611,12 @@ msgstr ""
 #: ../mod/admin/main.inc:178
 msgctxt "Admin-UserStatus-Heading"
 msgid "User"
-msgstr ""
+msgstr "පරිශිලක"
 
 #: ../mod/admin/main.inc:179
 msgctxt "Admin-UserStatus-Text"
 msgid "Active"
-msgstr ""
+msgstr "සක්‍රීය"
 
 #: ../mod/admin/main.inc:180
 msgctxt "Admin-UserStatus-Text"
@@ -625,12 +626,12 @@ msgstr ""
 #: ../mod/admin/main.inc:181
 msgctxt "Admin-UserStatus-Text"
 msgid "Banned"
-msgstr ""
+msgstr "තහනම් කරන ලද"
 
 #: ../mod/admin/main.inc:221
 msgctxt "Admin-UserPermission-Button"
 msgid "Save"
-msgstr ""
+msgstr "සුරකින්න"
 
 #: ../mod/admin/main.inc:249
 msgctxt "Admin-UserStatus-Message"
@@ -640,27 +641,27 @@ msgstr ""
 #: ../mod/admin/main.inc:267
 msgctxt "Admin-UserEventLog-TableHeader"
 msgid "Date/Time"
-msgstr ""
+msgstr "දිනය/වේලාව"
 
 #: ../mod/admin/main.inc:268
 msgctxt "Admin-UserEventLog-TableHeader"
 msgid "User Name"
-msgstr ""
+msgstr "පරිශීලක නම"
 
 #: ../mod/admin/main.inc:269
 msgctxt "Admin-UserEventLog-TableHeader"
 msgid "Full Name"
-msgstr ""
+msgstr "සම්පූර්ණ නම"
 
 #: ../mod/admin/main.inc:270
 msgctxt "Admin-UserEventLog-TableHeader"
 msgid "Event Type"
-msgstr ""
+msgstr "අවස්ථාවේ ස්වාභාවය"
 
 #: ../mod/admin/main.inc:271
 msgctxt "Admin-UserEventLog-TableHeader"
 msgid "Event"
-msgstr ""
+msgstr "අවස්ථාව"
 
 #: ../mod/admin/main.inc:301
 msgctxt "Admin-UserEventLog-Message"
@@ -670,87 +671,89 @@ msgstr ""
 #: ../mod/admin/main.inc:326
 msgctxt "Admin-AddUser-Form"
 msgid "Account Details"
-msgstr ""
+msgstr "ගිණුම් විස්තර"
 
 #: ../mod/admin/main.inc:328
 msgctxt "Admin-AddUser-TextField"
 msgid "First Name "
-msgstr ""
+msgstr "මුල් නම "
 
 #: ../mod/admin/main.inc:329
 msgctxt "Admin-AddUser-TextField"
 msgid "Last Name "
-msgstr ""
+msgstr "වාසගම "
 
 #: ../mod/admin/main.inc:330
 msgctxt "Admin-AddUser-TextField"
 msgid "User Name "
-msgstr ""
+msgstr "පරිශීලක නම "
 
 #: ../mod/admin/main.inc:331
 msgctxt "Admin-AddUser-TextField"
 msgid "Email Address "
-msgstr ""
+msgstr "ඊ මේල් ලිපිනය "
 
 #: ../mod/admin/main.inc:332
 msgctxt "Admin-AddUser-Password"
 msgid "Password for Login"
-msgstr ""
+msgstr "ඇතුලු වීම සඳහා මුර පදය"
 
 #: ../mod/admin/main.inc:333
 msgctxt "Admin-AddUser-Password"
 msgid "Confirm Password"
-msgstr ""
+msgstr "මුර පදය ස්ථිර කරන්න"
 
 #: ../mod/admin/main.inc:336
 msgctxt "Admin-AddUser-Text"
 msgid "Select Role"
-msgstr ""
+msgstr "භූමිකාව තෝරන්න"
 
 #: ../mod/admin/main.inc:337
 msgctxt "Admin-AddUser-Select"
 msgid "Roles"
-msgstr ""
+msgstr "භූමිකා"
 
 #: ../mod/admin/main.inc:340
 msgctxt "Admin-AddUser-TextField"
 msgid "OpenId Login Details"
-msgstr ""
+msgstr "විවෘත අනන්‍යතා ඇතුලත් වීමේ තොරතුරු"
 
 #: ../mod/admin/main.inc:341
 msgctxt "Admin-AddUser-Message"
 msgid "Option to use an OpenID instead of a username/password if you'd like."
 msgstr ""
+"ඔබ කැමති නම් පරිශීලක නම/මුර පදය වෙනුවට විවෘත අනන්‍යතා ඇතුලත් වීමේ තොරතුරු "
+"භාවිතා කරන්න."
 
 #: ../mod/admin/main.inc:342
 msgctxt "Admin-AddUser-Text"
 msgid "OpenID "
-msgstr ""
+msgstr "විවෘත අනන්‍යතා "
 
 #: ../mod/admin/main.inc:345
 msgctxt "Admin-AddUser-Form"
 msgid "Submit"
-msgstr ""
+msgstr "යවන්න"
 
 #: ../mod/admin/main.inc:377
 msgctxt "Admin-RemoveUser-Text"
 msgid "Select User(s) to Delete"
-msgstr ""
+msgstr "ඉවත් කිරීම සඳහා පරිශීලකයන් තෝරන්න"
 
 #: ../mod/admin/main.inc:382
 msgctxt "Admin-RemoveUser-Button"
 msgid "Remove user"
-msgstr ""
+msgstr "පරිශීලක ඉවත් කරන්න"
 
 #: ../mod/admin/main.inc:423
 msgctxt "Admin-RemoveUser-Error"
 msgid "User does not exist"
-msgstr ""
+msgstr "පරිශීලක නොපවතී"
 
 #: ../mod/admin/main.inc:425
 msgctxt "Admin-RemoveUser-Message"
 msgid "User was successfully removed"
-msgstr ""
+msgstr "පරිශීලක සාර්ථකව ඉවත් කරන ලදි"
 
 #: ../mod/admin/main.inc:440
 msgctxt "Admin-ChangeUserPassword-Message"
@@ -760,57 +763,57 @@ msgstr ""
 #: ../mod/admin/main.inc:449
 msgctxt "Admin-ChangeUserPassword-Select"
 msgid "Select User"
-msgstr ""
+msgstr "පරිශීලක තෝරන්න"
 
 #: ../mod/admin/main.inc:452
 msgctxt "Admin-ChangeUserPassword-Text"
 msgid "New Password"
-msgstr ""
+msgstr "නව මුරපදය"
 
 #: ../mod/admin/main.inc:454
 msgctxt "Admin-ChangeUserPassword-Password"
 msgid "New Password"
-msgstr ""
+msgstr "නව මුරපදය"
 
 #: ../mod/admin/main.inc:455
 msgctxt "Admin-ChangeUserPassword-Password"
 msgid "Confirm New Password"
-msgstr ""
+msgstr "නව මුරපදය ස්ථීර කරන්න"
 
 #: ../mod/admin/main.inc:458
 msgctxt "Admin-ChangeUserPassword-Button"
 msgid "Reset Password"
-msgstr ""
+msgstr "මුරපදය නැවත සකසන්න"
 
 #: ../mod/admin/main.inc:479
 msgctxt "Admin-ChangeUserPassword-Error"
 msgid "New password cannot be blank."
-msgstr ""
+msgstr "නව මුර පදය හිස්ව තැබිය නොහැක."
 
 #: ../mod/admin/main.inc:486
 msgctxt "Admin-ChangeUserPassword-Error"
 msgid "You failed to re-enter the password."
-msgstr ""
+msgstr "නැවත මුර පදය ඇතුලත් කිරීමට ඔබ අපොහොසත් විය."
 
 #: ../mod/admin/main.inc:493
 msgctxt "Admin-ChangeUserPassword-Error"
 msgid "The two passwords you entered did not match."
-msgstr ""
+msgstr "ඔබ ඇතුලු කල මුරපද එකිනෙක නොගැලපේ."
 
 #: ../mod/admin/main.inc:504
 msgctxt "Admin-ChangeUserPassword-Message"
 msgid "The password was succesfully reset."
-msgstr ""
+msgstr "මුරපදය නැවත සැකසීම සාර්ථකයි."
 
 #: ../mod/admin/main.inc:523
 msgctxt "Admin-ChangeUserPassword-Message"
 msgid "An error ocurred"
-msgstr ""
+msgstr "විනාසයි"
 
 #: ../mod/admin/main.inc:525
 msgctxt "Admin-ChangeUserPassword-Message"
 msgid "The password was succesfully updated."
-msgstr ""
+msgstr "මුරපදය යාවත්කාල කිරීම සාර්ථකයි."
 
 #: ../mod/admin/main.inc:544
 msgctxt "Admin-EnableModules-Help"
