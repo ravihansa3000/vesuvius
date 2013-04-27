@@ -8,14 +8,14 @@ msgstr ""
 "Project-Id-Version: vesuvius\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2013-03-30 21:12+0530\n"
-"PO-Revision-Date: 2013-04-19 18:23+0000\n"
-"Last-Translator: ishanaba <ishanaba.forums@gmail.com>\n"
+"PO-Revision-Date: 2013-04-26 17:07+0000\n"
+"Last-Translator: Kaushika Rukshan Athukorala <kaushikaruk@gmail.com>\n"
 "Language-Team: Sinhala <si@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2013-04-20 05:53+0000\n"
-"X-Generator: Launchpad (build 16567)\n"
+"X-Launchpad-Export-Date: 2013-04-27 06:08+0000\n"
+"X-Generator: Launchpad (build 16580)\n"
 
 #: ../www/theme/lpf3/header.php:59
 msgid "of"
@@ -63,7 +63,7 @@ msgstr "පුද්ගලයන් සෙවීම"
 
 #: ../www/index.php:187
 msgid "The stream requested is not valid."
-msgstr ""
+msgstr "ප්‍රවාහ ඉල්ලීම වලංගු නැත."
 
 #: ../www/index.php:218
 msgid "The requested module is not installed in Vesuvius"
@@ -79,7 +79,7 @@ msgstr ""
 
 #: ../mod/home/conf.inc:14
 msgid "Home"
-msgstr "නිවෙස්"
+msgstr "මුල් පිටුව"
 
 #: ../mod/home/main.inc:31
 msgctxt "Home-SelectEvent-Message"
@@ -95,7 +95,7 @@ msgctxt "Home-AvailableEvents-Text"
 msgid ""
 "For these events you can search and report new information directly to this "
 "registry :"
-msgstr ""
+msgstr "ඔබට මෙම අවස්ථා සඳහා නව දත්ත සොයා ඍජුව මෙම ලෙඛනයට වාර්තා කල හැක :"
 
 #: ../mod/home/main.inc:45
 msgctxt "Home-AvailableEvents-Text"
@@ -116,7 +116,7 @@ msgstr ""
 
 #: ../mod/pop/main.inc:30
 msgid "Sent Email Log"
-msgstr ""
+msgstr "යැවූ විද්‍යුත් තැපැල් ලොගය"
 
 #: ../mod/pop/main.inc:31
 msgid "SMTP Configuration"
