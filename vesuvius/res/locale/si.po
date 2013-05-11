@@ -8,14 +8,14 @@ msgstr ""
 "Project-Id-Version: vesuvius\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2013-03-30 21:12+0530\n"
-"PO-Revision-Date: 2013-04-26 17:07+0000\n"
+"PO-Revision-Date: 2013-05-11 03:04+0000\n"
 "Last-Translator: Kaushika Rukshan Athukorala <kaushikaruk@gmail.com>\n"
 "Language-Team: Sinhala <si@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2013-04-27 06:08+0000\n"
-"X-Generator: Launchpad (build 16580)\n"
+"X-Launchpad-Export-Date: 2013-05-11 05:52+0000\n"
+"X-Generator: Launchpad (build 16598)\n"
 
 #: ../www/theme/lpf3/header.php:59
 msgid "of"
@@ -71,11 +71,11 @@ msgstr "අවශ්‍ය ඒකකය විසුවියස් හි ස�
 
 #: ../www/index.php:237
 msgid "The action requested is not available"
-msgstr ""
+msgstr "ඔබගේ ඉල්ලිම ලබා දිය නොහැක"
 
 #: ../www/index.php:241
 msgid "This action does not support the stream type."
-msgstr ""
+msgstr "මෙම ක්‍රියාව ප්‍රවාහය හා නොගැලපේ"
 
 #: ../mod/home/conf.inc:14
 msgid "Home"
@@ -112,7 +112,7 @@ msgstr "මෙම අවස්ථා සඳහා ඔබට කල හැක්�
 
 #: ../mod/pop/conf.inc:14
 msgid "Outbound Email"
-msgstr ""
+msgstr "යැවූ ඊමේල්"
 
 #: ../mod/pop/main.inc:30
 msgid "Sent Email Log"
@@ -174,7 +174,7 @@ msgstr "ප්‍රතිස්ථාපනය"
 #: ../mod/snap/xajax.inc:156
 msgctxt "Snapshot-Rename-Message"
 msgid "Renaming Snapshot ..."
-msgstr ""
+msgstr "තිරපිටපත නැවත නම් කරමින් ..."
 
 #: ../mod/snap/xajax.inc:157
 msgctxt "Snapshot-Rename-Prompt"
@@ -189,7 +189,7 @@ msgstr "නම වෙනස් කරන්න"
 #: ../mod/snap/xajax.inc:163
 msgctxt "Snapshot-Delete-Message"
 msgid "Deleting Snapshot ..."
-msgstr ""
+msgstr "තිරපිටපත මකා දමමින් ..."
 
 #: ../mod/snap/xajax.inc:164
 msgctxt "Snapshot-Delete-Confirm"
@@ -204,7 +204,7 @@ msgstr "ඉවත් කරන්න"
 #: ../mod/snap/xajax.inc:168
 msgctxt "Snapshot-Restore-Message"
 msgid "Restoring Snapshot ..."
-msgstr ""
+msgstr "තිරපිටපත නැවත පිහිටුවමින් ..."
 
 #: ../mod/snap/xajax.inc:169
 msgctxt "Snapshot-Restore-Confirm"
@@ -230,7 +230,7 @@ msgstr "හමුවිය"
 #: ../mod/snap/xajax.inc:197
 msgctxt "Snapshot-Found-Message"
 msgid "Snapshots."
-msgstr ""
+msgstr "තිරපිටපත්"
 
 #: ../mod/snap/xajax.inc:275
 msgctxt "Snapshot-Log-Message"
@@ -578,7 +578,7 @@ msgstr "පරිශීලකගේ තත්වය"
 #: ../mod/admin/main.inc:45
 msgctxt "Admin-Menu"
 msgid "Module ACL"
-msgstr ""
+msgstr "ACL ඒකකය"
 
 #: ../mod/admin/main.inc:46
 msgctxt "Admin-Menu"
@@ -621,7 +621,7 @@ msgstr "සක්‍රීය"
 #: ../mod/admin/main.inc:180
 msgctxt "Admin-UserStatus-Text"
 msgid "Locked"
-msgstr ""
+msgstr "අඟුලු ලූ"
 
 #: ../mod/admin/main.inc:181
 msgctxt "Admin-UserStatus-Text"
@@ -826,7 +826,7 @@ msgstr ""
 #: ../mod/admin/main.inc:598
 msgctxt "Admin-Modules-Button"
 msgid "Save ACL"
-msgstr ""
+msgstr "ACL සුරකින්න"
 
 #: ../mod/admin/main.inc:651
 msgctxt "Admin-Modules-Message"
@@ -836,12 +836,12 @@ msgstr ""
 #: ../mod/admin/main.inc:653
 msgctxt "Admin-Modules-Message"
 msgid "The ACL changes were saved successfully."
-msgstr ""
+msgstr "ACL වෙනස්වීම් සුරැකීම සාර්ථකයි"
 
 #: ../mod/admin/main.inc:676
 msgctxt "Admin-User-Message"
 msgid "User's class updated successfully."
-msgstr ""
+msgstr "පරිශීලක පංතිය යාවත්කාලීන කිරීම සාර්ථකයි"
 
 #: ../mod/admin/main.inc:690
 msgctxt "Admin-ChangeUserRole-Message"
@@ -855,32 +855,32 @@ msgstr ""
 #: ../mod/admin/main.inc:699
 msgctxt "Admin-ChangeUserRole-TextField"
 msgid "UserID"
-msgstr ""
+msgstr "පරිශීලක අංකය"
 
 #: ../mod/admin/main.inc:700
 msgctxt "Admin-ChangeUserRole-TextField"
 msgid "Username"
-msgstr ""
+msgstr "පරිශීලක නාමය"
 
 #: ../mod/admin/main.inc:701
 msgctxt "Admin-ChangeUserRole-TextField"
 msgid "Real Name"
-msgstr ""
+msgstr "සත්‍ය නාමය"
 
 #: ../mod/admin/main.inc:728
 msgctxt "Admin-ChangeUserRole-Link"
 msgid "assign"
-msgstr ""
+msgstr "පැවරීම"
 
 #: ../mod/inw/conf.inc:17
 msgid "Search for a Person"
-msgstr ""
+msgstr "පුද්ගල සෙවීම"
 
 #: ../mod/rez/xajax.inc:81 ../mod/rez/xajax.inc:173 ../mod/rez/xajax.inc:534
 #: ../mod/rez/xajax.inc:640 ../mod/rez/xajax.inc:641
 msgctxt "ResourcePages-Table-Header"
 msgid "Page #"
-msgstr ""
+msgstr "පිටුව #"
 
 #: ../mod/rez/xajax.inc:82 ../mod/rez/xajax.inc:174 ../mod/rez/xajax.inc:535
 #: ../mod/rez/xajax.inc:642 ../mod/rez/xajax.inc:643
@@ -891,7 +891,7 @@ msgstr ""
 #: ../mod/rez/xajax.inc:83
 msgctxt "ResourcePages-Table-Header"
 msgid "Visibility"
-msgstr ""
+msgstr "දෘශ්‍යතාව"
 
 #: ../mod/rez/xajax.inc:84 ../mod/rez/xajax.inc:536 ../mod/rez/xajax.inc:644
 #: ../mod/rez/xajax.inc:645
