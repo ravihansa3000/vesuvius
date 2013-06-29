@@ -18,5 +18,5 @@
 $conf['mod_crs_name'] = _t("Client");
 // Defines this module's main menu priority
 $conf['mod_crs_menuorder'] = 100;
-//$conf['mod_crs_dependencies'] = "fms";
+$conf['mod_crs_dependencies'] = "fms";
 $conf['mod_crs_version'] = "1.0.5";
