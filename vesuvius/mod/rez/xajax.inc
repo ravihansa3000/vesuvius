@@ -597,6 +597,7 @@ function rez_perform_delete($page_id, $locale, $confirm) {
 function rez_perform_translate($page_id, $locale) {
 	global $global;
 
+<<<<<<< TREE
 	// get page info
 	$q = "
 	select *
@@ -637,6 +638,48 @@ function rez_perform_translate($page_id, $locale) {
 	$editMainHtml =
 	"<form id=\"editPageForm\" name=\"editPageForm\">
 	<table class=\"mainTable\">
+=======
+	// get page info
+	$q = "
+	select *
+	from rez_pages
+	where rez_page_id = '".$page_id."'
+	and rez_locale = '".$locale."';
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) {
+		daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "rez translate 1");
+	}
+	$original_row = $result->FetchRow();
+
+	if ( isset($_SESSION['rez_locale']) ) {
+		$rez_locale = $_SESSION['rez_locale'];
+	}
+	else $rez_locale = shn_rez_getlocale();
+
+	$q = "
+	select *
+	from rez_pages
+	where rez_page_id = '".$page_id."'
+	and rez_locale = '".$rez_locale."';
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) {
+		daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "rez translate 1");
+	}
+	$row = $result->FetchRow();
+	if((int)$row['rez_page_id'] < 0) {
+		$sistim = "SYSTEM";
+	} else {
+		$sistim = "";
+	}
+
+	$pageIdText = $sistim." ". abs($page_id);
+
+	$editMainHtml =
+	"<form id=\"editPageForm\" name=\"editPageForm\">
+	<table class=\"mainTable\">
+>>>>>>> MERGE-SOURCE
 	<tr><td class=\"mainRowOdd\" style=\"text-align: center; text-weight: bold;\">"._t("ResourcePages-Table-Header|Page #")."</td><td class=\"mainRowOdd\"> &nbsp; <b>".$pageIdText."</b></td>
 	<td class=\"mainRowOdd\" style=\"text-align: center; text-weight: bold;\">"._t("ResourcePages-Table-Header|Page #")."</td><td class=\"mainRowOdd\"> &nbsp; <b>".$pageIdText."</b></td></tr>
 	<tr><td class=\"mainRowEven\" style=\"text-align: center; text-weight: bold;\">"._t("ResourcePages-Table-Header|Menu/Page Title")."</td><td class=\"mainRowEven\"><input name=\"old_menuTitle\" type=\"text\" id=\"menuTitle\" value=\"".$original_row['rez_menu_title']."\" onchange=\"window.rezPageSaved = false;\" size=\"64\" /></td>
@@ -644,12 +687,21 @@ function rez_perform_translate($page_id, $locale) {
 	<tr><td class=\"mainRowOdd\" style=\"text-align: center; text-weight: bold;\">"._t("ResourcePages-Table-Header|Locale")."</td><td class=\"mainRowOdd\"><input name=\"old_slocale\" type=\"text\" id=\"locale\" value=\"".$original_row['rez_locale']."\" onchange=\"window.rezPageSaved = false;\" size=\"64\" /></td>
 	<td class=\"mainRowOdd\" style=\"text-align: center; text-weight: bold;\">"._t("ResourcePages-Table-Header|Locale")."</td><td class=\"mainRowOdd\"><input name=\"locale\" type=\"text\" id=\"locale\" value=\"".$rez_locale."\" onchange=\"window.rezPageSaved = false;\" size=\"64\" /></td></tr>
 	<tr><td class=\"mainRowEven\" style=\"text-align: center; text-weight: bold;\">"._t("ResourcePages-Table-Header|Last Modified")."</td><td class=\"mainRowEven\"> &nbsp; ".$original_row['rez_timestamp']."</td>
+<<<<<<< TREE
 	<td class=\"mainRowEven\" style=\"text-align: center; text-weight: bold;\">"._t("ResourcePages-Table-Header|Last Modified")."</td><td class=\"mainRowEven\"> &nbsp; ".$row['rez_timestamp']."</td></tr>
 	</table>
 	<div class=\"wysiwyg\"><table width=\"100%\" border=\"0\" overflow: scroll>"
 	."<tr><td width=\"50%\" ><div id=\"original\" style=\"height: 100%; width: 100%\">".$original_row['rez_content']."</div></td>"
 	."<td width=\"50%\" style=\"vertical-align:top;\" ><textarea name=\"pageContent\" onchange=\"window.rezPageSaved = false;\" id=\"pageContent\" style=\"height: 300px; width: 90%; overflow: scroll\">".$row['rez_content']."</textarea></td></tr>"
 	."</table></div>
+=======
+	<td class=\"mainRowEven\" style=\"text-align: center; text-weight: bold;\">"._t("ResourcePages-Table-Header|Last Modified")."</td><td class=\"mainRowEven\"> &nbsp; ".$row['rez_timestamp']."</td></tr>
+	</table>
+	<div class=\"wysiwyg\"><table width=\"100%\" border=\"0\">"
+	."<tr><td width=\"50%\"><div id=\"original\" style=\"height: 100%; width: 100%;\">".$original_row['rez_content']."</div></td>"
+	."<td width=\"50%\" style=\"vertical-align:top;\"><textarea name=\"pageContent\" onchange=\"window.rezPageSaved = false;\" id=\"pageContent\" style=\"height: 300px; width: 90%;\">".$row['rez_content']."</textarea></td></tr>"
+	."</table></div>
+>>>>>>> MERGE-SOURCE
 	</form>";
 	$pageControlHtml = '
 	<input class="styleTehButton" type="button" onclick="javascript:  window.rezPageSaved = true; if(nicEditors.editors.length>0){nicEditors.findEditor(\'pageContent\').saveContent();} rez_perform_save('.$page_id.', xajax.getFormValues(\'editPageForm\'));" value="'._t("ResourcePages-EditForm-Button|Save and Publish Changes").'">
