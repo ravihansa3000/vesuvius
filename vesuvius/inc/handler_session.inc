@@ -31,7 +31,17 @@ switch($user_data["result"]) {
 		$global['module']   = isset($conf['default_module']) ? $conf['default_module'] : "home";
 		$global['action']   = isset($conf['default_action']) ? $conf['default_action'] : "default";
 		$global['previous'] = true;
+		$uid=$user_data['user_id'];
+		$p= "update users set ntime=now() where user_id='".$uid."';";
+		$r=mysql_query($p);
+		if(mysql_num_rows($r>0))
+		{
+			echo "success";
+		}
+
 		shn_session_change($user_data);
+		
+
 		break;
 
 	case LOGGEDOUT:
@@ -52,7 +62,7 @@ switch($user_data["result"]) {
 session_update_activity();
 
 if(isset($user_data["doHeader"]) && $user_data["doHeader"] === true) {
-	if($user_data["headerLocation"] == "login" || $user_data["headerLocation"] = "auth" || $user_data["headerLocation"] == "index.php?doLogin=1" || $user_data["headerLocation"] == "index.php?doLogin=2") {
+	if($user_data["headerLocation"] == "login" || $user_data["headerLocation"] = "auth" || $user_data["headerLocation"] == "index.php?doLogin=1" || $user_data["headerLocation"] == "index.php?doLogin=2"|| $user_data["headerLoction"]=="demoauth") {
 		header("Location: settings");
 	} else {
 		header("Location: ".$_POST['return']);

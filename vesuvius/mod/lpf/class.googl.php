@@ -22,7 +22,7 @@ class goo_gl{
 	function goo_gl($url){
 
 		$this->url = $url;
-
+        if(function_exists('curl_init')){
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, 'http://goo.gl/api/url');
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
@@ -33,7 +33,7 @@ class goo_gl{
 		if($saida){
 			$json = json_decode($saida);
 			$this->resul = isset($json->short_url) ? $json->short_url : null;
-		}
+		}}
 	}
 
 	//show url shorted by goo.gl

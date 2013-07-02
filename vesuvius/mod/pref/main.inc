@@ -534,6 +534,8 @@ function shn_pref_signup($title="Create Your Account", $mod="pref", $act="signup
 		}
 	}
 
+	
+
 	echo "<div id=\"formcontainer\">";
 	shn_form_fopen2("register2", null);
 	shn_form_fsopen("Account Details");

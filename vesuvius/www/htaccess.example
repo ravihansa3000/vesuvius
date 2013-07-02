@@ -8,13 +8,13 @@ ErrorDocument 404 index.php
 DirectoryIndex index.php
 
 ##### Turn on mod_rewrite to capture the shortname from a url and pass it on as a url parameter
-RewriteEngine On
+  RewriteEngine On
 
 ##### Only use 1 of the following RewriteBase options ~ comment the other out
 ##### for when Sahana is installed on a virtual host at root level ie. http://domain.com/
 #RewriteBase /
-##### for when Sahana is installed in a user homedir ie. http://domain.gov/~gmiernicki/sahanaDev/www/
-RewriteBase /public_html/vesuvius/vesuvius/www/
+##### for when Sahana is installed in a user homedir ie. http://localhost/www
+RewriteBase /var/www/project_vesu/vesuvius/vesuvius/www/
 
 ##### make mod_rewrite skip the subsequent rules if the file or folder exists already (the number must be incremented each time a new rule is added below)
 RewriteCond %{REQUEST_FILENAME} -d [OR]

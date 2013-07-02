@@ -918,7 +918,7 @@ function shn_form_still_camera($act = null, $mod = null) {
  *                  'custom' => array(
  *                    array('value' => 'button text1', 'submit_opts' => 'name = "post value1"'),
  *                    array('value' => 'button text2', 'submit_opts' => 'name = "post value2"')))
- *
+ *button_s
  * @param <type> $button_set
  */
 function shn_form_submit_set($button_set = array('cancel' => true, 'back' => true, 'next' => true)) {

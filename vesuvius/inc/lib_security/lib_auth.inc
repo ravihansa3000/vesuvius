@@ -100,9 +100,10 @@ function shn_auth_activate_user($pid=null,$uname=null) {
 		if($uname==null) {
 			return false;
 		} else {
+			$time = now();
 			$sql = "
 				update users
-				set status='active'
+				set status='active', ntime ='".$time."'' 
 				where user_name='{$uname}';
 			";
 		}
@@ -275,8 +276,8 @@ function shn_auth_add_user($given_name, $family_name, $user_name, $user_password
 		}
 
 		$q = "
-			INSERT INTO users(p_uuid, password, changed_timestamp, user_name, salt, status, confirmation)
-			values('".$pid."','".$stored_password."', ".$time." ,'".mysql_real_escape_string($user_name)."', '".$salt."', '".$status."', '".$confirmation."');
+			INSERT INTO users(p_uuid, password, changed_timestamp, user_name, salt, status, confirmation,ctime)
+			values('".$pid."','".$stored_password."', ".$time." ,'".mysql_real_escape_string($user_name)."', '".$salt."', '".$status."', '".$confirmation."', now());
 		";
 		$res = $db->Execute($q);
 
@@ -646,6 +647,7 @@ function shn_authenticate_user() {
 		$user_data["headerLocation"] = "settings";
 		return $user_data;
 
+
 	// handle a normal login
 	} elseif($_GET['doLogin'] == "1") {
 
@@ -666,9 +668,11 @@ function shn_authenticate_user() {
 			$user_data["result"] = LOGINFAILED;
 			return $user_data;
 		} else {
+			
 			$status = $res->fields["status"];
 			$salt = $res->fields["salt"];
 			$uid = $res->fields["p_uuid"];
+
 		}
 		if($status == 'pending') {
 			add_error("Your account is not yet active. Please refer to the registration email you have recieved to activate it.");
@@ -723,6 +727,12 @@ function shn_authenticate_user() {
 		} else {
 			if($status == 'try1' || $status == 'try2' || $status == 'try3' || $status == 'active') {
 				shn_auth_activate_user($uid);
+				$q= "update users set ntime=now() where user_id='".$uid."';";
+				$r=mysql_query($q);
+				if(mysql_num_rows($r>0))
+				{
+					echo "success";
+				}
 			}
 
 			$e = explode("/", $_POST['return']);
@@ -732,6 +742,7 @@ function shn_authenticate_user() {
 			$user_data["result"] = LOGGEDIN;
 			$user_data["doHeader"] = true;
 			$user_data["headerLocation"] = $f;
+
 			return $user_data;
 		}
 	}

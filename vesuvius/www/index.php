@@ -252,7 +252,7 @@ function shn_main_front_controller() {
 
 	if($stream == null) {
 
-		if((($global['action'] == 'signup2') || ($global['action'] == 'signup') || ($global['action'] == 'forgotPassword') || ($global['action'] == 'loginForm')) && ($global['module'] = 'pref')) {
+		if((($global['action'] == 'signup2') || ($global['action'] == 'signup') || ($global['action'] == 'forgotPassword') || ($global['action'] == 'loginForm')) && (($global['module'] == 'pref')||($global['module']== 'demo'))) {
 			if(shn_acl_is_signup_enabled()) {
 				$module_function();
 			}
@@ -412,6 +412,7 @@ function shn_main_plus_register() {
 	global $global;
 	require_once($global['approot'].'mod/plus/register.php');
 }
+
 
 
 

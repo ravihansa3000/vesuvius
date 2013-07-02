@@ -536,7 +536,7 @@ function rez_perform_edit($page_id, $locale) {
 	<tr><td class=\"mainRowOdd\" style=\"text-align: center; text-weight: bold;\">"._t("ResourcePages-Table-Header|Locale")."</td><td class=\"mainRowOdd\"><input name=\"locale\" type=\"text\" id=\"locale\" value=\"".$row['rez_locale']."\" onchange=\"window.rezPageSaved = false;\" size=\"64\" /></td></tr>
 	<tr><td class=\"mainRowEven\" style=\"text-align: center; text-weight: bold;\">"._t("ResourcePages-Table-Header|Last Modified")."</td><td class=\"mainRowEven\"> &nbsp; ".$row['rez_timestamp']."</td></tr>
 	</table>
-	<div class=\"wysiwyg\"><textarea name=\"pageContent\" onchange=\"window.rezPageSaved = false;\" id=\"pageContent\" style=\"height: 300px; width: 100%;\">".$row['rez_content']."</textarea></div>
+	<div class=\"wysiwyg\"><textarea name=\"pageContent\" onchange=\"window.rezPageSaved = false;\" id=\"pageContent\" style=\"height: 150px; width: 100%; overflow -y: auto;\">".$row['rez_content']."</textarea></div>
 	</form>";
 
 	$editControlHtml = '
@@ -552,7 +552,7 @@ function rez_perform_edit($page_id, $locale) {
 	$global['xajax_res']->addAssign('rezControl','style.opacity','1.0');
 	$global['xajax_res']->addAssign('rezControl','innerHTML',$editControlHtml);
 
-	$global['xajax_res']->addScript('area2 = new nicEditor({fullPanel : true}).panelInstance(\'pageContent\'); document.getElementById(\'wysiwyg\').disabled = true;');
+	$global['xajax_res']->addScript('area2 = new nicEditor({fullPanel : true}).panelInstance(\'pageContent\'); document.getElementById(\'wysiwyg\').disabled = true;');    
 
 	return $global['xajax_res']->getXML();
 }
@@ -646,9 +646,9 @@ function rez_perform_translate($page_id, $locale) {
 	<tr><td class=\"mainRowEven\" style=\"text-align: center; text-weight: bold;\">"._t("ResourcePages-Table-Header|Last Modified")."</td><td class=\"mainRowEven\"> &nbsp; ".$original_row['rez_timestamp']."</td>
 	<td class=\"mainRowEven\" style=\"text-align: center; text-weight: bold;\">"._t("ResourcePages-Table-Header|Last Modified")."</td><td class=\"mainRowEven\"> &nbsp; ".$row['rez_timestamp']."</td></tr>
 	</table>
-	<div class=\"wysiwyg\"><table width=\"100%\" border=\"0\">"
-	."<tr><td width=\"50%\"><div id=\"original\" style=\"height: 100%; width: 100%;\">".$original_row['rez_content']."</div></td>"
-	."<td width=\"50%\"><textarea name=\"pageContent\" onchange=\"window.rezPageSaved = false;\" id=\"pageContent\" style=\"height: 300px; width: 90%;\">".$row['rez_content']."</textarea></td></tr>"
+	<div class=\"wysiwyg\"><table width=\"100%\" border=\"0\" overflow: scroll>"
+	."<tr><td width=\"50%\" ><div id=\"original\" style=\"height: 100%; width: 100%\">".$original_row['rez_content']."</div></td>"
+	."<td width=\"50%\" style=\"vertical-align:top;\" ><textarea name=\"pageContent\" onchange=\"window.rezPageSaved = false;\" id=\"pageContent\" style=\"height: 300px; width: 90%; overflow: scroll\">".$row['rez_content']."</textarea></td></tr>"
 	."</table></div>
 	</form>";
 	$pageControlHtml = '
@@ -673,6 +673,7 @@ function rez_perform_translate($page_id, $locale) {
 	$global['xajax_res']->addAssign('rezMain','innerHTML',$editMainHtml);
 	$global['xajax_res']->addAssign('rezControl','style.opacity','1.0');
 	$global['xajax_res']->addAssign('rezControl','innerHTML',$pageControlHtml);
+	$global['xajax_res']->addScript("setTimeout('e = document.getElementById(\'rezLog\'); e.scrollTop = e.scrollHeight+1000;', 500);");
 
 	$global['xajax_res']->addScript('area2 = new nicEditor({fullPanel : true}).panelInstance(\'pageContent\'); document.getElementById(\'wysiwyg\').disabled = true;');
 

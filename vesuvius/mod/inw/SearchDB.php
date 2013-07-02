@@ -294,7 +294,7 @@ class SearchDB {
 								'years_old'          => $row["years_old"],
 								'minAge'             => $row["minAge"],
 								'maxAge'             => $row["maxAge"],
-								'statusSahanaUpdated'=> $row["updated"],
+								'statusSahanaUpdated'=> '2013-05-05,16:53:35',
 								'last_seen'          => htmlspecialchars($row["last_seen"]),
 								'comments'           => htmlspecialchars(strip_tags($row["comments"])),
 								'gender'             => $row["opt_gender"],

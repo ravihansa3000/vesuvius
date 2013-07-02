@@ -1866,7 +1866,7 @@ CREATE TABLE `sys_group_to_module` (
 
 LOCK TABLES `sys_group_to_module` WRITE;
 /*!40000 ALTER TABLE `sys_group_to_module` DISABLE KEYS */;
-INSERT INTO `sys_group_to_module` (`group_id`, `module`, `status`) VALUES (1,'admin','enabled'),(1,'arrive','enabled'),(1,'eap','enabled'),(1,'em','enabled'),(1,'ha','enabled'),(1,'home','enabled'),(1,'inw','enabled'),(1,'mpres','enabled'),(1,'pfif','enabled'),(1,'plus','enabled'),(1,'pop','enabled'),(1,'pref','enabled'),(1,'report','enabled'),(1,'rez','enabled'),(1,'stat','enabled'),(1,'xst','enabled'),(2,'eap','enabled'),(2,'home','enabled'),(2,'inw','enabled'),(2,'pref','enabled'),(2,'report','enabled'),(2,'rez','enabled'),(2,'xst','enabled'),(3,'eap','enabled'),(3,'home','enabled'),(3,'inw','enabled'),(3,'report','enabled'),(3,'rez','enabled'),(3,'xst','enabled'),(5,'eap','enabled'),(5,'home','enabled'),(5,'inw','enabled'),(5,'pref','enabled'),(5,'report','enabled'),(5,'rez','enabled'),(5,'stat','enabled'),(5,'tp','enabled'),(5,'xst','enabled'),(6,'eap','enabled'),(6,'em','enabled'),(6,'ha','enabled'),(6,'home','enabled'),(6,'inw','enabled'),(6,'pref','enabled'),(6,'report','enabled'),(6,'rez','enabled'),(6,'stat','enabled'),(6,'tp','enabled'),(6,'xst','enabled'),(7,'eap','enabled'),(7,'home','enabled'),(7,'inw','enabled'),(7,'pref','enabled'),(7,'report','enabled'),(7,'rez','enabled'),(7,'stat','enabled'),(7,'xst','enabled');
+INSERT INTO `sys_group_to_module` (`group_id`, `module`, `status`) VALUES (1,'admin','enabled'),(1,'arrive','enabled'),(1,'eap','enabled'),(1,'em','enabled'),(1,'ha','enabled'),(1,'home','enabled'),(1,'inw','enabled'),(1,'mpres','enabled'),(1,'pfif','enabled'),(1,'plus','enabled'),(1,'pop','enabled'),(1,'pref','enabled'),(1,'report','enabled'),(1,'rez','enabled'),(1,'stat','enabled'),(1,'xst','enabled'),(1,'demo', 'enabled'),(2,'eap','enabled'),(2,'home','enabled'),(2,'inw','enabled'),(2,'pref','enabled'),(2,'report','enabled'),(2,'rez','enabled'),(2,'xst','enabled'),(3,'eap','enabled'),(3,'home','enabled'),(3,'inw','enabled'),(3,'report','enabled'),(3,'rez','enabled'),(3,'xst','enabled'),(5,'eap','enabled'),(5,'home','enabled'),(5,'inw','enabled'),(5,'pref','enabled'),(5,'report','enabled'),(5,'rez','enabled'),(5,'stat','enabled'),(5,'tp','enabled'),(5,'xst','enabled'),(6,'eap','enabled'),(6,'em','enabled'),(6,'ha','enabled'),(6,'home','enabled'),(6,'inw','enabled'),(6,'pref','enabled'),(6,'report','enabled'),(6,'rez','enabled'),(6,'stat','enabled'),(6,'tp','enabled'),(6,'xst','enabled'),(7,'eap','enabled'),(7,'home','enabled'),(7,'inw','enabled'),(7,'pref','enabled'),(7,'report','enabled'),(7,'rez','enabled'),(7,'stat','enabled'),(7,'xst','enabled');
 /*!40000 ALTER TABLE `sys_group_to_module` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1970,6 +1970,7 @@ CREATE TABLE `users` (
   `profile_picture` varchar(256) default NULL COMMENT 'url to profile pic',
   `locale` varchar(8) default NULL COMMENT 'language locale',
   `verified_email` tinyint(1) default NULL COMMENT 'true if email verified',
+  `ctime` datetime NOT NULL,
   PRIMARY KEY  (`user_id`),
   UNIQUE KEY `user_name` (`user_name`),
   KEY `p_uuid` (`p_uuid`),
