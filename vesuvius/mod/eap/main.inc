@@ -8,7 +8,7 @@
  * @link         https://pl.nlm.nih.gov/about
  * @link         http://sahanafoundation.org
  * @license	 http://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License (LGPL)
- * @lastModified 2012.0119
+ * @lastModified 2012.1022
  */
 
 global $global;
@@ -318,32 +318,30 @@ function emailUpdates() {
 	if($revisionCount > 0) {
 
 		$p = new pop();
-		$subject  = "People Locator update for ".$global['full_name'];
+		$subject  = "NLM People Locator update for someone you reported or are following";
 		$bodyHTML = "
 			<br>
-			Changes have been made to the details of the person record we have for <b>".$global['full_name']."</b>.<br>
+			Changes have been made to the details of a person you have reported or are following.<br>
 		";
 		$bodyAlt = "
 			\n
-			Changes have been made to the details of the person record we have for ".$global['full_name'].".\n
+			Changes have been made to the details of a person you have reported or are following.\n
 		";
 
 		$bodyHTML .= "
 			<br>
 			<br>
-			You can view the page for this person here: <a href=\"".$global['googl']."\">".$global['googl']."</a><br>
+			You can view the page for this person here: <a href=\"".makePersonUrl($global['uuid'])."\">".makePersonUrl($global['uuid'])."</a><br>
 			<br>
 			<br>
 			<i>If you would like to unsubscribe from these email alerts, click the button to un-follow this person from the link provided above.</i><br>
 			<br>
-			<br>
-			<br>
-			- People Locator
+			<img src=\"http://goo.gl/BqfCv\">
 		";
 		$bodyAlt .= "
 			\n
 			\n
-			You can view the page for this person here: ".$global['googl']."\n
+			You can view the page for this person here: ".makePersonUrl($global['uuid'])."\n
 			\n
 			\n
 			If you would like to unsubscribe from these email alerts, click the button to un-follow this person from the link provided above.\n
@@ -417,6 +415,8 @@ function saveRevision($table, $column, $name, $oldValue, $newValue) {
 		$new = "'".(string)mysql_real_escape_string($newValue)."'";
 	}
 
+	// we stopped using on duplicate b/c it causes problems with triggers!
+	/*
 	// save the revision
 	$q = "
 		INSERT INTO ".$table." (p_uuid, ".$column.")
@@ -425,6 +425,36 @@ function saveRevision($table, $column, $name, $oldValue, $newValue) {
 	";
 	$r = $global['db']->Execute($q);
 	if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit save revision 1 ((".$q."))"); }
+	*/
+	
+	$q = "
+		SELECT COUNT(*)
+		FROM ".$table."
+		WHERE p_uuid = '".$global['uuid']."';
+	";
+	$r = $global['db']->Execute($q);
+	if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit revise 0a ((".$q."))");	}
+	$row = $r->FetchRow();
+	
+	// if row exists, update
+	if((int)$row['COUNT(*)'] > 0) {
+		$q2 = "
+			UPDATE ".$table."
+			SET ".$column." = ".$new."
+			WHERE p_uuid = '".$global['uuid']."';
+		";
+		$r2 = $global['db']->Execute($q2);
+		if($r2 === false) { aoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit save revision 0b ((".$q2."))"); }
+		
+	// no row exists, so insert instead
+	} else {
+		$q2 = "
+			INSERT INTO ".$table." (p_uuid, ".$column.")
+			VALUES ('".$global['uuid']."', ".$new.");
+		";
+		$r2 = $global['db']->Execute($q2);
+		if($r2 === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit save revision 0c ((".$q2."))"); }	
+	}
 
 	// note the revision
 	$q = "
@@ -568,6 +598,13 @@ function shn_eap_edit() {
 
 	shn_eap_findRights();
 
+	echo "
+	<script type=\"text/javascript\" src=\"res/js/jquery.js\"></script>
+	<script type=\"text/javascript\" src=\"res/js/jquery.qrcode.min.js\"></script>
+	<script type=\"text/javascript\" src=\"res/js/jquery.lightbox-0.5.js\"></script>
+	<link rel=\"stylesheet\" type=\"text/css\" href=\"res/jquery.lightbox-0.5.css\" media=\"screen\" />
+	";
+
 	// if the person record is assigned to a private event and the user does not have permission to view it...
 	if(!$global['permissionToView']) {
 		echo "
@@ -584,7 +621,7 @@ function shn_eap_edit() {
 		WHERE p_uuid = '".$global['uuid']."'
 		AND (expiry_date > NOW()
 		OR expiry_date is null
-		OR expiry_date = '0000-01-01 00:00:00');
+		OR expiry_date = '2000-01-01 01:01:01');
 	";
 	$r   = $global['db']->Execute($q);
 	if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit edit 1 ((".$q."))"); }
@@ -664,7 +701,7 @@ function shn_eap_edit() {
 			<form>
 				<fieldset id=\"editHeader\">
 					<legend>Person Record</legend>
-					<div id=\"moveShitHere\">ok</div>
+					<div id=\"moveShitHere\"> </div>
 	";
 
 
@@ -834,16 +871,16 @@ function shn_eap_edit() {
 	}
 
 
-
+	global $conf;
 	// if the origin of the record is on this server, show a combined origin id / origin url
 	if(preg_match("+".$conf['base_uuid']."+", $global['uuid']) > 0) {
 		echo "
 					<label><b>Origin ID</b> </label>
-					<input type=\"text\" value=\"".$global['uuid']."\" size=\"96\" class=\"nonedit2 public\" READONLY>
+					<input style=\"float: left;\" type=\"text\" value=\"".$global['uuid']."\" size=\"96\" class=\"nonedit2 public\" READONLY>
 					<br>
 
 					<label><b>Origin URL</b> </label>
-					<div class=\"originUrl\"><a href=\"https://".$global['uuid']."\">https://".$global['uuid']."</a></div>
+					<div class=\"originUrl\"><a href=\"".$conf['https'].$global['uuid']."\">".$conf['https'].$global['uuid']."</a></div>
 					<br>
 		";
 
@@ -893,12 +930,92 @@ function shn_eap_edit() {
 
 
 	// IMAGES ////////////////////////////////////////////////////////////////////////////////////
+
+	// figure out if the person has any images ...
+	$q  = "
+		SELECT COUNT(*)
+		FROM image
+		WHERE p_uuid = '".$global['uuid']."'
+    AND note_id = '0';
+	";
+	$r   = $global['db']->Execute($q);
+	if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit edit 13 ((".$q."))"); }
+	$row = $r->FetchRow();
+	$num = (int)$row['COUNT(*)'];
+
+	$imagesFull  = array();
+	$imagesThumb = array();
+	$primary     = array();
+
+	// set default silhouettes
+
 	$boy     = "res/img/s0boy.png";
 	$girl    = "res/img/s1girl.png";
 	$man     = "res/img/s2man.png";
 	$woman   = "res/img/s3woman.png";
 	$unknown = "res/img/s4unknown.png";
 
+
+	// add a report abuse button
+	echo '<div style="clear:both;"></div>';
+	echo '<div style="float: right;" id="edit2abuse" onclick="abuse(\''.$global['uuid'].'\');">report abuse <img src="res/img/flag_hover.png"></div>';
+	echo '
+		<script>
+			function abuse(uuid) {
+				window.location.href = "'.$conf['https'].$conf['base_uuid']."edit?puuid=".urlencode($global['uuid']).'&abuse=1";
+			}
+		</script>
+	';
+	
+	// handle abuse requests
+	if(isset($_GET['abuse']) && (int)$_GET['abuse'] == 1) {
+		add_confirmation("Your request to report this record as abuse has been sent to our site staff.");
+		
+		$ip = isset($_SERVER['REMOTE_ADDR']) ? "'".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."'" : "0.0.0.0";
+		$q = "
+			SELECT *
+			FROM `abuse_queue`
+			WHERE p_uuid = '".mysql_real_escape_string($global['uuid'])."'
+			AND ip = ".$ip.";
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "reportAbuse via EAP 1 ((".$q."))"); }
+		if($result != null && !$result->EOF) {
+			$skipAbuse = true;
+		} else {
+			$skipAbuse = false;
+		}
+
+		// ok, so its a valid record and the user hasn't already reported it, so add it to the queue
+		if(!$skipAbuse) {
+			
+			// figure out of anonymous or logged in user
+			if(($_SESSION['logged_in'] != 1) || ($_SESSION['user'] == 'Anonymous')) {
+				$identifier = 'anonymous';
+			} else {
+				$identifier = $_SESSION['user'];
+			}
+			
+			$q = "
+				INSERT INTO `abuse_queue` (
+					`p_uuid`,
+					`identifier`,
+					`ip`
+				) VALUES (
+					'".mysql_real_escape_string((string)$global['uuid'])."',
+					'".$identifier."',
+					".$ip."
+				);
+			";
+			$result = $global['db']->Execute($q);
+			if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "reportAbuse via EAP 2 ((".$q."))"); }
+		}
+	}
+
+	
+	// begin output
+	echo '<div style="clear:both;"></div>';	
+	echo '<hr>';
 	echo "
 		<div class=\"form-container\">
 			<form method=\"post\" id=\"editPublic\" name=\"editPublic\" action=\"edit?puuid=".urlencode($global['uuid'])."\" enctype=\"multipart/form-data\">
@@ -919,10 +1036,10 @@ function shn_eap_edit() {
 			$error    = $_FILES["add_image"]["error"];
 			$size     = $_FILES["add_image"]["size"];
 
-			if($size > 1000000) {
-				add_error("Uploaded file is too large. Please upload an image file smaller than 1MB.");
+			if($size > 10000000) {
+				add_error("Uploaded file is too large. Please upload an image file smaller than 10 MB.");
 
-			} elseif($type == "image/gif" || $type == "image/jpeg" || $type == "image/png") {
+			} elseif($type == "image/gif" || $type == "image/jpeg" || $type == "image/png" || $type == "image/x-png" || $type == "image/pjpeg") {
 
 				if ($_FILES["add_image"]["error"] > 0) {
 					echo "Return Code: " . $_FILES["file"]["error"] . "<br />";
@@ -984,6 +1101,13 @@ function shn_eap_edit() {
 					chmod($path."full".$ext,  0777);
 					chmod($path."thumb".$ext, 0777);
 
+					// if the person has image(s) already, make this a secondary image, otherwise primary
+					if($num > 0) {
+						$principal = (int)0;
+					} else {
+						$principal = (int)1;
+					}
+
 					$q = "
 						INSERT INTO image (
 							image_id,
@@ -993,7 +1117,8 @@ function shn_eap_edit() {
 							image_width,
 							url,
 							url_thumb,
-							original_filename )
+							original_filename,
+							principal )
 						VALUES (
 							'".$image_id."',
 							'".$global['uuid']."',
@@ -1002,10 +1127,13 @@ function shn_eap_edit() {
 							'".$image_width."',
 							'".$url."',
 							'".$url_thumb."',
-							'".mysql_real_escape_string((string)$tmp_name)."' );
+							'".mysql_real_escape_string((string)$tmp_name)."',
+							".$principal." );
 					";
 					$result = $global['db']->Execute($q);
-					if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "eap insert image ((".$q."))"); }
+					if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "eap insert image ((".$q."))"); } else {
+						$num++; // we just added an image
+					}
 
 					add_confirmation("Your image has been uploaded successfully.");
 				}
@@ -1014,60 +1142,96 @@ function shn_eap_edit() {
 			}
 		}
 		echo '
-			<div id="eapUploadImage"><br>
-			Add an additional image to this record:<br><br><input type="file" name="add_image" id="add_image" /><br><br><input type="submit" name="UPLOAD" id="UPLOAD" value="UPLOAD" class="styleTehButton"/><br>&nbsp;
+			<div style="margin: 10px;" id="eapUploadImage">
+				<br>
+				Add an additional image to this record:<br>
+				<br>
+				<input type="file" name="add_image" id="add_image" onchange="enableUploadButton();" /><br>
+				<br>
+				<input type="submit" name="UPLOAD" id="UPLOAD" value="UPLOAD" class="styleTehButton" style="opacity: 0.2;" DISABLED/><br>
+				<br>
+				<i>Please save any changes to this record first<br>
+				before uploading a new image or they will be lost.</i>
+				<script>
+					function enableUploadButton() {
+						var d = document.getElementById("UPLOAD");
+						d.disabled = false;
+						d.style.opacity = "1";
+					}
+				</script>
 			</div>
+			<div style="clear: both;"></div>
 		';
 	}
 
 	// show all images
 
-	// figure out if the person has any images ...
-
-	$q  = "
-		SELECT COUNT(*)
-		FROM image
-		WHERE p_uuid = '".$global['uuid']."';
-	";
-	$r   = $global['db']->Execute($q);
-	if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit edit 13 ((".$q."))"); }
-	$row = $r->FetchRow();
-	$num = $row['COUNT(*)'];
-
-	$imagesFull  = array();
-	$imagesThumb = array();
-
+	$num = 0;
 	$q  = "
 		SELECT *
 		FROM image
-		WHERE p_uuid = '".$global['uuid']."';
+		WHERE p_uuid = '".$global['uuid']."'
+    AND note_id = '0';
 	";
 	$r   = $global['db']->Execute($q);
 	if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit edit 14 ((".$q."))"); }
 	while ($row = $r->FetchRow()) {
 		$imagesFull[]  = $row['url'];
 		$imagesThumb[] = $row['url_thumb'];
+
+		// find the first image tag for this image and call it the caption....
+		$caption = "";
+		$q2  = "
+			SELECT *
+			FROM image_tag
+			WHERE image_id = '".$row['image_id']."'
+			LIMIT 1;
+		";
+		$r2   = $global['db']->Execute($q2);
+		if($r2 === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit edit image tag 14b ((".$q2."))"); }
+		while(!$r2->EOF) {
+			$row2 = $r2->FetchRow();
+			$caption = $row2['tag_text'];
+		}
+
+		// formulate the image footer
+		if((int)$row['principal'] == 1) {
+			$primary[] = "PRIMARY IMAGE<br>".$caption;
+		} else {
+			$primary[] = "SECONDARY IMAGE<br>".$caption;
+		}
+		$num++;
 	}
 
-	for($i = 0; $i < $num; $i++) {
-		echo "
-					<a href=\"".$imagesFull[$i]."\" target=\"_blank\">
-						<div style=\"background-color: #fff; padding: 5px; border: 1px solid #777; float: left; text-align: center; margin-right: 10px; margin-bottom: 10px;\">
-							<img height=\"150\" src=\"".$imagesThumb[$i]."\">
-							<div style=\"clear:both;\"></div>
-							zoom
-						</div>
-					</a>
-		";
-	}
 	if($num == 0) {
 		echo '
 			<div style="float: left; margin-right: 10px;">
 			This record does not have an image associated with it.
 			</div>
 		';
-	}
+	} else {
+		echo "<span id=\"gallery\">";
+		for($i = 0; $i < $num; $i++) {
+			echo '
+				<a href="'.$imagesFull[$i].'" target="_blank" title="'.$primary[$i].'">
+					<div style="float: left; width: 200px !important; padding: 5px; margin: 10px; box-shadow: 1px 1px 8px rgba(127,127,127,0.5);">
+						<img style="margin-bottom: 5px;" width="200" src="'.$imagesThumb[$i].'">
+						<div style="clear: both;"></div>
+					<span style="color: #777 !important;">'.$primary[$i].'</span>
+					</div>
+				</a>
+			';
+		}
+		echo "</span>";
+		echo "
+			<script type=\"text/javascript\">
+			$(function() {
+				$('#gallery a').lightBox(); // Select all links in object with gallery ID
+			});
+			</script>
 
+		";
+	}
 
 	echo "
 				</fieldset>
@@ -1100,43 +1264,176 @@ function shn_eap_edit() {
 		";
 		$r   = $global['db']->Execute($q);
 		if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit edit 16 ((".$q."))"); }
-		$row = $r->FetchRow();
-		$url_mp3 = $row['url_resampled_mp3'];
-		$url_ogg = $row['url_resampled_ogg'];
+
 		echo "
-			<div class=\"form-container\" id=\"voiceNoteDiv\">
-				<form>
-					<fieldset id=\"editImages\">
-						<legend>Voice Note</legend>
-						<audio controls preload=\"auto\" autobuffer>
-							<source src=\"".$url_mp3."\" type=\"audio/mp3\" />
-							<source src=\"".$url_ogg."\" type=\"audio/ogg\" />
-							<br>Your browser doesn't support the HTML5 audio tag.<br>
-							<a href=\"".$url_mp3."\">Click here to download the media instead.</a>
-						</audio>
-					</fieldset>
-				</form>
-			</div>
+				<div style=\"clear:both;\"></div>
+				<hr>
+				<div class=\"form-container\" id=\"voiceNoteDiv\">
+					<form>
+						<fieldset id=\"editImages\">
+							<legend>Voice Note</legend>
 		";
 
-	// no voice note
-	}
-/* PL-286 begin
-	else {
+		while($row = $r->FetchRow()) {
+			$url_mp3 = $row['url_resampled_mp3'];
+			$url_ogg = $row['url_resampled_ogg'];
+			echo "
+							<audio controls preload=\"auto\" autobuffer>
+								<source src=\"".$url_mp3."\" type=\"audio/mp3\" />
+								<source src=\"".$url_ogg."\" type=\"audio/ogg\" />
+								<br>Your browser doesn't support the HTML5 audio tag.<br>
+								<a href=\"".$url_mp3."\">Click here to download the media instead.</a>
+							</audio>
+							<div style=\"height: 5px; clear:both;\"></div>
+			";
+		}
+
 		echo "
-			<div class=\"form-container\">
+						</fieldset>
+					</form>
+				</div>
+		";
+	}
+	// VOICENOTE END //////////////////////////////////////////////////////////////////////////////////
+	
+	
+	// MAP BEGIN //////////////////////////////////////////////////////////////////////////////////////
+	
+	
+	// get LAT-LON from reunite data first
+	$q  = "
+		SELECT *
+		FROM person_status
+		WHERE p_uuid = '".$global['uuid']."';
+	";
+	$r = $global['db']->Execute($q);
+	if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit edit 9999 ((".$q."))"); }
+	$row = $r->FetchRow();
+	$lat = $row['latitude'];
+	$lon = $row['longitude'];
+
+	$street2 = $row['street2'];
+	if($street2 != null && strlen(trim($street2)) > 0) {
+		$street2 = "<br> &nbsp; ".$row['street2'];
+	} else {
+		$street2 = "";
+	}
+	
+	$info = "<b>GPS: ".$lat.", ".$lon."</b><br> &nbsp; ".$row['street1'].$street2."<br> &nbsp; ".$row['city']."<br> &nbsp; ".$row['region']." ".$row['postal_code']."<br> &nbsp; ".$row['country'];
+
+	
+	//next try and get lat/lon for a hospital
+	if($lat == null && $lon == null && $person_to_hospital['hospital_uuid'] != null) {
+		
+		$q = "
+			SELECT *
+			FROM person_uuid p, hospital h
+			WHERE p.p_uuid = '".$global['uuid']."'
+			AND p.hospital_uuid = h.hospital_uuid ;
+		";
+		$r = $global['db']->Execute($q);
+		if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit edit 9998 ((".$q."))"); }
+		$row = $r->FetchRow();
+		
+		$lat = $row['latitude'];
+		$lon = $row['longitude'];
+
+		$street2 = $row['street2'];
+		if($street2 != null && strlen(trim($street2)) > 0) {
+			$street2 = "<br> &nbsp; ".$row['street2'];
+		} else {
+			$street2 = "";
+		}
+				
+		$info = "<b>GPS: ".$lat.", ".$lon."</b><br> &nbsp; ".$row['name']."<br> &nbsp; ".$row['street1'].$street2."<br> &nbsp; ".$row['city']."<br> &nbsp; ".$row['region']." ".$row['postal_code']."<br> &nbsp; ".$row['country'];
+	}
+	
+
+	// valid point?
+	if($lat != null && $lon != null && (float)$lat > -90 && (float)$lat < 90 && (float)$lon > -90 && $lon < 90) {
+		
+		
+		global $conf;
+		if(isset($conf['gmaps_api_string'])) {
+			echo $conf['gmaps_api_string'];
+		} else {
+			echo '<script type="text/javascript" src="http://maps.google.com/maps/api/js?v=3&sensor=true"></script>';
+		}
+		
+		
+		echo "
+			<div style=\"clear:both;\"></div>
+			<hr>
+			<div class=\"form-container\" id=\"locationDiv\" style=\"width: 100%;\">
 				<form>
 					<fieldset id=\"editImages\">
-						<legend>Voice Note</legend>
-						No voice note.
+						<legend>Last Known Location</legend>
+		";
+		
+		echo '
+			<div id="mapCanvas" style="width: 600px; height: 500px;"></div>
+		';
+		
+		echo "
+
+<script>
+		
+// Google Maps junx
+
+var latitude = '".$lat."';
+var longitude = '".$lon."';
+var map;
+var marker;
+
+var latlng = new google.maps.LatLng(latitude, longitude);
+var config = {
+	zoom: 12,
+	center: latlng,
+	disableDefaultUI: true,
+	navigationControl: false,
+	navigationControlOptions: {
+		style: google.maps.NavigationControlStyle.ZOOM_PAN
+	},
+	zoomControl: true,
+	zoomControlOptions: {
+		style: google.maps.ZoomControlStyle.LARGE
+	},
+	mapTypeControl: false,
+	mapTypeId: google.maps.MapTypeId.ROADMAP,
+	draggable: false,
+	disableDoubleClickZoom: true,
+	panControl: false,
+	scrollwheel: false,
+	scaleControl: false	
+};
+map = new google.maps.Map(document.getElementById('mapCanvas'), config);
+
+marker = new google.maps.Marker({
+	map: map,
+	draggable: false,
+});
+
+var info = new google.maps.InfoWindow( {
+    content: '".$info."'
+});
+
+info.open(map, marker);
+
+google.maps.event.addListener(marker, 'click', function() { info.open(map, marker); });
+
+marker.setPosition(latlng);
+map.setCenter(latlng);
+
+</script>
+		";
+		
+		echo "
 					</fieldset>
 				</form>
 			</div>
 		";
-	}
-// PL-286 end
-*/
-	// VOICENOTE END //////////////////////////////////////////////////////////////////////////////////
+	}	
+	// MAP END ////////////////////////////////////////////////////////////////////////////////////////
 
 
 	// LOAD PUBLIC DATA ///////////////////////////////////////////////////////////////////////////////
@@ -1244,17 +1541,20 @@ function shn_eap_edit() {
 			$r = $global['db']->Execute($q);
 			if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit edit 18b ((".$q."))"); }
 			$checkcheck  = $r->FetchRow();
-			if($checkcheck['expiry_date'] == "0000-01-01 00:00:00") {
+			if($checkcheck['expiry_date'] == "2000-01-01 01:01:01") {
 				$global['makeStaticPfifNote'] = true;
 				$person_uuid['expiry_date'] = updateExpiryDate();
 			}
 
 			$editGivenName     = trim($_POST['given_name']);
 			$editFamilyName    = trim($_POST['family_name']);
-			$editAge           = trim($_POST['age']);
-			$editMinAge        = trim($_POST['age_lower']);
-			$editMaxAge        = trim($_POST['age_upper']);
-			$editGender        = trim($_POST['opt_gender']);
+
+            // we only save age now, no longer ranges (but ranges can be inserted into age column)
+            $editAge           = trim($_POST['age']);
+            $editMinAge        = null;
+            $editMaxAge        = null;
+
+            $editGender        = trim($_POST['opt_gender']);
 			$editEye           = trim($_POST['opt_eye_color']);
 			$editSkin          = trim($_POST['opt_skin_color']);
 			$editHair          = trim($_POST['opt_hair_color']);
@@ -1297,7 +1597,10 @@ function shn_eap_edit() {
 				updateFullName($editGivenName, $editFamilyName);
 			}
 
-			if($editLastSeen      !== $person_details['last_seen'])      { saveRevision("person_details",       "last_seen",      "Last Seen",      $person_details['last_seen'],      $editLastSeen);      }
+			if($editLastSeen      !== $person_details['last_seen'])      {
+				saveRevision("person_details", "last_seen", "Last Seen", $person_details['last_seen'], $editLastSeen);
+				$global['makeStaticPfifNote'] = true;
+			}
 			if($editLastClothing  !== $person_details['last_clothing'])  { saveRevision("person_details",       "last_clothing",  "Last Clothing",  $person_details['last_clothing'],  $editLastClothing);  }
 			if($editOtherComments !== $person_details['other_comments']) { saveRevision("person_details",       "other_comments", "Other Comments", $person_details['other_comments'], $editOtherComments); }
 			if($editAge           !== $person_details['years_old'])      { saveRevision("person_details",       "years_old",      "Age",            $person_details['years_old'],      $editAge);           }
@@ -1312,7 +1615,10 @@ function shn_eap_edit() {
 			if($editWeight     !== $person_physical['weight'])           { saveRevision("person_physical",      "weight",         "Weight",      $person_physical['weight'],           $editWeight);   }
 			if($editComments   !== $person_physical['comments'])         { saveRevision("person_physical",      "comments",       "Comments",    $person_physical['comments'],         $editComments); }
 
-			if($editStatus     !== $person_status['opt_status'])         { saveRevision("person_status",        "opt_status",     "Status",      $person_status['opt_status'],         $editStatus);   }
+			if($editStatus     !== $person_status['opt_status'])         {
+				saveRevision("person_status", "opt_status", "Status", $person_status['opt_status'], $editStatus);
+				$global['makeStaticPfifNote'] = true;
+			}
 
 			if($editEvent      !== $person_incident['incident_id'])      { saveRevision("person_uuid",          "incident_id",    "Event",       $person_incident['incident_id'],      $editEvent);    }
 			if($editHospital   !== $person_to_hospital['hospital_uuid']) { saveRevision("person_uuid",          "hospital_uuid",  "Hospital",    $person_to_hospital['hospital_uuid'], $editHospital); }
@@ -1378,10 +1684,12 @@ function shn_eap_edit() {
 
 		$date->setTimestamp(strtotime($person_uuid['expiry_date']));
 		$expiry_date =  $date->format('l, F j, Y g:i a T');
-		if($person_uuid['expiry_date'] == null || $person_uuid['expiry_date'] == "0000-01-01 00:00:00") {
+		if($person_uuid['expiry_date'] == null || $person_uuid['expiry_date'] == "2000-01-01 01:01:01") {
 			$expiry_date = "---";
 		}
 
+echo '<div style="clear:both;"></div>';
+echo '<hr>';
 		echo "
 			<div class=\"form-container\">
 			<form method=\"post\" id=\"editPublic\" name=\"editPublic\" action=\"edit?puuid=".urlencode($global['uuid'])."\">
@@ -1424,8 +1732,9 @@ function shn_eap_edit() {
 		$q = "
 			SELECT *
 			FROM field_options
-			WHERE field_name = 'opt_status';
+			WHERE field_name = 'opt_status'
 		";
+		//AND option_code != 'unk';
 		$r = $global['db']->Execute($q);
 		if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit edit 24 ((".$q."))"); }
 		$opt_status_array = array();
@@ -1444,12 +1753,18 @@ function shn_eap_edit() {
 		$r = $global['db']->Execute($q);
 		if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit edit 25 ((".$q."))"); }
 		$hospital_array = array();
-		$hospital_array[null] = 'Unknown';
+		$hospital_array[null] = '---';
 		while(!$r->EOF) {
 			$hospital_array[$r->fields['hospital_uuid']] = $r->fields['name'];
 			$r->MoveNext();
 		}
-		shn_form_select($hospital_array, "<b>Located at Hospital</b>", "hospital", "onchange=\"\"", array('value'=>$editHospital));
+		if($global['role'] != "staff" && $global['role'] != "admin") {
+				$readOnlyH = ' disabled style="opacity: 0.2;"';
+		} else {
+				$readOnlyH = "";
+		}
+		
+		shn_form_select($hospital_array, "<b>Located at Hospital</b>", "hospital", $readOnlyH, array('value'=>$editHospital));
 
 
 		// generate incident dropdown
@@ -1462,15 +1777,34 @@ function shn_eap_edit() {
 		$incident_array = array();
 		while(!$r->EOF) {
 			$incident_array[$r->fields['incident_id']] = $r->fields['name'];
+      if($r->fields['incident_id'] == $editEvent) {
+        $newTitle = $r->fields['name'];
+      }
 			$r->MoveNext();
 		}
 		shn_form_select($incident_array, "<b>Related to Event:</b>", "event", "onchange=\"\"", array('value'=>$editEvent));
-
+    echo "
+      <script>
+        // they want the title to show the event name, so we update it here:
+        document.title = document.title + ' :: ".$newTitle."';
+      </script>
+    ";
 
 		// rest of public info......
-		// no more camel casing
-		//$editGivenName  = htmlspecialchars(mb_convert_case($editGivenName,  MB_CASE_TITLE, "UTF-8"));
-		//$editFamilyName = htmlspecialchars(mb_convert_case($editFamilyName, MB_CASE_TITLE, "UTF-8"));
+
+        // On Display:
+        // If we have an exact age, display it
+        // else If we have an age range display it instead
+        // else display nothing
+
+        if($editAge != null) {
+            $editAgeAll = $editAge;
+        } elseif($editMinAge != null && $editMaxAge != null) {
+            $editAgeAll = $editMinAge."-".$editMaxAge;
+        } else {
+            $editAgeAll = null;
+        }
+
 		$editGivenName  = htmlspecialchars($editGivenName);
 		$editFamilyName = htmlspecialchars($editFamilyName);
 		$global['full_name'] = $editGivenName." ".$editFamilyName;
@@ -1492,16 +1826,8 @@ function shn_eap_edit() {
 			<input type=\"hidden\" id=\"given_name\" name=\"given_name\" value=\"".$editGivenName."\">
 			<input type=\"hidden\" id=\"family_name\" name=\"family_name\" value=\"".$editFamilyName."\">
 
-			<label for=\"age\">Age in Years</label>
-			<input size=\"3\" type=\"number\" min=\"0\" max=\"150\" name=\"age\" id=\"age\" value=\"".$editAge."\" size=\"50\" tabindex=\"".++$shn_tabindex."\" class=\"public\">
-			<br>
-
-			<label for=\"age_lower\">Lower Age Range</label>
-			<input size=\"3\" type=\"number\" min=\"0\" max=\"150\" name=\"age_lower\" id=\"age_upper\" value=\"".$editMinAge."\" size=\"50\" tabindex=\"".++$shn_tabindex."\" class=\"public\">
-			<br>
-
-			<label for=\"age_upper\">Upper Age Range</label>
-			<input size=\"3\" type=\"number\" min=\"0\" max=\"150\" name=\"age_upper\" id=\"age_upper\" value=\"".$editMaxAge."\" size=\"50\" tabindex=\"".++$shn_tabindex."\" class=\"public\">
+			<label for=\"age\">Age</label>
+			<input size=\"6\" type=\"text\" name=\"age\" id=\"age\" value=\"".$editAgeAll."\" size=\"6\" tabindex=\"".++$shn_tabindex."\" class=\"public\">
 			<br>
 		";
 
@@ -1573,7 +1899,8 @@ function shn_eap_edit() {
 
 		$editMinAge = $person_details['minAge'];
 		$editMaxAge = $person_details['maxAge'];
-
+echo '<div style="clear:both;"></div>';
+echo '<hr>';
 		echo "
 			<div class=\"form-container\">
 			<form>
@@ -1624,6 +1951,10 @@ function shn_eap_edit() {
 		echo "
 			<label for=\"opt_status\"><b>Related to Event</b> </label>
 			<input type=\"text\" name=\"opt_status\" id=\"opt_status\" value=\"".$eventName."\" size=\"50\" tabindex=\"".++$shn_tabindex."\" class=\"nonedit public\" READONLY>
+      <script>
+        // they want the title to show the event name, so we update it here:
+        document.title = document.title + ' :: ".$eventName."';
+      </script>
 			<br>
 		";
 
@@ -1714,11 +2045,13 @@ function shn_eap_edit() {
 
 
 	// NOTES BEGIN ////////////////////////////////////////////////////////////////////////////////////////
+echo '<div style="clear:both;"></div>';
+echo '<hr>';
 	echo "
 		<div class=\"form-container\">
 		<form method=\"post\" id=\"notesPerson\" name=\"notesPerson\" action=\"edit?addNote&puuid=".urlencode($global['uuid'])."\">
-		<fieldset id=\"editNotes\">
-		<legend><span class=\"notesText\">Notes</span></legend>
+		<fieldset id=\"editNotes\" style=\"min-width: 700px;\">
+		<legend><span class=\"notesText\">Comments</span></legend>
 	";
 
 	$q  = "
@@ -1788,75 +2121,14 @@ function shn_eap_edit() {
 		";
 	}
 
-
-	// EXTERNAL PFIF NOTES
-	$global['db']->EXECUTE("set names 'utf8'");
-	$q = "
-		SELECT note_record_id, entry_date, author_name, found,
-		REPLACE(status, '_', ' ') as status, last_known_location, text
-		FROM pfif_note
-		WHERE p_uuid = '".$global['uuid']."'
-		ORDER BY entry_date DESC;
-	";
-	$result = $global['db']->Execute($q);
-	if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit edit 29 ((".$q."))"); }
-	while (!$result == NULL && !$result->EOF) {
-
-
-		$timezone = new DateTimeZone( "UTC" );
-		$date = new DateTime();
-		$date->setTimezone( $timezone );
-
-		$date->setTimestamp(strtotime($result->fields["entry_date"]));
-		$utime =  $date->format('l, F j, Y g:i a T');
-
-		echo "
-			<p class=\"triangle-obtuse\">
-				<b>".$result->fields["text"]."</b><br>
-		";
-
-		if($result->fields["status"] == null) {
-			$status = "unknown";
-		} else {
-			$status = $result->fields["status"];
-		}
-		echo "<br>Status: <b>".$status."</b><br>";
-
-		if($result->fields["found"] == true) {
-			echo "<br><b>FOUND</b><br>";
-		}
-		if(trim($result->fields["last_known_location"]) != "") {
-			echo "<br>Last Known Location: <b>".$result->fields["last_known_location"]."</b><br>";
-		}
-
-		echo "
-				<span class=\"noteFooter\">".$result->fields["note_record_id"]."</span>
-			</p>
-			<div style=\"height: 25px;\">Posted by <b>".$result->fields["author_name"]."</b> on ".$utime."</div>
-		";
-
-		/*
-		'note_id'=>$result->fields["note_record_id"],
-		'date'=>$result->fields["entry_date"],
-		'author'=>$result->fields["author_name"],
-		'found'=>$result->fields["found"],
-		'status'=>$result->fields["status"],
-		'lastSeen'=>$result->fields["last_known_location"],
-		'text'=>$result->fields["text"]
-		*/
-		$result->MoveNext();
-	}
-	// EXTERNAL PFIF END
-
-
-	// if user is allowed to add notes... show the tool for this
+  // if user is allowed to add notes... show the tool for this
 	if($global['addNote']) {
 		echo "
 			<div id=\"addYourOwnComment\">
 				<b>Add your own comment...</b><br>
 				<center>
-					<textarea name=\"addNote\" id=\"addNote\" style=\"width: 80%; \" rows=\"5\" tabindex=\"".++$shn_tabindex."\" ></textarea><br>
-					<input type=\"submit\" value=\"Save Note\" class=\"styleTehButton\" tabindex=\"".++$shn_tabindex."\">
+					<textarea name=\"addNote\" id=\"addNote\" style=\"width: 95%; \" rows=\"5\" tabindex=\"".++$shn_tabindex."\" ></textarea><br>
+					<input type=\"submit\" value=\"Save Comment\" class=\"styleTehButton\" tabindex=\"".++$shn_tabindex."\">
 				</center>
 			</div>
 		";
@@ -1876,7 +2148,90 @@ function shn_eap_edit() {
 		</fieldset>
 		</form></div>
 	";
-	// NOTES END //////////////////////////////////////////////////////////////////////////////////////////
+	// NOTES END ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+	// LEGACY PFIF NOTES BEGIN //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  $pfifNoteCount = 0;
+	$global['db']->EXECUTE("set names 'utf8'");
+	$q = "
+		SELECT note_record_id, entry_date, author_name, author_made_contact,
+		REPLACE(status, '_', ' ') as status, last_known_location, text
+		FROM pfif_note
+		WHERE p_uuid = '".$global['uuid']."'
+		ORDER BY entry_date DESC;
+	";
+	$result = $global['db']->Execute($q);
+	if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit edit 29 ((".$q."))"); }
+	while (!$result == NULL && !$result->EOF) {
+
+    $pfifNoteCount++;
+    
+    if($pfifNoteCount == 1) {
+      echo '
+        <div style="clear:both;"></div>
+        <hr>
+    		<div class="form-container">
+    		<form method="post" id="notesPerson" name="notesPerson" action="edit?addNote&puuid='.urlencode($global['uuid']).'">
+    		<fieldset id="editNotes">
+    		<legend><span class="notesText">Legacy Comments</span></legend>
+    	';
+    }
+
+		$timezone = new DateTimeZone( "UTC" );
+		$date = new DateTime();
+		$date->setTimezone( $timezone );
+
+		$date->setTimestamp(strtotime($result->fields["entry_date"]));
+		$utime =  $date->format('l, F j, Y g:i a T');
+
+		echo "
+				<b>Note:</b> ".$result->fields["text"]."<br>
+		";
+
+		if($result->fields["status"] == null) {
+			$status = "unknown";
+		} else {
+			$status = $result->fields["status"];
+		}
+		echo "<b>Status:</b> ".$status."<br>";
+
+		if($result->fields["author_made_contact"] == true) {
+			echo "<b>FOUND</b><br>";
+		}
+		if(trim($result->fields["last_known_location"]) != "") {
+			echo "<b>Last Known Location: </b>".$result->fields["last_known_location"]."<br>";
+		}
+
+		echo "
+			<b>Comment Author:</b> ".$result->fields["author_name"]."</b> on ".$utime."<br>
+		";
+
+		/*
+		'note_id'=>$result->fields["note_record_id"],
+		'date'=>$result->fields["entry_date"],
+		'author'=>$result->fields["author_name"],
+		'found'=>$result->fields["found"],
+		'status'=>$result->fields["status"],
+		'lastSeen'=>$result->fields["last_known_location"],
+		'text'=>$result->fields["text"]
+		*/
+		$result->MoveNext();
+	}
+  if($pfifNoteCount > 0) {
+    echo "
+      <label for=\"height\">&nbsp;</label>
+      </fieldset>
+      </form></div>
+	  ";
+  }
+	// EXTERNAL PFIF END
+
+
+
+
 
 
 	// LOAD PRIVATE DATA //////////////////////////////////////////////////////////////////////////////////
@@ -1948,14 +2303,15 @@ function shn_eap_edit() {
 			$editReligion   = $person_details['opt_religion'];
 			$editRace       = $person_details['opt_race'];
 		}
-
+echo '<div style="clear:both;"></div>';
+echo '<hr>';
 		echo "
 			<div class=\"form-container\">
 			<form method=\"post\" id=\"editPrivateForm\" name=\"editPrivateForm\" action=\"edit?puuid=".urlencode($global['uuid'])."\">
 			<fieldset id=\"editPrivate\">
 			<legend><span class=\"privateText\">Private Contact Information (not visible to the public)</span></legend>
 			<label for=\"address\">Street Address</label>
-			<textarea name=\"address\" id=\"address\" cols=\"56\" rows=\"4\" tabindex=\"".++$shn_tabindex."\" class=\"public\">".$editAddress."</textarea>
+			<textarea name=\"address\" id=\"address\" cols=\"80\" rows=\"4\" tabindex=\"".++$shn_tabindex."\" class=\"public\">".$editAddress."</textarea>
 			<br>
 		";
 
@@ -1981,6 +2337,8 @@ function shn_eap_edit() {
 
 	// REVISIONS START//////////////////////////////////////////////////////////////////////////////////
 	if($global['privateEdit']) {
+echo '<div style="clear:both;"></div>';
+echo '<hr>';
 		echo "
 			<div class=\"form-container\">
 			<form id=\"editRevisionsForm\" name=\"editRevisionsForm\">
@@ -1990,20 +2348,24 @@ function shn_eap_edit() {
 
 		$out = "<table>
 			<tr>
+				<td style=\"text-align: left; border: none; font-weight: bold;\" class=\"odder\">Revision by (username)</td>
+				<td style=\"text-align: left; border: none; font-weight: bold;\" class=\"odder\">Updated When</td>
 				<td style=\"text-align: left; border: none; font-weight: bold;\" class=\"odder\">Field Changed</td>
 				<td style=\"text-align: left; border: none; font-weight: bold;\" class=\"odder\">Old Value</td>
+				<td style=\"text-align: left; border: none; font-weight: bold;\" class=\"odder\"> &nbsp; </td>
 				<td style=\"text-align: left; border: none; font-weight: bold;\" class=\"odder\">New Value</td>
-				<td style=\"text-align: left; border: none; font-weight: bold;\" class=\"odder\">Updated When</td>
-				<td style=\"text-align: left; border: none; font-weight: bold;\" class=\"odder\">Updated By</td>
+
+
 			</tr>
 		";
 
 		$q  = "
 			SELECT *
-			FROM person_updates u, person_uuid p
+			FROM person_updates u, person_uuid p, users uu
 			WHERE u.p_uuid = '".$global['uuid']."'
 			AND p.p_uuid = u.updated_by_p_uuid
-			ORDER BY update_time DESC;
+			AND p.p_uuid = uu.p_uuid
+			ORDER BY update_time DESC, updated_column DESC;
 		";
 		$r  = $global['db']->Execute($q);
 		if($r === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit edit 31 ((".$q."))"); }
@@ -2016,18 +2378,20 @@ function shn_eap_edit() {
 			}
 			$out .= "
 				<tr>
+					<td style=\"text-align: left; border: none;\" class=\"".$class."\"><b>".$row['full_name']."</b> (".$row['user_name'].")</td>
+					<td style=\"text-align: left; border: none;\" class=\"".$class."\">".$row['update_time']."</td>
 					<td style=\"text-align: left; border: none;\" class=\"".$class."\">".$row['updated_table']." :: ".$row['updated_column']."</td>
 					<td style=\"text-align: left; border: none;\" class=\"".$class."\">".$row['old_value']."</td>
+					<td style=\"text-align: left; border: none;\" class=\"".$class."\">=></td>
 					<td style=\"text-align: left; border: none;\" class=\"".$class."\">".$row['new_value']."</td>
-					<td style=\"text-align: left; border: none;\" class=\"".$class."\">".$row['update_time']."</td>
-					<td style=\"text-align: left; border: none;\" class=\"".$class."\">".$row['full_name']."</td>
+
 				</tr>
 			";
 			$count++;
 		}
 		$out .= "</table>";
 		if($count == 0) {
-			echo "<b>This record has not been completed yet.</b>";
+			echo "<b>This record has no revisions.</b>";
 		} else {
 			echo $out;
 		}
@@ -2040,6 +2404,8 @@ function shn_eap_edit() {
 
 
 	// FOLLOW //////////////////////////////////////////////////////////////////////////////////////////
+echo '<div style="clear:both;"></div>';
+echo '<hr>';
 	echo "<div id=\"followDiv\">";
 	if($global['startFollow'] && $global['role'] != "reporter") {
 
@@ -2065,12 +2431,12 @@ function shn_eap_edit() {
 				<div class=\"form-container\">
 				<form method=\"post\" id=\"followPerson\" name=\"followPerson\" action=\"edit?follow&puuid=".urlencode($global['uuid'])."\">
 				<fieldset id=\"editFollow\">
-				<legend><span class=\"followText\">Follow</span></legend>
+				<legend><span class=\"followText\">Follow / Share</span></legend>
 				To receive email alerts when this record is updated with new information, you can elect to follow this person. You will only receive an email when the reporter or staff change any of the information in this person's record or when a user of the site leaves a note on this page.<br>
 				<br>
 				<input id=\"followButton\" class=\"styleTehButton\" type=\"button\" value=\"Click here to begin following this person's record via email\" onclick=\"followPersonCall();\"><br>
 				<br>
-				Be aware that at any time you may visit your <a href=\"index.php?mod=pref&act=default\">User Preferences</a> page to manage which people you are following.
+				Be aware that at any time you may visit your <a href=\"pref?following\">People I'm Following</a> page to manage which people you are following.
 				</fieldset>
 				</form>
 				</div>
@@ -2104,7 +2470,7 @@ function shn_eap_edit() {
 			<div class=\"form-container\">
 			<form method=\"post\" id=\"followPerson\" name=\"followPerson\">
 			<fieldset id=\"editFollow\">
-			<legend><span class=\"followText\">Follow</span></legend>
+			<legend><span class=\"followText\">Follow / Share</span></legend>
 			To receive email alerts when this record is updated with new information, you can elect to follow this person. You will only receive an email when the reporter or staff change any of the information in this person's record or when a user of the site leaves a note on this page.<br>
 			<br>
 			<b> &nbsp; To follow this person, you must first <a href=\"login\">login or register</a>.</b>
@@ -2117,54 +2483,7 @@ function shn_eap_edit() {
 	// FOLLOW END ///////////////////////////////////////////////////////////////////////////////
 
 
-	// SHARE ////////////////////////////////////////////////////////////////////////////////////
-	echo "
-		<div class=\"form-container\">
-		<form>
-		<fieldset id=\"editShare\">
-		<legend>Share</legend>
-
-		<span id =\"sendToText\">Send this page to a mobile device :</span><br><br>
-		<div style=\"float: left; width: 158px;\">
-			<script type=\"text/javascript\" src=\"res/js/jquery-1.6.4.min.js\"></script>
-			<script type=\"text/javascript\" src=\"res/js/jquery.qrcode.min.js\"></script>
-			<div id=\"qrcode\"></div>
-			<script>
-				jQuery('#qrcode').qrcode(\"".$global['googl']."\");
-			</script>
-		</div>
-
-
-		<div id=\"shortUrlText\" style=\"float: left;\">
-			<br><br>
-			Short URL to this page : <br><br>
-			<a href=\"".$global['googl']."\">".$global['googl']."</a><br>
-		</div>
-
-		<div style=\"clear:both;\"></div>
-
-		<div id=\"addThisDiv\">
-			<div class=\"addthis_toolbox addthis_default_style\">
-			<a class=\"addthis_button_facebook_like\" fb:like:layout=\"button_count\"></a>
-			<a class=\"addthis_button_tweet\"></a>
-			<a class=\"addthis_button_google_plusone\" g:plusone:size=\"medium\"></a>
-	";
-/*
-			<a class=\"addthis_counter addthis_pill_style\"></a>
-*/
-	echo "
-			</div>
-			<script type=\"text/javascript\" src=\"https://s7.addthis.com/js/250/addthis_widget.js#pubid=ra-4e66a6fa46524fa8\"></script>
-		</div>
-		</fieldset>
-		</form>
-		</div>
-	";
-	// SHARE END ///////////////////////////////////////////////////////////////////////////////////////
-
-
 	// DEBUG ////////////////////////////////////////////////////////////////////////////////////
-
 	// only allow debugging when enabled and only by the root user....
 	if($debug && $_SESSION['user_p_uuid'] == "1") {
 		echo "<div class=\"form-container\" style=\"overflow: hidden;\"><form><fieldset>";
@@ -2190,6 +2509,48 @@ function shn_eap_edit() {
 	}
 	// DEBUG END //////////////////////////////////////////////////////////////////////////////////
 
+	echo '
+			<div>
+				<g:plusone size="medium" annotation="none"></g:plusone>
+				<a id="tweet" href="https://twitter.com/share" class="twitter-share-button" data-size="small" data-lang="en" data-count="none"></a>
+				<div class="fb-send" data-href="http://example.com" data-font="verdana"></div><div id="fb-root"></div>
+			</div>
+			<br>
+			<script>
+
+// g+ button
+(function() {
+	var po = document.createElement("script"); po.type = "text/javascript";
+	po.async = true;
+	po.src = "https://apis.google.com/js/plusone.js";
+	var s = document.getElementsByTagName("script")[0];
+	s.parentNode.insertBefore(po, s);
+})();
+
+// twitter button
+!function(d,s,id){
+	var js,fjs=d.getElementsByTagName(s)[0];
+	if(!d.getElementById(id)){
+		js=d.createElement(s);
+		js.id=id;
+		js.src="//platform.twitter.com/widgets.js";
+		fjs.parentNode.insertBefore(js,fjs);
+	}
+}(document,"script","twitter-wjs");
+
+// facebook button
+(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, "script", "facebook-jssdk"));
+
+			</script>
+	';
+
+
 	emailUpdates();
 
 	// make pfif note on new records (for the first save)
@@ -2212,11 +2573,11 @@ function shn_eap_edit() {
 		$n->phone_of_found_person   = null;
 		$n->last_known_location     = $person_details['last_seen'];
 		$n->text                    = $person_details['other_comments'];
-		$n->found                   = null; // we have no way to know if the reporter had direct contact (hence we leave this null)
+		$n->author_made_contact     = null; // we have no way to know if the reporter had direct contact (hence we leave this null)
 
 		// we map found = true for the cases when we know a person is alive (PL-318)
 		if($person_status['opt_status'] == "ali") {
-			$n->found = true;
+			$n->author_made_contact = true;
 		}
 
 		// figure out the person's pfif status

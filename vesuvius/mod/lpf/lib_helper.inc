@@ -19,84 +19,52 @@ function updateArrivalRate($person_uuid, $incident_id, $triagepic, $reunite, $we
 	global $global;
 	$db = $global['db'];
 
-	// lock tables to hold values for this session
-	$q = "LOCK TABLE arrival_rate WRITE ;";
-	$result = $db->Execute($q);
-	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $db->ErrorMsg(), "updateArrivalRate 1 ((".$q."))"); }
-
-	$q = "
-		SELECT *
-		FROM arrival_rate
-		WHERE incident_id = ".$incident_id."
-		ORDER BY arrival_time DESC
-		LIMIT 1;
-	";
-	$result = $db->Execute($q);
-	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $db->ErrorMsg(), "updateArrivalRate 2 ((".$q."))"); }
-
-	if($result != NULL && !$result->EOF) {
-		$source_all           = (int)$result->fields['source_all'];
-		$source_triagepic     = (int)$result->fields['source_triagepic'];
-		$source_reunite       = (int)$result->fields['source_reunite'];
-		$source_website       = (int)$result->fields['source_website'];
-		$source_pfif          = (int)$result->fields['source_pfif'];
-		$source_vanilla_email = (int)$result->fields['source_vanilla_email'];
-	} else {
-		$source_all           = 0;
-		$source_triagepic     = 0;
-		$source_reunite       = 0;
-		$source_website       = 0;
-		$source_pfif          = 0;
-		$source_vanilla_email = 0;
-	}
+  $b = "";
+  $c = "";
+  $d = "";
+  $e = "";
+  $f = "";
 
 	if($triagepic) {
-		$source_triagepic++;
+		$b="+1";
 	}
 	if($reunite) {
-		$source_reunite++;
+		$c="+1";
 	}
 	if($website) {
-		$source_website++;
+		$d="+1";
 	}
 	if($pfif) {
-		$source_pfif++;
+		$e="+1";
 	}
 	if($vanilla_email) {
-		$source_vanilla_email++;
+		$f="+1";
 	}
 
-	$source_all++;
+	$q = "START TRANSACTION;";
+  $result = $db->Execute($q);
+  if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $db->ErrorMsg(), $q); }
 
-	$q = "
-		INSERT INTO arrival_rate (
-			person_uuid,
-			incident_id,
-			arrival_time,
-			source_all,
-			source_triagepic,
-			source_reunite,
-			source_website,
-			source_pfif,
-			source_vanilla_email )
-		VALUES (
-			'".mysql_real_escape_string($person_uuid)."',
-			'".mysql_real_escape_string((int)$incident_id)."',
-			'".date('Y-m-d H:i:s')."',
-			'".mysql_real_escape_string((int)$source_all)."',
-			'".mysql_real_escape_string((int)$source_triagepic)."',
-			'".mysql_real_escape_string((int)$source_reunite)."',
-			'".mysql_real_escape_string((int)$source_website)."',
-			'".mysql_real_escape_string((int)$source_pfif)."',
-			'".mysql_real_escape_string((int)$source_vanilla_email)."' );
-	";
-	$result = $db->Execute($q);
-	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $db->ErrorMsg(), "updateArrivalRate 3 ((".$q."))"); }
+  $q = "
+      SELECT @A:=source_all, @B:=source_triagepic, @C:=source_reunite, @D:=source_website, @E:=source_pfif, @F:=source_vanilla_email
+      FROM arrival_rate 
+      WHERE incident_id=112
+      ORDER BY arrival_time DESC
+      LIMIT 1;
+  ";
+  $result = $db->Execute($q);
+  if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $db->ErrorMsg(), $q); }
 
-	// unlock table
-	$q = "UNLOCK TABLES ;";
+  $q = "  
+      INSERT INTO arrival_rate (person_uuid, incident_id, arrival_time, source_all, source_triagepic, source_reunite, source_website, source_pfif, source_vanilla_email)
+      VALUES ('".mysql_real_escape_string($person_uuid)."', '".mysql_real_escape_string((int)$incident_id)."', '".date('Y-m-d H:i:s')."', @A+1, @B".$b.", @C".$c.", @D".$d.", @E".$e.", @F".$f.");
+  ";
+  $result = $db->Execute($q);
+  if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $db->ErrorMsg(), $q); }
+  
+  $q = "COMMIT;";
 	$result = $db->Execute($q);
-	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $db->ErrorMsg(), "updateArrivalRate 4 ((".$q."))"); }
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $db->ErrorMsg(), $q); }
 }
 
 
@@ -105,6 +73,10 @@ function daoErrorLog($file, $line, $method, $class, $function, $errorMessage, $o
 
 	global $global;
 	$db = $global['db'];
+  
+  // add backtrace
+  $other .= " << ".debug_string_backtrace()." >>";
+  
 	$q = "
 		INSERT INTO dao_error_log (
 			file,
@@ -124,6 +96,20 @@ function daoErrorLog($file, $line, $method, $class, $function, $errorMessage, $o
 			'".mysql_real_escape_string((string)$other)."' );
 	";
 	$result = $db->Execute($q);
+}
+function debug_string_backtrace() { 
+  ob_start(); 
+  debug_print_backtrace(); 
+  $trace = ob_get_contents(); 
+  ob_end_clean(); 
+
+  // Remove first item from backtrace as it's this function which  is redundant. 
+  $trace = preg_replace ('/^#0\s+' . __FUNCTION__ . "[^\n]*\n/", '', $trace, 1); 
+
+  // Renumber backtrace items. 
+  $trace = preg_replace ('/^#(\d+)/me', '\'#\' . ($1 - 1)', $trace); 
+
+  return $trace; 
 }
 
 

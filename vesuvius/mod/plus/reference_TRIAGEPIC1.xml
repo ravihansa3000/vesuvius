@@ -31,7 +31,7 @@
 					<userName>NIH\miernickig</userName>
 				</login>
 				<person>
-					<personId>Practice-8888</personId>
+					<personId>911-8888</personId>
 					<eventName>test</eventName>
 					<eventLongName>Test Exercise - TEST/DEMO/DRILL</eventLongName>
 					<organization>
@@ -39,22 +39,40 @@
 						<orgId>1234567890</orgId>
 					</organization>
 					<lastName>WebServices</lastName>
-					<firstName>TestFrom</firstName>
+					<firstName>2TestFrom</firstName>
 					<gender>U</gender>
 					<genderEnum>M, F, U, C</genderEnum>
 					<genderEnumDesc>Male; Female; Unknown; Complex(M/F)</genderEnumDesc>
 					<peds>N</peds>
 					<pedsEnum>Y,N</pedsEnum>
 					<pedsEnumDesc>Pediatric patient? Yes, No</pedsEnumDesc>
-					<triageCategory>Black</triageCategory>
+					<triageCategory>Green</triageCategory>
 					<triageCategoryEnum>Green, BH Green, Yellow, Red, Gray, Black</triageCategoryEnum>
 					<triageCategoryEnumDesc>Treat eventually if needed; Treat for behavioral health; Treat soon; Treat...</triageCategoryEnumDesc>
 				</person>
 			</lpfContent>
 		</xmlContent>
 	</contentObject>
+	
+	<!--
+		There are 3 scenarios for how image contentObjects are handled in the TRIAGEPIC1 XML format:
+		
+			1) an image contentObject is present with a sha1 (digest) not currently associated with
+				this person. The CO must also contains binary image data. In this case, the image is
+				treated as a new image for the person and is appended to the person record.
+
+			2) an image contentObject is present with a sha1 (digest) that is identical to an image
+				that is already associated with this person. Binary image data can or can not be present in
+				this case. We treat this as a "non-deletion" and no changes to the person's images occur.
+				Thus, the binary data is effectively ignored.
+
+			3) an image contentObject is absent for an image that is already associated with this person.
+				This is verified by a contentObject with the same sha1 missing. We treat this case as an
+				image deletion request ~ the image is deleted from the person's record.		
+	-->
+	
 	<contentObject>
-		<contentDescription>4000 Green</contentDescription>
+		<contentDescription>911-8888 Green Msg #1 - this is a caption</contentDescription>
 		<contentKeyword>
 			<valueListUrn>...</valueListUrn>
 			<value>...</value>
@@ -75,7 +93,7 @@
 		</nonXMLContent>
 	</contentObject>
 	<contentObject>
-		<contentDescription>6000 Kat</contentDescription>
+		<contentDescription>911-8888 Kat Msg #1 s1 - this is the second image's caption</contentDescription>
 		<contentKeyword>
 			<valueListUrn>...</valueListUrn>
 			<value>...</value>

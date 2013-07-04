@@ -283,6 +283,22 @@ function shn_plus_registerAll($namespace) {
 		"Used to verify a username / password combination are valid."
 	);
 
+	shn_plus_registerOne($server, 'checkUserAuthTriagePic',
+		array(
+			'in' => array(
+				'username'     => 'xsd:string',
+				'password'     => 'xsd:string'
+			),
+			'out' => array(
+				'valid'        => 'xsd:boolean',
+				'errorCode'    => 'xsd:integer',
+				'errorMessage' => 'xsd:string'
+			)
+		),
+		$namespace,
+		"Used to verify a username / password combination are valid for TriagePic."
+	);
+
 	shn_plus_registerOne($server, 'getUserStatus',
 		array(
 			'in' => array(
@@ -717,24 +733,6 @@ function shn_plus_registerAll($namespace) {
 		"A simple lookup to determine if a record is still an original or has incurred revisions."
 	);
 
-	shn_plus_registerOne($server, 'addComment',
-		array(
-			'in' => array(
-				'uuid'           => 'xsd:string',
-				'comment'        => 'xsd:string',
-				'status'         => 'xsd:string',
-				'username'       => 'xsd:string',
-				'password'       => 'xsd:string'
-			),
-			'out' => array(
-				'errorCode'      => 'xsd:integer',
-				'errorMessage'   => 'xsd:string'
-			)
-		),
-		$namespace,
-		"Add a text comment and suggest a status update for a person."
-	);
-
 	shn_plus_registerOne($server, 'getPersonPermissions',
 		array(
 			'in' => array(
@@ -751,82 +749,6 @@ function shn_plus_registerAll($namespace) {
 		),
 		$namespace,
 		"Find out who has permission to revise a record."
-	);
-
-	// Image Indexing API DECLARATIONS /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
-	// Image Indexing API DECLARATIONS /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
-
-	shn_plus_registerOne($server, 'getImageCountsAndTokens',
-		array(
-			'in' => array(
-				'username'       => 'xsd:string',
-				'password'       => 'xsd:string'
-			),
-			'out' => array(
-				'imageCount'     => 'xsd:integer',
-				'firstToken'     => 'xsd:integer',
-				'lastToken'      => 'xsd:integer',
-				'nullTokenCount' => 'xsd:integer',
-				'errorCode'      => 'xsd:integer',
-				'errorMessage'   => 'xsd:string'
-			)
-		),
-		$namespace,
-		"Returns a count of the total number of images and the value of the latest brownie (image index value)."
-	);
-
-	shn_plus_registerOne($server, 'getImageList',
-		array(
-			'in' => array(
-				'tokenStart'     => 'xsd:integer',
-				'tokenEnd'       => 'xsd:integer',
-				'username'       => 'xsd:string',
-				'password'       => 'xsd:string'
-			),
-			'out' => array(
-				'imageList'      => 'xsd:string',
-				'errorCode'      => 'xsd:integer',
-				'errorMessage'   => 'xsd:string'
-			)
-		),
-		$namespace,
-		"Returns a list of the images and their associated properties, paginated by a start and end token (index value)."
-	);
-
-	shn_plus_registerOne($server, 'getImageListBlock',
-		array(
-			'in' => array(
-				'tokenStart'     => 'xsd:integer',
-				'stride'         => 'xsd:integer',
-				'username'       => 'xsd:string',
-				'password'       => 'xsd:string'
-			),
-			'out' => array(
-				'imageList'      => 'xsd:string',
-				'errorCode'      => 'xsd:integer',
-				'errorMessage'   => 'xsd:string'
-			)
-		),
-		$namespace,
-		"Returns a list of the images and their associated properties, in blocks of stride size beginning with a start token (index value)."
-	);
-
-	shn_plus_registerOne($server, 'getNullTokenList',
-		array(
-			'in' => array(
-				'tokenStart'     => 'xsd:integer',
-				'tokenEnd'       => 'xsd:integer',
-				'username'       => 'xsd:string',
-				'password'       => 'xsd:string'
-			),
-			'out' => array(
-				'nullTokenList'  => 'xsd:string',
-				'errorCode'      => 'xsd:integer',
-				'errorMessage'   => 'xsd:string'
-			)
-		),
-		$namespace,
-		"Returns a list of the images that have been removed from the system (either deleted or expired)."
 	);
 }
 

@@ -1,18 +1,12 @@
 <?php
-/** ******************************************************************************************************************************************************************
-*********************************************************************************************************************************************************************
-********************************************************************************************************************************************************************
-*
-* @class        nameParser
-* @version      11
-* @link         http://code.google.com/p/nameparser/
-* @author       Greg Miernicki <g@miernicki.com>
-* @author       Keith Beckman
-* @author       DLM
-*
-********************************************************************************************************************************************************************
-*********************************************************************************************************************************************************************
-**********************************************************************************************************************************************************************/
+/**
+* @class   nameParser
+* @version 12
+* @link    http://code.google.com/p/nameparser/
+* @author  Greg Miernicki <g@miernicki.com>
+* @author  Keith Beckman
+* @author  DLM
+*/
 
 class nameParser {
 
@@ -84,7 +78,8 @@ class nameParser {
 	* @param string The Name String
 	* @access public
 	*/
-	public function	__construct( $initString = "" ) {
+	public function __construct( $initString = "" ) {
+
 		$this->title 		= "";
 		$this->first 		= "";
 		$this->middle 		= "";
@@ -119,7 +114,7 @@ class nameParser {
 	* Access Method
 	* @access public
 	*/
-	public function	getFirstName() { return $this->first; }
+	public function getFirstName() { return $this->first; }
 
 
 
@@ -127,7 +122,7 @@ class nameParser {
 	* Access Method
 	* @access public
 	*/
-	public function	getMiddleName() { return $this->middle; }
+	public function getMiddleName() { return $this->middle; }
 
 
 
@@ -135,7 +130,7 @@ class nameParser {
 	* Access Method
 	* @access public
 	*/
-	public function	getLastName() { return $this->last; }
+	public function getLastName() { return $this->last; }
 
 
 
@@ -143,7 +138,7 @@ class nameParser {
 	* Access Method
 	* @access public
 	*/
-	public function	getTitle() { return $this->title; }
+	public function getTitle() { return $this->title; }
 
 
 
@@ -151,7 +146,7 @@ class nameParser {
 	* Access Method
 	* @access public
 	*/
-	public function	getSuffix() { return $this->suffix; }
+	public function getSuffix() { return $this->suffix; }
 
 
 
@@ -159,7 +154,7 @@ class nameParser {
 	* Access Method
 	* @access public
 	*/
-	public function	getNotParseable() { return $this->notParseable; }
+	public function getNotParseable() { return $this->notParseable; }
 
 
 
@@ -168,7 +163,7 @@ class nameParser {
 	* @access public
 	* @param newFullName the new value to set fullName to
 	*/
-	public function	setFullName( $newFullName ) { $this->fullName = $newFullName; }
+	public function setFullName( $newFullName ) { $this->fullName = $newFullName; }
 
 
 
@@ -180,6 +175,7 @@ class nameParser {
 	* @access private
 	*/
 	private function inArrayNorm( $needle, $haystack ) {
+
 		$needle = trim( strtolower( str_replace( '.', '', $needle ) ) );
 		return	in_array( $needle, $haystack );
 	}
@@ -191,7 +187,8 @@ class nameParser {
 	*
 	* @access public
 	*/
-	public function	parse() {
+	public function parse() {
+
 		// reset values
 		$this->title 		= "";
 		$this->first 		= "";

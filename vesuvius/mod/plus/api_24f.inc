@@ -695,6 +695,41 @@ function checkUserAuth($username, $password) {
 
 
 
+/** Used to verify a username / password combination are valid for TriagePic */
+function checkUserAuthTriagePic($username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+
+	global $global;
+	require_once($global['approot']."/inc/lib_security/lib_auth.inc");
+	$success = false;
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+
+	// check user against groups 5 and 6 (hs, hsa)
+	if(!shn_plus_checkUserGroup($username, 5) && !shn_plus_checkUserGroup($username, 6)) {
+		$status = 20;
+	}
+
+	if($status == 0) {
+		return array(
+			'valid'        => (boolean)true,
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+	} else {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'valid'        => (boolean)false,
+			'errorCode'    => (int)$status,
+			'errorMessage' => (string)$eCodes[$status]
+		);
+	}
+}
+
+
+
 /** Used to determine user account status without authenticating */
 function getUserStatus($username) {
 
@@ -945,22 +980,10 @@ function searchWithAuth($eventShortname, $searchTerm, $filterStatusMissing, $fil
 		$ecode = $status;
 	} else {
 		// check if the user is a member of a group that has access to the event in question
-		$q = "
-			SELECT *
-			FROM incident i, users u, sys_user_groups s, sys_user_to_group t
-			WHERE (i.private_group = s.group_id
-			AND s.group_id = t.group_id
-			AND t.p_uuid = u.p_uuid
-			AND u.user_name = '".mysql_real_escape_string($username)."'
-			AND i.shortname = '".mysql_real_escape_string($eventShortname)."')
-			OR (i.private_group is null
-			AND i.shortname = '".mysql_real_escape_string($eventShortname)."');
-		";
-		$result = $global['db']->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "searchWithAuth 1"); }
-		if($result == null || $result->EOF) {
+		$status = shn_plus_checkEventPermissions($username, $eventShortname);
+		if($status != 0) {
 			$error = true;
-			$ecode = 300;
+			$ecode = $status;
 		}
 	}
 
@@ -1157,22 +1180,10 @@ function searchCountWithAuth($eventShortname, $searchTerm, $filterStatusMissing,
 		$ecode = $status;
 	} else {
 		// check if the user is a member of a group that has access to the event in question
-		$q = "
-			SELECT *
-			FROM incident i, users u, sys_user_groups s, sys_user_to_group t
-			WHERE (i.private_group = s.group_id
-			AND s.group_id = t.group_id
-			AND t.p_uuid = u.p_uuid
-			AND u.user_name = '".mysql_real_escape_string($username)."'
-			AND i.shortname = '".mysql_real_escape_string($eventShortname)."')
-			OR (i.private_group is null
-			AND i.shortname = '".mysql_real_escape_string($eventShortname)."');
-		";
-		$result = $global['db']->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "searchWithAuth 1"); }
-		if($result == null || $result->EOF) {
+		$status = shn_plus_checkEventPermissions($username, $eventShortname);
+		if($status != 0) {
 			$error = true;
-			$ecode = 300;
+			$ecode = $status;
 		}
 	}
 
@@ -1271,52 +1282,39 @@ function reportPerson($personXML, $eventShortName, $xmlFormat, $username, $passw
 		$ecode = $status;
 	} else {
 		// check if the user is a member of a group that has access to the event in question
+		$status = shn_plus_checkEventPermissions($username, $eventShortName);
+		if($status != 0) {
+			$error = true;
+			$ecode = $status;
+		}
+	}		
+		
+	// figure out the p_uuid of the user who is reporting
+	if(!$error) {
 		$q = "
 			SELECT *
-			FROM incident i, users u, sys_user_groups s, sys_user_to_group t
-			WHERE (i.private_group = s.group_id
-			AND s.group_id = t.group_id
-			AND t.p_uuid = u.p_uuid
-			AND u.user_name = '".mysql_real_escape_string($username)."'
-			AND i.shortname = '".mysql_real_escape_string($eventShortName)."')
-			OR (i.private_group is null
-			AND i.shortname = '".mysql_real_escape_string($eventShortName)."');
+			FROM users
+			WHERE user_name = '".$username."';
 		";
 		$result = $global['db']->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "reportPerson 1"); }
-		if($result == null || $result->EOF) {
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "reportPerson 2"); }
+		$rep_uuid = $result->fields['p_uuid'];
+	}
+
+	// no errors, we must have permission to report to this event for the given user
+	if(!$error) {
+		$p = new person();
+		$p->init();
+		$p->rep_uuid  = $rep_uuid;
+		$p->theString = $personXML;
+		$p->xmlFormat = $xmlFormat;
+		$p->setEvent($eventShortName);
+		$ecode = $p->parseXml();
+		if($ecode == 0 || $ecode == 419 || $ecode == 420) { // we accept record with bad images (the images are not saved)
+			$p->insert();
+			$p->plusReportLog();
+		} else {
 			$error = true;
-			$ecode = 300;
-		}
-
-		// figure out the p_uuid of the user who is reporting
-		if(!$error) {
-			$q = "
-				SELECT *
-				FROM users
-				WHERE user_name = '".$username."';
-			";
-			$result = $global['db']->Execute($q);
-			if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "reportPerson 2"); }
-			$rep_uuid = $result->fields['p_uuid'];
-		}
-
-		// no errors, we must have permission to report to this event for the given user
-
-		if(!$error) {
-			$p = new person();
-			$p->init();
-			$p->rep_uuid  = $rep_uuid;
-			$p->theString = $personXML;
-			$p->xmlFormat = $xmlFormat;
-			$p->setEvent($eventShortName);
-			$ecode = $p->parseXml();
-			if($ecode == 0 || $ecode == 419 || $ecode == 420) { // we accept record with bad images (the images are not saved)
-				$p->insert();
-				$p->plusReportLog();
-			} else {
-				$error = true;
-			}
 		}
 	}
 
@@ -1517,79 +1515,61 @@ function reReportPerson($uuid, $personXML, $eventShortname, $xmlFormat, $usernam
 		$ecode = $status;
 	} else {
 		// check if the user is a member of a group that has access to the event in question
+		$status = shn_plus_checkEventPermissions($username, $eventShortname);
+		if($status != 0) {
+			$error = true;
+			$ecode = $status;
+		}
+	}
+
+	// figure out the p_uuid of the user who is reporting
+	if(!$error) {
 		$q = "
 			SELECT *
-			FROM incident i, users u, sys_user_groups s, sys_user_to_group t
-			WHERE (i.private_group = s.group_id
-			AND s.group_id = t.group_id
-			AND t.p_uuid = u.p_uuid
-			AND u.user_name = '".mysql_real_escape_string($username)."'
-			AND i.shortname = '".mysql_real_escape_string($eventShortname)."')
-			OR (i.private_group is null
-			AND i.shortname = '".mysql_real_escape_string($eventShortname)."');
+			FROM users
+			WHERE user_name = '".$username."';
 		";
 		$result = $global['db']->Execute($q);
-		if($result == null || $result->EOF) {
+		$rep_uuid = $result->fields['p_uuid'];
+	}
+
+	// check if the record exists
+	if(!$error && !shn_plus_doesPersonExist($uuid)) {
+		$error = true;
+		$ecode = 410;
+	}
+
+/*
+	// check if the record was reported via PLUS, if not error 416
+	if(!$error && !shn_plus_wasRecordReportedViaPLUS($uuid)) {
+		$error = true;
+		$ecode = 416;
+	}
+*/
+
+	// check if the user is admin, hs, hsa, or record owner
+	if(!$error && !shn_plus_checkCredzTriage($username, $uuid)) {
+		$error = true;
+		$ecode = 408;
+	}
+
+	// no errors, we must have permission to revise this record
+
+	if(!$error) {
+		$p = new person();
+		$p->p_uuid    = $uuid;
+		$p->updated_by_p_uuid = $rep_uuid;
+		$p->load();
+		$p->theString = $personXML;
+		$p->xmlFormat = $xmlFormat;
+		$p->setEvent($eventShortname);
+		$ecode = $p->parseXml(true);
+
+		// we accept bad images, we'll record the person, not the bad images (419/420!)
+		if($ecode == 0 || $ecode == 419 || $ecode == 420|| $ecode == 422 || $ecode == 423) {
+			$p->update();
+		} else {
 			$error = true;
-			$ecode = 300;
-		}
-
-		// figure out the p_uuid of the user who is reporting
-		if(!$error) {
-			$q = "
-				SELECT *
-				FROM users
-				WHERE user_name = '".$username."';
-			";
-			$result = $global['db']->Execute($q);
-			$rep_uuid = $result->fields['p_uuid'];
-		}
-
-		// check if the record exists
-		if(!$error && !shn_plus_doesPersonExist($uuid)) {
-			$error = true;
-			$ecode = 410;
-		}
-
-		// check if the record was reported via PLUS, if not error 416
-		if(!$error && !shn_plus_wasRecordReportedViaPLUS($uuid)) {
-			$error = true;
-			$ecode = 416;
-		}
-
-		// check if the user is admin, hs, hsa, or record owner
-		if(!$error && !shn_plus_checkCredzTriage($username, $uuid)) {
-			$error = true;
-			$ecode = 408;
-		}
-
-		// no errors, we must have permission to revise this record
-
-		if(!$error) {
-			$p = new person();
-			$p->p_uuid    = $uuid;
-			$p->rep_uuid  = $rep_uuid;
-			$p->theString = $personXML;
-			$p->xmlFormat = $xmlFormat;
-			$p->setEvent($eventShortname);
-			$p->ignoreDupeUuid = true;
-			$ecode = $p->parseXml();
-
-			if($ecode == 0 || $ecode == 419 || $ecode == 420) { // we accept bad images, we'll record the person, not the bad images (419/420!)
-
-				// we made it this far, so delete the old person record
-				$personOld = new person();
-				$personOld->p_uuid = $uuid;
-				$personOld->load();
-				$personOld->delete();
-
-				// and then re-insert the new record (this is a hack until we re-parse and revise on the fly)
-				$p->insert();
-				$p->plusReportLog();
-
-			} else {
-				$error = true;
-			}
 		}
 	}
 
@@ -1604,11 +1584,10 @@ function reReportPerson($uuid, $personXML, $eventShortname, $xmlFormat, $usernam
 		return array(
 			'url'          => (string)$p->p_uuid,
 			'errorCode'    => (int)$ecode,
-			'errorMessage' => (string)''
+			'errorMessage' => (string)$eCodes[$ecode]
 		);
 	}
 }
-
 
 
 /** Owners, admins, and HSA can immediately expire a record, everyone else can submit an expiration request to a moderated queue. */
@@ -1982,27 +1961,6 @@ function hasRecordBeenRevised($uuid, $username, $password) {
 }
 
 
-
-/** Add a text comment and suggest a status update for a person. */
-function addComment($uuid, $comment, $status, $username, $password) {
-
-	shn_plus_logAccess(__FUNCTION__, $username);
-	global $global;
-	global $conf;
-	$error = false;
-	$ecode = null;
-	$suggested_status = $status;
-
-	// check auth, if fails, return w/ error code/message
-	$status = shn_plus_checkCredz($username, $password);
-	if($status != 0) {
-		$eCodes = unserialize(ERRORCODES);
-		return array(
-			'errorCode'    => (int)$status,
-			'errorMessage' => (string)$eCodes[$status]
-		);
-	}
-
 	// figure out the reporter (web service user)'s uuid
 	$q = "
 		SELECT *
@@ -2086,353 +2044,6 @@ function getPersonPermissions($uuid, $username, $password) {
 			'errorMessage' => ''
 		);
 	}
-}
-
-
-
-/** Image Indexing API FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
-/// Image Indexing API FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
-/// Image Indexing API FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
-/// Image Indexing API FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
-/// Image Indexing API FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
-
-
-/** Returns a count of the total number of images and the value of the latest brownie (image index value). */
-function getImageCountsAndTokens($username, $password) {
-
-	shn_plus_logAccess(__FUNCTION__, $username);
-	global $global;
-
-	$imageCount     = 0;
-	$firstToken     = 0;
-	$lastToken      = 0;
-	$nullTokenCount = 0;
-
-	// check auth, if fails, return w/ error code/message
-	$status = shn_plus_checkCredz($username, $password);
-	if($status != 0) {
-		$eCodes = unserialize(ERRORCODES);
-		return array(
-			'imageCount'     => (int)0,
-			'firstToken'     => (int)0,
-			'lastToken'      => (int)0,
-			'nullTokenCount' => (int)0,
-			'errorCode'      => (int)$status,
-			'errorMessage'   => (string)$eCodes[$status]
-		);
-
-	// passed auth
-	} else {
-
-		// find the first token
-		$q = "
-			SELECT *
-			FROM image
-			ORDER BY image_id ASC
-			LIMIT 1;
-		";
-		$result = $global['db']->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getImageCountAndTokens 1"); }
-		$firstToken = $result->fields["image_id"];
-
-		// find the last token
-		$q = "
-			SELECT *
-			FROM image
-			ORDER BY image_id DESC
-			LIMIT 1;
-		";
-		$result = $global['db']->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getImageCountAndTokens 2"); }
-		$lastToken = $result->fields["image_id"];
-
-		// find the image count
-		$q = "
-			SELECT COUNT(*)
-			FROM image
-			LIMIT 1;
-		";
-		$result = $global['db']->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getImageCountAndTokens 3"); }
-		$imageCount = $result->fields["COUNT(*)"];
-
-		$nullTokenCount = $lastToken - $imageCount;
-	}
-
-	return array(
-		'imageCount'     => (int)$imageCount,
-		'firstToken'     => (int)$firstToken,
-		'lastToken'      => (int)$lastToken,
-		'nullTokenCount' => (int)$nullTokenCount,
-		'errorCode'      => (int)0,
-		'errorMessage'   => ''
-	);
-}
-
-
-
-/** Returns a list of the images and their associated properties, paginated by a start and end token (index value). */
-function getImageList($tokenStart, $tokenEnd, $username, $password) {
-
-	shn_plus_logAccess(__FUNCTION__, $username);
-	global $global;
-	global $conf;
-	$list = array();
-
-	// check auth, if fails, return w/ error code/message
-	$status = shn_plus_checkCredz($username, $password);
-	if($status != 0) {
-		$eCodes = unserialize(ERRORCODES);
-		return array(
-			'imageList'    => (string)'',
-			'errorCode'    => (int)$status,
-			'errorMessage' => (string)$eCodes[$status]
-		);
-
-	// passed auth
-	} else {
-
-		// find the first token
-		$q = "
-			SELECT *
-			FROM image
-			ORDER BY image_id ASC
-			LIMIT 1;
-		";
-		$result = $global['db']->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getImageList 1"); }
-		$firstToken = $result->fields["image_id"];
-
-		// find the last token
-		$q = "
-			SELECT *
-			FROM image
-			ORDER BY image_id DESC
-			LIMIT 1;
-		";
-		$result = $global['db']->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getImageList 2"); }
-		$lastToken = $result->fields["image_id"];
-
-		// check for user asking for out of range tokens...
-		if($tokenStart < $firstToken || $tokenEnd > $lastToken || $tokenStart > $lastToken || $tokenEnd < $firstToken || $tokenStart > $tokenEnd) {
-			$eCodes = unserialize(ERRORCODES);
-			return array(
-				'imageList'    => (string)'',
-				'errorCode'    => (int)411,
-				'errorMessage' => (string)$eCodes[411]
-			);
-		}
-
-		// get a list of all images in the range of the provided tokens
-		$q = "
-			SELECT *
-			FROM image i, person_uuid p
-			WHERE p.p_uuid = i.p_uuid
-			AND image_id >= '".mysql_real_escape_string($tokenStart)."'
-			AND image_id <= '".mysql_real_escape_string($tokenEnd)."';
-		";
-		$result = $global['db']->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getImageList 3 ((".$q."))"); }
-		while (!$result == NULL && !$result->EOF) {
-			$creation_time = isset($result->fields["creation_time"]) ? $result->fields["creation_time"] : null;
-			$list[] = array(
-				'person_uuid'   => $result->fields["p_uuid"],
-				'image_id'      => $result->fields["image_id"],
-				'expiry_date'   => $result->fields["expiry_date"],
-				'creation_time' => $creation_time,
-				'url'           => $conf['https'].$conf['base_uuid'].$result->fields["url"],
-				'url_thumb'     => $conf['https'].$conf['base_uuid'].$result->fields["url_thumb"]
-			);
-			$result->MoveNext();
-		}
-	}
-	return array(
-		'imageList'    => (string)json_encode($list),
-		'errorCode'    => (int)0,
-		'errorMessage' => ''
-	);
-}
-
-
-/** Returns a list of the images and their associated properties, in blocks of stride size beginning with a start token (index value). */
-function getImageListBlock($tokenStart, $stride, $username, $password) {
-
-	shn_plus_logAccess(__FUNCTION__, $username);
-	global $global;
-	global $conf;
-	$list = array();
-
-	// check for valid stride value
-	if($stride < 1 || $stride > 1000000) {
-		$eCodes = unserialize(ERRORCODES);
-		return array(
-			'imageList'    => (string)'',
-			'errorCode'    => (int)417,
-			'errorMessage' => (string)$eCodes[417]
-		);
-	}
-
-	// check auth, if fails, return w/ error code/message
-	$status = shn_plus_checkCredz($username, $password);
-	if($status != 0) {
-		$eCodes = unserialize(ERRORCODES);
-		return array(
-			'imageList'    => (string)'',
-			'errorCode'    => (int)$status,
-			'errorMessage' => (string)$eCodes[$status]
-		);
-	}
-
-	// passed auth
-
-	// find the first token
-	$q = "
-		SELECT *
-		FROM image
-		ORDER BY image_id ASC
-		LIMIT 1;
-	";
-	$result = $global['db']->Execute($q);
-	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getImageList 1"); }
-	$firstToken = $result->fields["image_id"];
-
-	// find the last token
-	$q = "
-		SELECT *
-		FROM image
-		ORDER BY image_id DESC
-		LIMIT 1;
-	";
-	$result = $global['db']->Execute($q);
-	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getImageList 2"); }
-	$lastToken = $result->fields["image_id"];
-
-	// check for user asking for out of range tokens...
-	if($tokenStart < $firstToken || $tokenStart > $lastToken) {
-		$eCodes = unserialize(ERRORCODES);
-		return array(
-			'imageList'    => (string)'',
-			'errorCode'    => (int)411,
-			'errorMessage' => (string)$eCodes[411]
-		);
-	}
-
-	// get a list of all images in the range of the provided tokens
-	$q = "
-		SELECT *
-		FROM image i, person_uuid p
-		WHERE p.p_uuid = i.p_uuid
-		AND image_id >= '".mysql_real_escape_string($tokenStart)."'
-		LIMIT ".(int)$stride.";
-	";
-	$result = $global['db']->Execute($q);
-	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getImageList 3 ((".$q."))"); }
-	while (!$result == NULL && !$result->EOF) {
-		$creation_time = isset($result->fields["creation_time"]) ? $result->fields["creation_time"] : null;
-		$list[] = array(
-			'person_uuid'   => $result->fields["p_uuid"],
-			'image_id'      => $result->fields["image_id"],
-			'expiry_date'   => $result->fields["expiry_date"],
-			'creation_time' => $creation_time,
-			'url'           => $conf['https'].$conf['base_uuid'].$result->fields["url"],
-			'url_thumb'     => $conf['https'].$conf['base_uuid'].$result->fields["url_thumb"]
-		);
-		$result->MoveNext();
-	}
-
-	return array(
-		'imageList'    => (string)json_encode($list),
-		'errorCode'    => (int)0,
-		'errorMessage' => ''
-	);
-}
-
-
-/** Returns a list of the images that have been removed from the system (either deleted or expired). */
-function getNullTokenList($tokenStart, $tokenEnd, $username, $password) {
-
-	shn_plus_logAccess(__FUNCTION__, $username);
-	global $global;
-	$nullList = array();
-	$imageList = array();
-
-	// check auth, if fails, return w/ error code/message
-	$status = shn_plus_checkCredz($username, $password);
-	if($status != 0) {
-		$eCodes = unserialize(ERRORCODES);
-		return array(
-			'nullTokenList'    => (string)'',
-			'errorCode'    => (int)$status,
-			'errorMessage' => (string)$eCodes[$status]
-		);
-
-	// passed auth
-	} else {
-
-		// find the first token
-		$q = "
-			SELECT *
-			FROM image
-			ORDER BY image_id ASC
-			LIMIT 1;
-		";
-		$result = $global['db']->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getNullTokenList 1"); }
-		$firstToken = $result->fields["image_id"];
-
-		// find the last token
-		$q = "
-			SELECT *
-			FROM image
-			ORDER BY image_id DESC
-			LIMIT 1;
-		";
-		$result = $global['db']->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getNullTokenList 2"); }
-		$lastToken = $result->fields["image_id"];
-
-		// check for user asking for out of range tokens...
-		if($tokenStart < $firstToken || $tokenEnd > $lastToken) {
-			$eCodes = unserialize(ERRORCODES);
-			return array(
-				'nullTokenList'    => (string)'',
-				'errorCode'    => (int)411,
-				'errorMessage' => (string)$eCodes[411]
-			);
-		}
-
-		// fill the array with all the possible indexes from the range
-		for($i = (int)$tokenStart; $i <= (int)$tokenEnd; $i++) {
-			$nullList[] = $i;
-		}
-
-		// get a list of all images in the range of the provided tokens
-		$q = "
-			SELECT image_id
-			FROM image
-			WHERE image_id >= '".mysql_real_escape_string($tokenStart)."'
-			AND image_id <= '".mysql_real_escape_string($tokenEnd)."';
-		";
-		$result = $global['db']->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getNullTokenList 3 ((".$q."))"); }
-		while (!$result == NULL && !$result->EOF) {
-			$imageList[] = (int)$result->fields["image_id"];
-			$result->MoveNext();
-		}
-
-		// now we extract the images that are present from the range we created ~ this leaves the null tokens
-		for($i = 0; $i < sizeof($imageList); $i++) {
-			$delKey = array_search($imageList[$i], $nullList);
-			array_splice($nullList, $delKey, 1);
-		}
-
-	}
-	return array(
-		'nullTokenList'    => (string)json_encode($nullList),
-		'errorCode'    => (int)0,
-		'errorMessage' => ''
-	);
 }
 
 

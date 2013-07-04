@@ -1,13 +1,13 @@
 <?
 /**
  * @name         PL User Services
- * @version      24
+ * @version      25
  * @package      plus
  * @author       Greg Miernicki <g@miernicki.com> <gregory.miernicki@nih.gov>
  * @about        Developed in whole or part by the U.S. National Library of Medicine
  * @link         https://pl.nlm.nih.gov/about
  * @license	 http://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License (LGPL)
- * @lastModified 2012.0221
+ * @lastModified 2012.0529
  */
 
 
@@ -34,7 +34,6 @@ function shn_plus_default() {
 	shn_tabmenu_item("reported", _t("People Reported"),   "plus");
 	shn_tabmenu_item("raw",      _t("Raw Access Log"),    "plus");
 	shn_tabmenu_item("stat",     _t("Access Statistics"), "plus");
-	shn_tabmenu_item("clients",  _t("Active Clients"),    "plus");
 	shn_tabmenu_close();
 
 	if(isset($_GET['plus'])) {
@@ -48,9 +47,6 @@ function shn_plus_default() {
 
 	} elseif(isset($_GET['reported'])) {
 		$control = "shn_plus_reported";
-
-	} elseif(isset($_GET['clients'])) {
-		$control = "shn_plus_clients";
 	}
 
 	if($control == "") {
@@ -184,7 +180,8 @@ function shn_plus_raw() {
 
 	$q = "
 		SELECT count(*)
-		FROM `plus_access_log`;
+		FROM `plus_access_log`
+		WHERE `call` <> 'ping' ;
 	";
 	$result = $global['db']->Execute($q);
 	$row = $result->FetchRow();
@@ -199,9 +196,11 @@ function shn_plus_raw() {
 
 	$q  = "
 		SELECT *
-		FROM plus_access_log
+		FROM `plus_access_log`
+		WHERE `call` != 'ping'
+		AND `call` != 'pingWithEcho'
 		ORDER BY access_time DESC
-		LIMIT ".$startPoint.", 100;
+		LIMIT ".$startPoint.", 100 ;
 	";
 	$result = $global['db']->Execute($q);
 	$count = 0;
@@ -229,9 +228,14 @@ function shn_plus_raw() {
 		} else {
 			$username = $row['user_name'];
 		}
+    if($row['application'] == "Mozilla") {
+      $clientName = "Zoner";
+    } else {
+      $clientName = $row['application'];
+    }
 		echo "  <tr>
 				<td ".$odd.">".$row['access_time']."</td>
-				<td ".$odd.">".$row['application']."</td>
+				<td ".$odd.">".$clientName."</td>
 				<td ".$odd.">".$row['version']."</td>
 				<td ".$odd.">".$row['ip']."</td>
 				<td ".$odd." style=\"text-align: left;\"><b>".$row['call']."</b></td>
@@ -294,7 +298,8 @@ function shn_plus_stat() {
 		".$where."
 		".$notLike."
 		group by `ip`
-		order by count(*) desc;
+		order by count(*) desc
+		limit 50;
 	";
 	$result = $global['db']->Execute($q);
 	$count = 0;
@@ -351,7 +356,7 @@ function shn_plus_stat() {
 		<div class=\"form-container\" style=\"width: 230px; float: left; margin-right: 5px;\">
 			<form>
 				<fieldset>
-					<legend>Hits by IP Address</legend>
+					<legend>Hits by IP (Top 50)</legend>
 					<table id=\"regLog\">
 						<tr>
 							<td class=\"evener\"><b>IP Address</b></td>
@@ -519,6 +524,8 @@ function shn_plus_stat() {
 		}
 		if(trim($row['application']) == "") {
 			$app = "TriagePic and others";
+  	} elseif(trim($row['application']) == "Mozilla") {
+			$app = "Zoner";
 		} else {
 			$app = $row['application'];
 		}
@@ -547,7 +554,8 @@ function shn_plus_stat() {
 		".$where."
 		".$notLike."
 		group by `user_name`
-		order by count(*) desc;
+		order by count(*) desc
+		limit 50;
 	";
 	$result = $global['db']->Execute($q);
 	$count = 0;
@@ -556,7 +564,7 @@ function shn_plus_stat() {
 		<div class=\"form-container\" style=\"width: 230px; float: left; margin-right: 5px;\">
 			<form>
 				<fieldset>
-					<legend>Hits by User</legend>
+					<legend>Hits by User (Top 50)</legend>
 					<table id=\"regLog\">
 						<tr>
 							<td class=\"evener\"><b>User</b></td>
@@ -592,94 +600,6 @@ function shn_plus_stat() {
 	echo "</div><div style=\"clear:both;\"></div>";
 }
 
-
-
-function shn_plus_clients() {
-
-	global $global;
-
-	// only use the pro version of Google Maps on these domains (which have a license key):
-	if(($_SERVER['HTTP_HOST'] == "pl")
-	|| ($_SERVER['HTTP_HOST'] == "pl.nlm.nih.gov")
-	|| ($_SERVER['HTTP_HOST'] == "plstage")
-	|| ($_SERVER['HTTP_HOST'] == "plstage.nlm.nih.gov")
-	|| ($_SERVER['HTTP_HOST'] == "ceb-stage-lx")
-	|| ($_SERVER['HTTP_HOST'] == "ceb-stage-lx.nlm.nih.gov")) {
-		echo "<script type=\"text/javascript\" src=\"https://maps-api-ssl.google.com/maps/api/js?v=3&client=gme-hhs&sensor=true\"></script>";
-
-	// else use standard Google Maps:
-	} else {
-		echo "<script type=\"text/javascript\" src=\"http://maps.google.com/maps/api/js?v=3&sensor=true\"></script>";
-	}
-
-	echo '
-		<br><div id="mapCanvas" style="width: 100%; height: 500px;"></div>
-		<script>'.file_get_contents($global['approot']."/mod/plus/plus.js").'</script>
-	';
-
-	$ips = array();
-	$q = "
-		SELECT ip
-		FROM plus_access_log
-		GROUP BY ip;
-	";
-	$result = $global['db']->Execute($q);
-	while($row = $result->FetchRow()) {
-		$ips[] = $row['ip'];
-	}
-
-	echo "<script>
-		var locations = [
-	";
-
-	$count = 0;
-	foreach($ips as $ip) {
-		$q = "
-			SELECT *
-			FROM plus_access_log
-			WHERE ip = '".$ip."'
-			ORDER BY access_time DESC
-			LIMIT 1;
-		";
-		$result = $global['db']->Execute($q);
-		$row = $result->FetchRow();
-
-		if($row['latitude'] !== null && trim($row['latitude']) != '' && $row['longitude'] !== null && trim($row['longitude']) != '') {
-			if($count > 0) {
-				echo ",";
-			}
-			echo "
-				['".$row['user_name']."', ".(float)$row['latitude'].", ".(float)$row['longitude']."]
-			";
-			$count++;
-		}
-	}
-	echo "
-		];
-
-		var infowindow = new google.maps.InfoWindow();
-		var marker, i;
-		var latlngbounds = new google.maps.LatLngBounds();
-
-		for (i = 0; i < locations.length; i++) {
-			var p = new google.maps.LatLng(locations[i][1], locations[i][2]);
-			latlngbounds.extend(p);
-			marker = new google.maps.Marker({
-				position: new google.maps.LatLng(locations[i][1], locations[i][2]),
-				map: map
-			});
-			google.maps.event.addListener(marker, 'click', (function(marker, i) {
-				return function() {
-					infowindow.setContent(locations[i][0]);
-					infowindow.open(map, marker);
-				}
-			})(marker, i));
-		}
-
-		map.fitBounds(latlngbounds);
-		</script>
-	";
-}
 
 
 

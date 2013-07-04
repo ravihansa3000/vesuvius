@@ -9,21 +9,27 @@
  * @license	 http://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License (LGPL)
  * @lastModified 2012.0221
  */
-
+//global $global;
 $user = "testDontDelete";
 $pass = "dontDelete99";
 $uuid = "pl.nlm.nih.gov/person.2958785";
 //$uuid = "ceb-stage-lx.nlm.nih.gov/~miernickig/vesuvius/vesuvius/www/person.4001921";
 require_once("../../3rd/nusoap/lib/nusoap.php");
 
-$wsdl = "https://pl.nlm.nih.gov/?wsdl&api=24";
+$global['approot'] = '../..';
+require_once($global['approot']."/mod/lpf/class.person.php"); 
+require_once($global['approot']."/mod/lpf/class.personEdxl.php");
+require_once($global['approot']."/mod/lpf/class.personImage.php");
+require_once($global['approot']."/mod/lpf/class.personImageTag.php");
+
+$wsdl = "http://localhost/vesuvius/vesuvius/www/?wsdl&api=24";
 //$wsdl = "https://plstage.nlm.nih.gov/?wsdl&api=24";
 //$wsdl = "http://ceb-stage-lx.nlm.nih.gov/~miernickig/vesuvius/vesuvius/www/?wsdl&api=24";
 $client = new nusoap_client($wsdl);
 
 
 $x = file_get_contents("reference_REUNITE4.xml");
-$result = $client->call('reportPerson', array('personXML'=>$x, 'eventShortName'=>'test', 'xmlFormat'=>'REUNITE4', 'username'=>$user, 'password'=>$pass));
+$result = $client->call('exportPerson', array('incidentId' => 1));
 //$result = $client->call('reReportPerson', array('uuid'=>'pl.nlm.nih.gov/person.2970291', 'personXML'=>$x, 'eventShortName'=>'test', 'xmlFormat'=>'REUNITE3', 'username'=>$user, 'password'=>$pass));
 
 //$x = file_get_contents("reference_TRIAGEPIC1.xml");
@@ -83,6 +89,14 @@ $result = $client->call('search', array(
 	'sortBy'=>''
 ));
 */
+$per = unserialize(json_decode($result['export_person']));
+echo 'test: ' . $per->full_name;
+echo '<pre>';
+print_r($per);
+//$data = $per->images[0]->fileContentBase64;
+//header("Content-type: image/jpg");
+//echo '<img src="data:image/jpg;base64,' . $data . '" />';
+//echo base64_decode($data);
 
 echo "
 	<h2>wsdl: ".$wsdl."</h2>

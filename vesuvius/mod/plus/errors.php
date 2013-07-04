@@ -1,20 +1,21 @@
 <?
 /**
  * @name         PL User Services
- * @version      24
+ * @version      28
  * @package      plus
  * @author       Greg Miernicki <g@miernicki.com> <gregory.miernicki@nih.gov>
  * @about        Developed in whole or part by the U.S. National Library of Medicine
  * @link         https://pl.nlm.nih.gov/about
  * @license	 http://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License (LGPL)
- * @lastModified 2012.0221
+ * @lastModified 2013.0211
  */
+
 
 
 // define error codes
 define("ERRORCODES", serialize(array(
-	0    => "No error.",
-	1    => "Invalid username or password.",
+	0    => "",
+	1    => "Invalid username, password, or api key.",
 	2    => "User account is not active. Please check your email for a link to activate your account.",
 	3    => "User account is banned. Please contact support for help with this issue.",
 	4    => "User account locked due to many failed authentication attempts.",
@@ -26,15 +27,15 @@ define("ERRORCODES", serialize(array(
 	10   => "User does not exist or user's account is not active.",
 	11   => "Email address is not associated with any user account.",
 	12   => "Username does not exist.",
-	13    => "Invalid confirmation request.",
+	13   => "Invalid confirmation request.",
+	20   => "User is not a part of Hospital Staff or Hospital Staff Admin groups.",
 	100  => "No hospital registered with this id.",
 	200  => "sessionTimeout value missing from database.",
-	201  => "Invalid number of uuid’s requested, value must be between 2 and 100.",
+	201  => "Invalid number of uuids requested, value must be between 2 and 100.",
 	300  => "Insufficient privileges to access data in this event.",
 	301  => "Authentication required to access this non-public event.",
 	302  => "Event does not exist with this shortname.",
 	400  => "Invalid enumeration.",
-	401  => "Duplicate person report ~ p_uuid collision.",
 	402  => "Invalid p_uuid ~ out of range.",
 	403  => "Error parsing XML.",
 	405  => "Event is closed to reporting.",
@@ -51,7 +52,14 @@ define("ERRORCODES", serialize(array(
 	417  => "Invalid stride size, must be an integer value between 1 and 1,000,000.",
 	418  => "Insufficient permission to access this record.",
 	419  => "Invalid image mimetype(s) ~ image(s) not added to record.",
-	420  => "SHA-1 mismatch(s) ~ image(s) rejected.",
+	420  => "SHA-1 mismatch(s) or bad image data ~ image(s) rejected.",
+	421  => "No image present with the given sha1.",
+	422  => "One or more duplicate image(s) were detected for this person and rejected.",
+	423  => "Bad image deletion request: invalid sha1 or image url.",
+	424  => "One or more duplicate voiceNotes(s) were detected for this person and rejected.",
+	425  => "Bad voiceNote deletion request: invalid sha1 or image url.",
+	430  => "Invalid identifier provided.",
+	431  => "User has already flagged this record for abuse.",
 	9000 => "Database Error.",
 	9998 => "Function not yet implemented (stub).",
 	9999 => "Unknown error.",

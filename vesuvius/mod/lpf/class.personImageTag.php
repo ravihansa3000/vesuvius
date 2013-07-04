@@ -13,6 +13,8 @@
 
 class personImageTag {
 
+	public $p_uuid;
+
 	public $tag_id;
 	public $image_id;
 	public $tag_x;
@@ -28,6 +30,8 @@ class personImageTag {
 	public $Otag_w;
 	public $Otag_h;
 	public $Otag_text;
+
+	public $sql_p_uuid;
 
 	private $sql_tag_id;
 	private $sql_image_id;
@@ -47,6 +51,9 @@ class personImageTag {
 
 	public $updated_by_p_uuid;
 
+	private $saved;
+	private $modified;
+
 
 	// Constructor
 	public function __construct() {
@@ -54,6 +61,8 @@ class personImageTag {
 		global $global;
 		$this->db = $global['db'];
 
+		$this->p_uuid = null;
+
 		$this->tag_id   = null;
 		$this->image_id = null;
 		$this->tag_x    = null;
@@ -69,6 +78,8 @@ class personImageTag {
 		$this->Otag_w    = null;
 		$this->Otag_h    = null;
 		$this->Otag_text = null;
+
+		$this->sql_p_uuid = null;
 
 		$this->sql_tag_id   = null;
 		$this->sql_image_id = null;
@@ -87,12 +98,17 @@ class personImageTag {
 		$this->sql_Otag_text = null;
 
 		$this->updated_by_p_uuid = null;
+
+		$this->modified = false;
+		$this->saved    = false;
 	}
 
 
 	// Destructor
 	public function __destruct() {
 
+		$this->p_uuid = null;
+
 		$this->tag_id   = null;
 		$this->image_id = null;
 		$this->tag_x    = null;
@@ -108,6 +124,8 @@ class personImageTag {
 		$this->Otag_w    = null;
 		$this->Otag_h    = null;
 		$this->Otag_text = null;
+
+		$this->sql_p_uuid = null;
 
 		$this->sql_tag_id   = null;
 		$this->sql_image_id = null;
@@ -126,12 +144,16 @@ class personImageTag {
 		$this->sql_Otag_text = null;
 
 		$this->updated_by_p_uuid = null;
+
+		$this->modified = null;
+		$this->saved    = null;
 	}
 
 
 	// initializes some values for a new instance (instead of when we load a previous instance)
 	public function init() {
 
+		$this->saved = false;
 		$this->tag_id = shn_create_uuid("image_tag");
 	}
 
@@ -157,16 +179,31 @@ class personImageTag {
 			$this->tag_h    = $result->fields['tag_h'];
 			$this->tag_text = $result->fields['tag_text'];
 
-			$this->Otag_id   = $result->fields['tag_id'];
-			$this->Oimage_id = $result->fields['image_id'];
-			$this->Otag_x    = $result->fields['tag_x'];
-			$this->Otag_y    = $result->fields['tag_y'];
-			$this->Otag_w    = $result->fields['tag_w'];
-			$this->Otag_h    = $result->fields['tag_h'];
-			$this->Otag_text = $result->fields['tag_text'];
+			$this->Otag_id   = $this->tag_id;
+			$this->Oimage_id = $this->image_id;
+			$this->Otag_x    = $this->tag_x;
+			$this->Otag_y    = $this->tag_y;
+			$this->Otag_w    = $this->tag_w;
+			$this->Otag_h    = $this->tag_h;
+			$this->Otag_text = $this->tag_text;
+
+			$this->saved = true;
 		}
 	}
-
+	
+	public function makeArrayObject() {
+		$r = array();
+			
+		$r['tag_id']   = $this->tag_id;
+		$r['tag_x']    = $this->tag_x;
+		$r['tag_y']    = $this->tag_y;
+		$r['tag_w']    = $this->tag_w;
+		$r['tag_h']    = $this->tag_h;
+		$r['tag_text'] = $this->tag_text;
+	
+		return $r;
+	}
+	
 
 	// Delete function
 	public function delete() {
@@ -180,6 +217,8 @@ class personImageTag {
 		";
 		$result = $this->db->Execute($q);
 		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "person delete imageTag 1 ((".$q."))"); }
+
+		$this->saved = false;
 	}
 
 
@@ -187,13 +226,15 @@ class personImageTag {
 	private function sync() {
 
 		// build SQL value strings
+		$this->sql_p_uuid   = ($this->p_uuid   === null) ? "NULL" : "'".mysql_real_escape_string((string)$this->p_uuid)."'";
+
 		$this->sql_tag_id   = ($this->tag_id   === null) ? "NULL" : (int)$this->tag_id;
 		$this->sql_image_id = ($this->image_id === null) ? "NULL" : (int)$this->image_id;
 		$this->sql_tag_x    = ($this->tag_x    === null) ? "NULL" : (int)$this->tag_x;
 		$this->sql_tag_y    = ($this->tag_y    === null) ? "NULL" : (int)$this->tag_y;
 		$this->sql_tag_w    = ($this->tag_w    === null) ? "NULL" : (int)$this->tag_w;
 		$this->sql_tag_h    = ($this->tag_h    === null) ? "NULL" : (int)$this->tag_h;
-		$this->sql_tag_text = ($this->tag_text === null) ? "NULL" : "'".mysql_real_escape_string((string)$this->tag_text)."'";
+		$this->sql_tag_text = ($this->tag_text === null) ? "NULL" : "'".htmlentities(mysql_real_escape_string((string)$this->tag_text))."'";
 
 		$this->sql_Otag_id   = ($this->Otag_id   === null) ? "NULL" : (int)$this->Otag_id;
 		$this->sql_Oimage_id = ($this->Oimage_id === null) ? "NULL" : (int)$this->Oimage_id;
@@ -201,62 +242,80 @@ class personImageTag {
 		$this->sql_Otag_y    = ($this->Otag_y    === null) ? "NULL" : (int)$this->Otag_y;
 		$this->sql_Otag_w    = ($this->Otag_w    === null) ? "NULL" : (int)$this->Otag_w;
 		$this->sql_Otag_h    = ($this->Otag_h    === null) ? "NULL" : (int)$this->Otag_h;
-		$this->sql_Otag_text = ($this->Otag_text === null) ? "NULL" : "'".mysql_real_escape_string((string)$this->Otag_text)."'";
+		$this->sql_Otag_text = ($this->Otag_text === null) ? "NULL" : "'".htmlentities(mysql_real_escape_string((string)$this->Otag_text))."'";
 	}
 
 
 	// save the image tag
 	public function insert() {
 
-		$this->sync();
-		$q = "
-			INSERT INTO image_tag (
-				tag_id,
-				image_id,
-				tag_x,
-				tag_y,
-				tag_w,
-				tag_h,
-				tag_text )
-			VALUES (
-				".$this->sql_tag_id.",
-				".$this->sql_image_id.",
-				".$this->sql_tag_x.",
-				".$this->sql_tag_y.",
-				".$this->sql_tag_w.",
-				".$this->sql_tag_h.",
-				".$this->sql_tag_text." );
-		";
-		$result = $this->db->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personImageTag insert ((".$q."))"); }
+		// if this object is in the db, update it instead
+		if($this->saved) {
+			$this->update();
+		} else {
+
+			$this->sync();
+			$q = "
+				INSERT INTO image_tag (
+					tag_id,
+					image_id,
+					tag_x,
+					tag_y,
+					tag_w,
+					tag_h,
+					tag_text )
+				VALUES (
+					".$this->sql_tag_id.",
+					".$this->sql_image_id.",
+					".$this->sql_tag_x.",
+					".$this->sql_tag_y.",
+					".$this->sql_tag_w.",
+					".$this->sql_tag_h.",
+					".$this->sql_tag_text." );
+			";
+			$result = $this->db->Execute($q);
+			if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personImageTag insert ((".$q."))"); }
+
+			$this->saved = true;
+			$this->modified = false;
+		}
 	}
 
 
-	// Update / Save Functions ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// Update / Save Functions ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// Update / Save Functions ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/** Update / Save Functions ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// Update / Save Functions ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// Update / Save Functions ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 
 
 	// save the person (subsequent save = update)
 	public function update() {
 
-		$this->sync();
-		$this->saveRevisions();
+		// if we've never saved this record before, we can't update it, so insert() instead
+		if(!$this->saved) {
+			$this->insert();
+		} else {
 
-		$q = "
-			UPDATE image_tag
-			SET
-				image_id = ".$this->sql_image_id.",
-				tag_x    = ".$this->sql_tag_x.",
-				tag_y    = ".$this->sql_tag_y.",
-				tag_w    = ".$this->sql_tag_w.",
-				tag_h    = ".$this->sql_tag_h.",
-				tag_text = ".$this->sql_tag_text."
+			$this->sync();
+			$this->saveRevisions();
 
-			WHERE tag_id = ".$this->sql_tag_id.";
-		";
-		$result = $this->db->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personImageTag update ((".$q."))"); }
+			if($this->modified) {
+				$q = "
+					UPDATE image_tag
+					SET
+						image_id = ".$this->sql_image_id.",
+						tag_x    = ".$this->sql_tag_x.",
+						tag_y    = ".$this->sql_tag_y.",
+						tag_w    = ".$this->sql_tag_w.",
+						tag_h    = ".$this->sql_tag_h.",
+						tag_text = ".$this->sql_tag_text."
+
+					WHERE tag_id = ".$this->sql_tag_id.";
+				";
+				$result = $this->db->Execute($q);
+				if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personImageTag update ((".$q."))"); }
+			}
+			$this->modified = false;
+		}
 	}
 
 
@@ -274,6 +333,8 @@ class personImageTag {
 
 	// save the revision
 	function saveRevision($newValue, $oldValue, $table, $column) {
+
+		$this->modified = true;
 
 		// note the revision
 		$q = "

@@ -1,16 +1,15 @@
 <?php
 /**
  * @name         LPF Library
- * @version      28
+ * @version      29
  * @package      lpf
  * @author       Greg Miernicki <g@miernicki.com> <gregory.miernicki@nih.gov>
  * @about        Developed in whole or part by the U.S. National Library of Medicine and the Sahana Foundation
  * @link         https://pl.nlm.nih.gov/about
  * @link         http://sahanafoundation.org
  * @license	 http://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License (LGPL)
- * @lastModified 2012.0126
+ * @lastModified 2013.0603
  */
-
 
 
 // Enumerated Types...
@@ -19,7 +18,7 @@ $global['enumTriageStatusTags']  = array('Green', 'BH Green', 'Yellow', 'Red', '
 $global['enumGenders']           = array('M', 'F', 'U', 'C');
 $global['enumDistrStatus']       = array('Actual', 'Exercise', 'System', 'Test');
 $global['enumDistrType']         = array('Ack', 'Cancel', 'Dispatch', 'Error', 'Report', 'Request', 'Response', 'Update');
-$global['enumXmlFormats']        = array('REUNITE2', 'REUNITE3', 'REUNITE4', 'TRIAGEPIC0', 'TRIAGEPIC1');
+$global['enumXmlFormats']        = array('REUNITE4', 'TRIAGEPIC0', 'TRIAGEPIC1', 'ZONER0', 'ZONER1');
 
 // whether to save the xml attachments for debug purposes
 $global['debugAndSaveXmlToFile'] = true;
@@ -34,6 +33,7 @@ require_once($global['approot']."/mod/lpf/class.personEdxl.php");
 require_once($global['approot']."/mod/lpf/class.personImage.php");
 require_once($global['approot']."/mod/lpf/class.personImageTag.php");
 require_once($global['approot']."/mod/lpf/class.voiceNote.php");
+require_once($global['approot']."/mod/lpf/class.personNote.php");
 require_once($global['approot']."/mod/lpf/class.XMLParser.php");
 require_once($global['approot']."/mod/lpf/class.pop.php");
 require_once($global['approot']."/mod/lpf/class.nameParser.php");

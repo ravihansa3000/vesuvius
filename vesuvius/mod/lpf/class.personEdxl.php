@@ -4,7 +4,7 @@
 ********************************************************************************************************************************************************************
 *
 * @class        personEdxl
-* @version      12
+* @version      16
 * @author       Greg Miernicki <g@miernicki.com>
 *
 ********************************************************************************************************************************************************************
@@ -156,6 +156,13 @@ class personEdxl {
 	public $image_co_ids;
 	public $image_sha1;
 
+	// whether the object has been modified or inserted (saved)
+	private $modified;
+	private $saved;
+	
+	// who updated the record
+	public $updated_by_p_uuid;
+
 
 	// Constructor
 	public function __construct() {
@@ -293,6 +300,11 @@ class personEdxl {
 		$this->sql_Olanguage        = null;
 		$this->sql_Owhen_here       = null;
 		$this->sql_Oinbound         = null;
+
+		$this->modified = false;
+		$this->saved    = false;
+		
+		$this->updated_by_p_uuid = null;
 	}
 
 
@@ -429,10 +441,18 @@ class personEdxl {
 		$this->sql_Olanguage        = null;
 		$this->sql_Owhen_here       = null;
 		$this->sql_Oinbound         = null;
+
+		$this->modified = null;
+		$this->saved    = null;
+		
+		$this->updated_by_p_uuid = null;
 	}
 
+	
 	/** initializes some values for a new instance (instead of when we load a previous instance) */
 	public function init() {
+
+		$this->saved = false;
 
 		// update sequences
 		$this->co_id = shn_create_uuid("edxl_co_header");
@@ -583,6 +603,10 @@ class personEdxl {
 			$this->image_sha1[]   = $result->fields['sha1'];
 			$result->MoveNext();
 		}
+
+		// this object exists in the db
+		$this->saved = true;
+
 		return true;
 	}
 
@@ -710,102 +734,47 @@ class personEdxl {
 		";
 		$result = $this->db->Execute($q);
 		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "person delete edxl 4 ((".$q."))"); }
+
+		// doesn't exist in the db anymore
+		$this->saved = false;
 	}
 
 
 	// save the image tag
 	public function insert() {
 
-		$this->sync();
-		$q = "
-			INSERT INTO edxl_de_header (
-				de_id,
-				when_sent,
-				sender_id,
-				distr_id,
-				distr_status,
-				distr_type,
-				combined_conf,
-				language,
-				when_here,
-				inbound )
-			VALUES (
-				".$this->sql_de_id.",
-				".$this->sql_when_sent.",
-				".$this->sql_sender_id.",
-				".$this->sql_distr_id.",
-				".$this->sql_distr_status.",
-				".$this->sql_distr_type.",
-				".$this->sql_combined_conf.",
-				".$this->sql_language.",
-				".$this->sql_when_here.",
-				".$this->sql_inbound." );
-		";
-		$result = $this->db->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl de header insert ((".$q."))"); }
+		// if this object exists in the db, update instead
+		if($this->saved) {
+			$this->update();
+		} else {
 
-		$q = "
-			INSERT INTO edxl_co_header (
-				de_id,
-				co_id,
-				p_uuid,
-				type,
-				content_descr,
-				incident_id,
-				incident_descr,
-				confidentiality )
-			VALUES (
-				".$this->sql_de_id.",
-				".$this->sql_co_id.",
-				".$this->sql_p_uuid.",
-				".$this->sql_type.",
-				".$this->sql_content_descr.",
-				".$this->sql_incident_id.",
-				".$this->sql_incident_descr.",
-				".$this->sql_confidentiality." );
-		";
-		$result = $this->db->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl co header insert ((".$q."))"); }
-
-		$q = "
-			INSERT INTO edxl_co_lpf (
-				co_id,
-				p_uuid,
-				schema_version,
-				login_machine,
-				login_account,
-				person_id,
-				event_name,
-				event_long_name,
-				org_name,
-				org_id,
-				last_name,
-				first_name,
-				gender,
-				peds,
-				triage_category )
-			VALUES (
-				".$this->sql_co_id.",
-				".$this->sql_p_uuid.",
-				".$this->sql_schema_version.",
-				".$this->sql_login_machine.",
-				".$this->sql_login_account.",
-				".$this->sql_person_id.",
-				".$this->sql_event_name.",
-				".$this->sql_event_long_name.",
-				".$this->sql_org_name.",
-				".$this->sql_org_id.",
-				".$this->sql_last_name.",
-				".$this->sql_first_name.",
-				".$this->sql_gender.",
-				".$this->sql_peds.",
-				".$this->sql_triage_category." );
-		";
-		$result = $this->db->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl co lpf insert ((".$q."))"); }
-
-
-		for($i = 0; $i < sizeof($this->contentDatas); $i++) {
+			$this->sync();
+			$q = "
+				INSERT INTO edxl_de_header (
+					de_id,
+					when_sent,
+					sender_id,
+					distr_id,
+					distr_status,
+					distr_type,
+					combined_conf,
+					language,
+					when_here,
+					inbound )
+				VALUES (
+					".$this->sql_de_id.",
+					".$this->sql_when_sent.",
+					".$this->sql_sender_id.",
+					".$this->sql_distr_id.",
+					".$this->sql_distr_status.",
+					".$this->sql_distr_type.",
+					".$this->sql_combined_conf.",
+					".$this->sql_language.",
+					".$this->sql_when_here.",
+					".$this->sql_inbound." );
+			";
+			$result = $this->db->Execute($q);
+			if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl de header insert ((".$q."))"); }
 
 			$q = "
 				INSERT INTO edxl_co_header (
@@ -819,9 +788,9 @@ class personEdxl {
 					confidentiality )
 				VALUES (
 					".$this->sql_de_id.",
-					'".mysql_real_escape_string($this->image_co_ids[$i])."',
+					".$this->sql_co_id.",
 					".$this->sql_p_uuid.",
-					'pix',
+					".$this->sql_type.",
 					".$this->sql_content_descr.",
 					".$this->sql_incident_id.",
 					".$this->sql_incident_descr.",
@@ -831,25 +800,91 @@ class personEdxl {
 			if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl co header insert ((".$q."))"); }
 
 			$q = "
-				INSERT INTO edxl_co_photos (
+				INSERT INTO edxl_co_lpf (
 					co_id,
 					p_uuid,
-					mimeType,
-					uri,
-					contentData,
-					image_id,
-					sha1 )
+					schema_version,
+					login_machine,
+					login_account,
+					person_id,
+					event_name,
+					event_long_name,
+					org_name,
+					org_id,
+					last_name,
+					first_name,
+					gender,
+					peds,
+					triage_category )
 				VALUES (
-					'".mysql_real_escape_string($this->image_co_ids[$i])."',
+					".$this->sql_co_id.",
 					".$this->sql_p_uuid.",
-					'".mysql_real_escape_string($this->mimeTypes[$i])."',
-					'".mysql_real_escape_string($this->uris[$i])."',
-					'".mysql_real_escape_string($this->contentDatas[$i])."',
-					'".mysql_real_escape_string($this->image_ids[$i])."',
-					'".mysql_real_escape_string($this->image_sha1[$i])."' );
+					".$this->sql_schema_version.",
+					".$this->sql_login_machine.",
+					".$this->sql_login_account.",
+					".$this->sql_person_id.",
+					".$this->sql_event_name.",
+					".$this->sql_event_long_name.",
+					".$this->sql_org_name.",
+					".$this->sql_org_id.",
+					".$this->sql_last_name.",
+					".$this->sql_first_name.",
+					".$this->sql_gender.",
+					".$this->sql_peds.",
+					".$this->sql_triage_category." );
 			";
 			$result = $this->db->Execute($q);
-			if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl co photos insert ((".$q."))"); }
+			if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl co lpf insert ((".$q."))"); }
+
+
+			for($i = 0; $i < sizeof($this->contentDatas); $i++) {
+
+				$q = "
+					INSERT INTO edxl_co_header (
+						de_id,
+						co_id,
+						p_uuid,
+						type,
+						content_descr,
+						incident_id,
+						incident_descr,
+						confidentiality )
+					VALUES (
+						".$this->sql_de_id.",
+						'".mysql_real_escape_string($this->image_co_ids[$i])."',
+						".$this->sql_p_uuid.",
+						'pix',
+						".$this->sql_content_descr.",
+						".$this->sql_incident_id.",
+						".$this->sql_incident_descr.",
+						".$this->sql_confidentiality." );
+				";
+				$result = $this->db->Execute($q);
+				if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl co header insert ((".$q."))"); }
+
+				$q = "
+					INSERT INTO edxl_co_photos (
+						co_id,
+						p_uuid,
+						mimeType,
+						uri,
+						contentData,
+						image_id,
+						sha1 )
+					VALUES (
+						'".mysql_real_escape_string($this->image_co_ids[$i])."',
+						".$this->sql_p_uuid.",
+						'".mysql_real_escape_string($this->mimeTypes[$i])."',
+						'".mysql_real_escape_string($this->uris[$i])."',
+						'".mysql_real_escape_string($this->contentDatas[$i])."',
+						'".mysql_real_escape_string($this->image_ids[$i])."',
+						'".mysql_real_escape_string($this->image_sha1[$i])."' );
+				";
+				$result = $this->db->Execute($q);
+				if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl co photos insert ((".$q."))"); }
+			}
+			$this->saved = true;
+			$this->modified = false;
 		}
 	}
 
@@ -861,65 +896,171 @@ class personEdxl {
 
 	// save the person (subsequent save = update)
 	public function update() {
+
+		// if we've never saved this record before, we can't update it, so insert() instead
+		if(!$this->saved) {
+			$this->insert();
+		} else {
+
+			$this->sync();
+			$this->saveRevisions();
+
+			$q = "
+				UPDATE edxl_de_header
+				SET
+					when_sent     = ".$this->sql_when_sent.",
+					sender_id     = ".$this->sql_sender_id.",
+					distr_id      = ".$this->sql_distr_id.",
+					distr_status  = ".$this->sql_distr_status.",
+					distr_type    = ".$this->sql_distr_type.",
+					combined_conf = ".$this->sql_combined_conf.",
+					language      = ".$this->sql_language.",
+					when_here     = ".$this->sql_when_here.",
+					inbound       = ".$this->sql_inbound."
+				WHERE de_id = ".$this->sql_de_id.";
+			";
+			$result = $this->db->Execute($q);
+			if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl de header update ((".$q."))"); }
+
+
+			$q = "
+				UPDATE edxl_co_header
+				SET
+					p_uuid          = ".$this->sql_p_uuid.",
+					type            = ".$this->sql_type.",
+					content_descr   = ".$this->sql_content_descr.",
+					incident_id     = ".$this->sql_incident_id.",
+					incident_descr  = ".$this->sql_incident_descr.",
+					confidentiality = ".$this->sql_confidentiality."
+				WHERE co_id = ".$this->sql_co_id.";
+			";
+			$result = $this->db->Execute($q);
+			if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl co header update ((".$q."))"); }
+
+
+			$q = "
+				UPDATE edxl_co_lpf
+				SET
+					schema_version  = ".$this->sql_schema_version.",
+					login_machine   = ".$this->sql_login_machine.",
+					login_account   = ".$this->sql_login_account.",
+					person_id       = ".$this->sql_person_id.",
+					event_name      = ".$this->sql_event_name.",
+					event_long_name = ".$this->sql_event_long_name.",
+					org_name        = ".$this->sql_org_name.",
+					org_id          = ".$this->sql_org_id.",
+					last_name       = ".$this->sql_last_name.",
+					first_name      = ".$this->sql_first_name.",
+					gender          = ".$this->sql_gender.",
+					peds            = ".$this->sql_peds.",
+					triage_category = ".$this->sql_triage_category."
+				WHERE co_id = ".$this->sql_co_id.";
+			";
+			$result = $this->db->Execute($q);
+			if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl co lpf update ((".$q."))"); }
+
+			
+// DISABLED saving duplicates of every image for now as we don't use them for any purpose.... 			
 /*
-		$this->sync();
-		$this->saveRevisions();
+			// if any images exist at this point, they are new and different images for the person, so we insert them  instead of updating
+			for($i = 0; $i < sizeof($this->contentDatas); $i++) {
 
-		$q = "
-			UPDATE edxl_de_header (
-			SET
-				de_id         = ".$this->sql_de_id.",
-				when_sent     = ".$this->sql_when_sent.",
-				sender_id     = ".$this->sql_sender_id.",
-				distr_id      = ".$this->sql_distr_id.",
-				distr_status  = ".$this->sql_distr_status.",
-				distr_type    = ".$this->sql_distr_type.",
-				combined_conf = ".$this->sql_combined_conf.",
-				language      = ".$this->sql_language.",
-				when_here     = ".$this->sql_when_here.",
-				inbound       = ".$this->sql_inbound."
-			WHERE de_id = ".$this->sql_de_id.";
-		";
-		$result = $this->db->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl de header insert ((".$q."))"); }
+				$q = "
+					INSERT INTO edxl_co_header (
+						de_id,
+						co_id,
+						p_uuid,
+						type,
+						content_descr,
+						incident_id,
+						incident_descr,
+						confidentiality )
+					VALUES (
+						".$this->sql_de_id.",
+						'".mysql_real_escape_string($this->image_co_ids[$i])."',
+						".$this->sql_p_uuid.",
+						'pix',
+						".$this->sql_content_descr.",
+						".$this->sql_incident_id.",
+						".$this->sql_incident_descr.",
+						".$this->sql_confidentiality." );
+				";
+				$result = $this->db->Execute($q);
+				if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl update1 co header insert ((".$q."))"); }
 
+				$q = "
+					INSERT INTO edxl_co_photos (
+						co_id,
+						p_uuid,
+						mimeType,
+						uri,
+						contentData,
+						image_id,
+						sha1 )
+					VALUES (
+						'".mysql_real_escape_string($this->image_co_ids[$i])."',
+						".$this->sql_p_uuid.",
+						'".mysql_real_escape_string($this->mimeTypes[$i])."',
+						'".mysql_real_escape_string($this->uris[$i])."',
+						'".mysql_real_escape_string($this->contentDatas[$i])."',
+						'".mysql_real_escape_string($this->image_ids[$i])."',
+						'".mysql_real_escape_string($this->image_sha1[$i])."' );
+				";
+				$result = $this->db->Execute($q);
+				if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl update2 co photos insert ((".$q."))"); }
 
-
-
-
-		$q = "
-			UPDATE image_tag
-			SET
-				image_id = ".$this->sql_image_id.",
-				tag_x    = ".$this->sql_tag_x.",
-				tag_y    = ".$this->sql_tag_y.",
-				tag_w    = ".$this->sql_tag_w.",
-				tag_h    = ".$this->sql_tag_h.",
-				tag_text = ".$this->sql_tag_text."
-
-			WHERE tag_id = ".$this->sql_tag_id.";
-		";
-		$result = $this->db->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personImageTag update ((".$q."))"); }
-*/
-
+				// save the revision history for this new image
+				//$this->saveRevision(null, "ADDITIONAL_IMAGE", 'edxl_co_header', null);
+			}
+*/			
+			
+			$this->modified = false;
+		}
 	}
 
 
 	// save any changes since object was loaded as revisions
 	function saveRevisions() {
 
-		if($this->image_id != $this->Oimage_id) { $this->saveRevision($this->sql_image_id, $this->sql_Oimage_id, 'image_tag', 'image_id' ); }
-		if($this->tag_x    != $this->Otag_x)    { $this->saveRevision($this->sql_tag_x,    $this->sql_Otag_x,    'image_tag', 'tag_x'    ); }
-		if($this->tag_y    != $this->Otag_y)    { $this->saveRevision($this->sql_tag_y,    $this->sql_Otag_y,    'image_tag', 'tag_y'    ); }
-		if($this->tag_w    != $this->Otag_w)    { $this->saveRevision($this->sql_tag_w,    $this->sql_Otag_w,    'image_tag', 'tag_w'    ); }
-		if($this->tag_h    != $this->Otag_h)    { $this->saveRevision($this->sql_tag_h,    $this->sql_Otag_h,    'image_tag', 'tag_h'    ); }
-		if($this->tag_text != $this->Otag_text) { $this->saveRevision($this->sql_tag_text, $this->sql_Otag_text, 'image_tag', 'tag_text' ); }
+		// de_id not mutable
+		// co_id not mutable
+		if($this->content_descr   != $this->Ocontent_descr  ) { $this->saveRevision($this->sql_content_descr,   $this->sql_Ocontent_descr,   'edxl_co_header', 'content_descr'   ); }
+		if($this->incident_id     != $this->Oincident_id    ) { $this->saveRevision($this->sql_incident_id,     $this->sql_Oincident_id,     'edxl_co_header', 'incident_id'     ); }
+		if($this->incident_descr  != $this->Oincident_descr ) { $this->saveRevision($this->sql_incident_descr,  $this->sql_Oincident_descr,  'edxl_co_header', 'incident_descr'  ); }
+		if($this->confidentiality != $this->Oconfidentiality) { $this->saveRevision($this->sql_confidentiality, $this->sql_Oconfidentiality, 'edxl_co_header', 'confidentiality' ); }
+
+		// p_uuid not mutable
+		if($this->type            != $this->Otype           ) { $this->saveRevision($this->sql_type,            $this->sql_Otype,            'edxl_co_lpf', 'type'            ); }
+		if($this->schema_version  != $this->Oschema_version ) { $this->saveRevision($this->sql_schema_version,  $this->sql_Oschema_version,  'edxl_co_lpf', 'schema_version'  ); }
+		if($this->login_machine   != $this->Ologin_machine  ) { $this->saveRevision($this->sql_login_machine,   $this->sql_Ologin_machine,   'edxl_co_lpf', 'login_machine'   ); }
+		if($this->login_account   != $this->Ologin_account  ) { $this->saveRevision($this->sql_login_account,   $this->sql_Ologin_account,   'edxl_co_lpf', 'login_account'   ); }
+		if($this->person_id       != $this->Operson_id      ) { $this->saveRevision($this->sql_person_id,       $this->sql_Operson_id,       'edxl_co_lpf', 'person_id'       ); }
+		if($this->event_name      != $this->Oevent_name     ) { $this->saveRevision($this->sql_event_name,      $this->sql_Oevent_name,      'edxl_co_lpf', 'event_name'      ); }
+		if($this->event_long_name != $this->Oevent_long_name) { $this->saveRevision($this->sql_event_long_name, $this->sql_Oevent_long_name, 'edxl_co_lpf', 'event_long_name' ); }
+		if($this->org_name        != $this->Oorg_name       ) { $this->saveRevision($this->sql_org_name,        $this->sql_Oorg_name,        'edxl_co_lpf', 'org_name'        ); }
+		if($this->org_id          != $this->Oorg_id         ) { $this->saveRevision($this->sql_org_id,          $this->sql_Oorg_id,          'edxl_co_lpf', 'org_id'          ); }
+		if($this->last_name       != $this->Olast_name      ) { $this->saveRevision($this->sql_last_name,       $this->sql_Olast_name,       'edxl_co_lpf', 'last_name'       ); }
+		if($this->first_name      != $this->Ofirst_name     ) { $this->saveRevision($this->sql_first_name,      $this->sql_Ofirst_name,      'edxl_co_lpf', 'first_name'      ); }
+		if($this->gender          != $this->Ogender         ) { $this->saveRevision($this->sql_gender,          $this->sql_Ogender,          'edxl_co_lpf', 'gender'          ); }
+		if($this->peds            != $this->Opeds           ) { $this->saveRevision($this->sql_peds,            $this->sql_Opeds,            'edxl_co_lpf', 'peds'            ); }
+		if($this->triage_category != $this->Otriage_category) { $this->saveRevision($this->sql_triage_category, $this->sql_Otriage_category, 'edxl_co_lpf', 'triage_category' ); }
+
+		if($this->when_sent     != $this->Owhen_sent    ) { $this->saveRevision($this->sql_when_sent,     $this->sql_Owhen_sent,     'edxl_de_header', 'when_sent'     ); }
+		if($this->sender_id     != $this->Osender_id    ) { $this->saveRevision($this->sql_sender_id,     $this->sql_Osender_id,     'edxl_de_header', 'sender_id'     ); }
+		if($this->distr_id      != $this->Odistr_id     ) { $this->saveRevision($this->sql_distr_id,      $this->sql_Odistr_id,      'edxl_de_header', 'distr_id'      ); }
+		if($this->distr_status  != $this->Odistr_status ) { $this->saveRevision($this->sql_distr_status,  $this->sql_Odistr_status,  'edxl_de_header', 'distr_status'  ); }
+		if($this->distr_type    != $this->Odistr_type   ) { $this->saveRevision($this->sql_distr_type,    $this->sql_Odistr_type,    'edxl_de_header', 'distr_type'    ); }
+		if($this->combined_conf != $this->Ocombined_conf) { $this->saveRevision($this->sql_combined_conf, $this->sql_Ocombined_conf, 'edxl_de_header', 'combined_conf' ); }
+		if($this->language      != $this->Olanguage     ) { $this->saveRevision($this->sql_language,      $this->sql_Olanguage,      'edxl_de_header', 'language'      ); }
+		if($this->when_here     != $this->Owhen_here    ) { $this->saveRevision($this->sql_when_here,     $this->sql_Owhen_here,     'edxl_de_header', 'when_here'     ); }
+		if($this->inbound       != $this->Oinbound      ) { $this->saveRevision($this->sql_inbound,       $this->sql_Oinbound,       'edxl_de_header', 'inbound'       ); }
 	}
 
 
 	// save the revision
 	function saveRevision($newValue, $oldValue, $table, $column) {
+
+		$this->modified = true;
 
 		// note the revision
 		$q = "
@@ -927,7 +1068,7 @@ class personEdxl {
 			VALUES (".$this->sql_p_uuid.", '".$table."', '".$column."', ".$oldValue.", ".$newValue.", '".$this->updated_by_p_uuid."');
 		";
 		$result = $this->db->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personImageTag saveRevision ((".$q."))"); }
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "personEdxl saveRevision ((".$q."))"); }
 	}
 
 

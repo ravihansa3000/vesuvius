@@ -1,13 +1,13 @@
 <?
 /**
  * @name         PL User Services
- * @version      24
+ * @version      25
  * @package      plus
  * @author       Greg Miernicki <g@miernicki.com> <gregory.miernicki@nih.gov>
  * @about        Developed in whole or part by the U.S. National Library of Medicine
  * @link         https://pl.nlm.nih.gov/about
  * @license	 http://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License (LGPL)
- * @lastModified 2012.0221
+ * @lastModified 2012.0529
  */
 
 
@@ -61,7 +61,7 @@ if($username != null && $reset != null) {
 	gotoFourOhFour();
 }
 
-function gotoAlreadyActive() {header("Location: ".makeBaseUrl()."index.php?mod=rez&act=default&page_id=-4");}
-function gotoActivated()     {header("Location: ".makeBaseUrl()."index.php?mod=rez&act=default&page_id=-5");}
-function gotoReset()         {header("Location: ".makeBaseUrl()."index.php?mod=rez&act=default&page_id=-6");}
-function gotoFourOhFour()    {header("Location: ".makeBaseUrl()."index.php?mod=rez&act=default&page_id=-404");}
+function gotoAlreadyActive() {header("Location: ".makeBaseUrl()."resources?page=active");    } //4
+function gotoActivated()     {header("Location: ".makeBaseUrl()."resources?page=activated"); } //5
+function gotoReset()         {header("Location: ".makeBaseUrl()."resources?page=reset");     } //6
+function gotoFourOhFour()    {header("Location: ".makeBaseUrl()."resources?page=404");       } //404
