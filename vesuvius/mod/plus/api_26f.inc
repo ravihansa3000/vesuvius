@@ -1,0 +1,2173 @@
+<?
+/**
+ * @name         PL User Services
+ * @version      26
+ * @package      plus
+ * @author       Greg Miernicki <g@miernicki.com> <gregory.miernicki@nih.gov>
+ * @about        Developed in whole or part by the U.S. National Library of Medicine
+ * @link         https://pl.nlm.nih.gov/about
+ * @license	 http://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License (LGPL)
+ * @lastModified 2012.1022
+ */
+
+
+/** GENERAL API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// GENERAL API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// GENERAL API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// GENERAL API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// GENERAL API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+
+/** Used to test if the server is active/up. */
+function ping() {
+	return array('time' => (string)date("Y:md H:m:s.".getMicrotimeComponent()." e"));
+}
+
+
+
+/** Used to test if the server is active/up as well as report latency data. The latency is calculated from the previous ping call, so during the intial call of this service, you would report a latency of -1, 0, or null to signifiy no latency. */
+function pingWithEcho($machineName = null, $latency = null) {
+
+	global $global;
+	$ip = isset($_SERVER['REMOTE_ADDR']) ? "'".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."'" : "0.0.0.0";
+	if(isset($machineName) && $machineName != null && trim($machineName) != "" && isset($latency) && $latency != -1 && $latency != 0 && $latency != null) {
+		$q = "
+			INSERT INTO `plus_ping` (
+				`machine_name`,
+				`milliseconds`,
+				`time_stamp`,
+				`ip`
+			) VALUES (
+				'".mysql_real_escape_string((string)$machineName)."',
+				".(int)($latency*100).", 
+				CURRENT_TIMESTAMP,
+				".$ip."
+			);
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "pingWithEcho !!"); }
+	}
+	return array('time' => (string)date("Y:md H:m:s.".getMicrotimeComponent()." e"));
+}
+
+
+
+/** Returns an array of (incident_id, parent_id, name, shortname, date, type, latitude, longitude) of public disaster events. */
+function getEventList() {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	$list = array();
+	$q = "
+		SELECT *
+		FROM incident
+		WHERE private_group is null
+		ORDER BY `default` DESC, date DESC;
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getEventList 1"); }
+	while(!$result == NULL && !$result->EOF) {
+		$list[] = array(
+			'incident_id' => $result->fields["incident_id"],
+			'parent_id'   => $result->fields["parent_id"],
+			'name'        => $result->fields["name"],
+			'shortname'   => $result->fields["shortname"],
+			'date'        => $result->fields["date"],
+			'type'        => $result->fields["type"],
+			'latitude'    => $result->fields["latitude"],
+			'longitude'   => $result->fields["longitude"],
+			'street'      => $result->fields["street"],
+			'group'       => $result->fields["private_group"],
+			'closed'      => $result->fields["closed"],
+		);
+		$result->MoveNext();
+	}
+	return array(
+		'eventList'    => (string)json_encode($list),
+		'errorCode'    => (int)0,
+		'errorMessage' => ''
+	);
+}
+
+
+
+/** Returns an array of (incident_id, parent_id, name, shortname, date, type, latitude, longitude) disaster events accessibleby a certain user. */
+function getEventListUser($username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	$list = array();
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+	if($status != 0) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'eventList'    => (string)'',
+			'errorCode'    => (int)$status,
+			'errorMessage' => (string)$eCodes[$status]
+		);
+
+	// find the user's p_uuid
+	} else {
+		$q = "
+			SELECT *
+			FROM users
+			WHERE user_name = '".mysql_real_escape_string($username)."';
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getEventListUser 1"); }
+		// we can assume, the row exists, since we passed auth check
+		$p_uuid = $result->fields["p_uuid"];
+	}
+
+	// get a list of all public events and events where the user has access
+	$q = "
+		SELECT *
+		FROM incident i
+		LEFT JOIN sys_user_to_group s ON i.private_group = s.group_id
+		LEFT JOIN users u ON u.p_uuid = s.p_uuid
+		WHERE i.private_group is null
+		OR (
+			s.group_id = i.private_group
+			and s.p_uuid = u.p_uuid
+			and u.p_uuid = '".$p_uuid."'
+		)
+		ORDER BY `default` DESC, date DESC;
+	";
+
+	/*
+	$q = "
+		SELECT *
+		FROM incident
+		ORDER BY `default` DESC, name ASC;
+	";
+	*/
+	
+	
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getEventListUser 2"); }
+	while (!$result == NULL && !$result->EOF) {
+		if($result->fields["private_group"] == 5) {
+			$ggg = "5,6";
+		} else {
+			$ggg = $result->fields["private_group"];
+		}
+		$list[] = array(
+			'incident_id' => $result->fields["incident_id"],
+			'parent_id'   => $result->fields["parent_id"],
+			'name'        => $result->fields["name"],
+			'shortname'   => $result->fields["shortname"],
+			'date'        => $result->fields["date"],
+			'type'        => $result->fields["type"],
+			'latitude'    => $result->fields["latitude"],
+			'longitude'   => $result->fields["longitude"],
+			'street'      => $result->fields["street"],
+			'group'       => $ggg,
+			'closed'      => $result->fields["closed"],
+		);
+		$result->MoveNext();
+	}
+	return array(
+		'eventList'    => (string)json_encode($list),
+		'errorCode'    => (int)0,
+		'errorMessage' => ''
+	);
+}
+
+
+
+/** Returns an array of (group_id, group_name) listing all groups in the system. */
+function getGroupList() {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	$list = array();
+	$q = "
+		SELECT *
+		FROM sys_user_groups
+		ORDER BY group_id ASC;
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getGroupList 1"); }
+	while (!$result == NULL && !$result->EOF) {
+		$list[] = array(
+			'group_id'  => $result->fields["group_id"],
+			'group_name'=> $result->fields["group_name"]
+		);
+		$result->MoveNext();
+	}
+	return array(
+		'groupList'    => (string)json_encode($list),
+		'errorCode'    => (int)0,
+		'errorMessage' => ''
+	);
+}
+
+
+
+/** Returns an array of (hospital_uuid, name, shortname, latitude, longitude). */
+function getHospitalList() {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	$list = array();
+	$q = "
+		SELECT *
+		FROM hospital
+		ORDER BY `hospital_uuid` ASC;
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getHospitalList 1"); }
+	while (!$result == NULL && !$result->EOF) {
+		$list[] = array(
+			'hospital_uuid' => $result->fields["hospital_uuid"],
+			'npi'           => $result->fields["npi"],
+			'name'          => $result->fields["name"],
+			'shortname'     => $result->fields["short_name"],
+			'latitude'      => $result->fields["latitude"],
+			'longitude'     => $result->fields["longitude"],
+		);
+		$result->MoveNext();
+	}
+	return array(
+		'hospitalList' => (string)json_encode($list),
+		'errorCode'    => (int)0,
+		'errorMessage' => ''
+	);
+}
+
+
+
+/** Returns all data relavent to a particular hospital */
+function getHospitalData($hospital_uuid) {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	$error = true;
+
+	$q = "
+		SELECT *
+		FROM hospital
+		WHERE hospital_uuid = '".mysql_real_escape_string($hospital_uuid)."'
+		LIMIT 1;
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getHospitalData 1"); }
+	while (!$result == NULL && !$result->EOF) {
+		$data = array(
+			'name'          => (string)$result->fields["name"],
+			'shortname'     => (string)$result->fields["short_name"],
+			'street1'       => (string)$result->fields["street1"],
+			'street2'       => (string)$result->fields["street2"],
+			'city'          => (string)$result->fields["city"],
+			'county'        => (string)$result->fields["county"],
+			'state'         => (string)$result->fields["region"],
+			'country'       => (string)$result->fields["country"],
+			'zip'           => (string)$result->fields["postal_code"],
+			'phone'         => (string)$result->fields["phone"],
+			'fax'           => (string)$result->fields["fax"],
+			'email'         => (string)$result->fields["email"],
+			'www'           => (string)$result->fields["www"],
+			'npi'           => (string)$result->fields["npi"],
+			'latitude'      => (double)$result->fields["latitude"],
+			'longitude'     => (double)$result->fields["longitude"],
+			'errorCode'     => (int)0,
+			'errorMessage'  => ''
+		);
+		$result->MoveNext();
+		$error = false;
+	}
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		$data = array(
+			'name'          => (string)'',
+			'shortname'     => (string)'',
+			'street1'       => (string)'',
+			'street2'       => (string)'',
+			'city'          => (string)'',
+			'county'        => (string)'',
+			'state'         => (string)'',
+			'country'       => (string)'',
+			'zip'           => (string)'',
+			'phone'         => (string)'',
+			'fax'           => (string)'',
+			'email'         => (string)'',
+			'www'           => (string)'',
+			'npi'           => (string)'',
+			'latitude'      => (double)0.0,
+			'longitude'     => (double)0.0,
+			'errorCode'    => (int)100,
+			'errorMessage' => (string)$eCodes[100]
+		);
+	}
+	return $data;
+}
+
+
+
+/** Returns all policy data relavent to a particular hospital */
+function getHospitalPolicy($hospital_uuid) {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	$error = true;
+
+	$q = "
+		SELECT *
+		FROM hospital
+		WHERE hospital_uuid = '".mysql_real_escape_string($hospital_uuid)."'
+		LIMIT 1;
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getHospitalPolicy 1"); }
+	while (!$result == NULL && !$result->EOF) {
+		$data = array(
+			'patientIdPrefix'            => (string)$result->fields['patient_id_prefix'],
+			'patientIdSuffixVariable'    => (boolean)$result->fields['patient_id_suffix_variable'],
+			'patientIdSuffixFixedLength' => (int)$result->fields['patient_id_suffix_fixed_length'],
+			'photoRequired'              => (boolean)$result->fields['photo_required'],
+			'honorNoPhotoRequest'        => (boolean)$result->fields['honor_no_photo_request'],
+			'photographerNameRequired'   => (boolean)$result->fields['photographer_name_required'],
+			'errorCode'                  => (int)0,
+			'errorMessage'               => ''
+		);
+		$result->MoveNext();
+		$error = false;
+	}
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		$data = array(
+			'patientIdPrefix'            => '',
+			'patientIdSuffixVariable'    => (boolean)false,
+			'patientIdSuffixFixedLength' => (int)0,
+			'photoRequired'              => (boolean)false,
+			'honorNoPhotoRequest'        => (boolean)false,
+			'photographerNameRequired'   => (boolean)false,
+			'errorCode'                  => (int)100,
+			'errorMessage'               => (string)$eCodes[100]
+		);
+	}
+	return $data;
+}
+
+
+
+/** Retrieve a particular hospitalâ€™s legalese clause. */
+function getHospitalLegalese($hospital_uuid) {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	$error = true;
+
+	$q = "
+		SELECT *
+		FROM hospital
+		WHERE hospital_uuid = '".mysql_real_escape_string($hospital_uuid)."'
+		LIMIT 1;
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getHospitalLegalese 1"); }
+	while (!$result == NULL && !$result->EOF) {
+		$data = array(
+			'legalese'     => (string)$result->fields["legalese"],
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+		$result->MoveNext();
+		$error = false;
+	}
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		$data = array(
+			'legalese'     => (string)'',
+			'errorCode'    => (int)100,
+			'errorMessage' => (string)$eCodes[100]
+		);
+	}
+	return $data;
+}
+
+
+
+/** Retrieve a particular hospitalâ€™s anonymous legalese clause. */
+function getHospitalLegaleseAnon($hospital_uuid) {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	$error = true;
+
+	$q = "
+		SELECT *
+		FROM hospital
+		WHERE hospital_uuid = '".mysql_real_escape_string($hospital_uuid)."'
+		LIMIT 1;
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getHospitalLegaleseAnon 1"); }
+	while (!$result == NULL && !$result->EOF) {
+		$data = array(
+			'legaleseAnon' => (string)$result->fields["legaleseAnon"],
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+		$result->MoveNext();
+		$error = false;
+	}
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		$data = array(
+			'legaleseAnon' => (string)'',
+			'errorCode'    => (int)100,
+			'errorMessage' => (string)$eCodes[100]
+		);
+	}
+	return $data;
+}
+
+
+
+/** Retrieves information about when the legalese clauses were last updated for a particular hospital. */
+function getHospitalLegaleseTimestamps($hospital_uuid) {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	$error = true;
+
+	$q = "
+		SELECT *
+		FROM hospital
+		WHERE hospital_uuid = '".mysql_real_escape_string($hospital_uuid)."'
+		LIMIT 1;
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getHospitalLegaleseTimestamps 1"); }
+	while (!$result == NULL && !$result->EOF) {
+		$data = array(
+			'legaleseTimestamp'    => (string)$result->fields["legaleseTimestamp"],
+			'legaleseAnonTimestamp'=> (string)$result->fields["legaleseAnonTimestamp"],
+			'errorCode'            => (int)0,
+			'errorMessage'         => ''
+		);
+		$result->MoveNext();
+		$error = false;
+	}
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		$data = array(
+			'legaleseTimestamp'    => (string)'',
+			'legaleseAnonTimestamp'=> (string)'',
+			'errorCode'    => (int)100,
+			'errorMessage' => (string)$eCodes[100]
+		);
+	}
+	return $data;
+}
+
+
+
+/** ACCOUNT API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// ACCOUNT API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// ACCOUNT API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// ACCOUNT API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// ACCOUNT API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+
+
+/** Creates a new inactive (pending confirmation) user in the system with the supplied characteristics and credentials. */
+function registerUser($username, $emailAddress, $password, $givenName, $familyName) {
+
+	// special unit test case ~
+	// registerUser("testCaseUser", "testCase@email.com", "testCasePassword99", "testCaseGiven", "testCaseFamily");
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	require_once($global['approot']."/inc/lib_security/lib_auth.inc");
+	$success = false;
+
+	// check if a user already is tied to this email address
+	if(shn_is_user_with_email($emailAddress)) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'registered'   => (boolean)false,
+			'errorCode'    => (int)6,
+			'errorMessage' => (string)$eCodes[6]
+		);
+	}
+
+	// check if a username is already in use
+	if(shn_is_user($username)) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'registered'   => (boolean)false,
+			'errorCode'    => (int)7,
+			'errorMessage' => (string)$eCodes[7]
+		);
+	}
+
+	// check if email address is valid
+	if(!isEmailValid($emailAddress)) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'registered'   => (boolean)false,
+			'errorCode'    => (int)8,
+			'errorMessage' => (string)$eCodes[8]
+		);
+	}
+
+	// check if password matches policy
+	if(shn_check_password_matches_policy($password, $username) !== true) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'registered'   => (boolean)false,
+			'errorCode'    => (int)9,
+			'errorMessage' => (string)$eCodes[9]
+		);
+	}
+
+	// pretend for test case...
+	if($username == "testCaseUser" || $emailAddress == "testCase@email.com" || $password == "testPassword99" || $givenName == "testCaseGiven" || $familyName == "testCaseFamily") {
+		$success = true;
+
+	// passed all checks, create user
+	} else {
+		$success = shn_auth_add_user($givenName, $familyName, $username, $password, null, null, array('pending'=> true), $emailAddress);
+	}
+
+	if($success) {
+		shn_plus_emailNewUser($username);
+		return array(
+			'registered'   => (boolean)true,
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+	} else {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'registered'   => (boolean)false,
+			'errorCode'    => (int)9999,
+			'errorMessage' => (string)$eCodes[9999]
+		);
+	}
+}
+
+
+
+/** Changes the password from old to new. */
+function changeUserPassword($username, $oldPassword, $newPassword) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	require_once($global['approot']."/inc/lib_security/lib_auth.inc");
+	$success = false;
+
+	// check if new password matches policy
+	if(shn_check_password_matches_policy($newPassword, $username) !== true) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'changed'      => (boolean)false,
+			'errorCode'    => (int)9,
+			'errorMessage' => (string)$eCodes[9]
+		);
+	}
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $oldPassword);
+	if($status != 0) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'changed'      => (boolean)false,
+			'errorCode'    => (int)$status,
+			'errorMessage' => (string)$eCodes[$status]
+		);
+	}
+
+	$success = shn_change_password_simple($username, $newPassword);
+
+	if($success) {
+		return array(
+			'changed'      => (boolean)true,
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+	} else {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'changed'      => (boolean)false,
+			'errorCode'    => (int)9999,
+			'errorMessage' => (string)$eCodes[9999]
+		);
+	}
+}
+
+
+
+/** Initiates the password reset procedure. */
+function resetUserPassword($email) {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	$success = false;
+
+	$q = "
+		SELECT u.user_name
+		FROM users u, contact c
+		WHERE c.contact_value = '".mysql_real_escape_string($email)."'
+		AND u.p_uuid = c.p_uuid
+		AND u.status = 'active';
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "resetUserPassword 1"); }
+	if($result != null && !$result->EOF) {
+		$success = true;
+		shn_plus_resetEmail($result->fields["user_name"], $email);
+	}
+
+	if($success) {
+		return array(
+			'sent'         => (boolean)true,
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+	} else {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'sent'         => (boolean)false,
+			'errorCode'    => (int)10,
+			'errorMessage' => (string)$eCodes[10]
+		);
+	}
+}
+
+
+
+/** Sends an email to the user with their username. */
+function forgotUsername($email) {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	$success = false;
+
+	$q = "
+		SELECT u.user_name
+		FROM users u, contact c
+		WHERE c.contact_value = '".mysql_real_escape_string($email)."'
+		AND u.p_uuid = c.p_uuid
+		AND u.status = 'active';
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "forgotUsername 1"); }
+
+	// pretend for test case...
+	if($email == "testCase@email.com") {
+		$success = true;
+	} elseif($result != null && !$result->EOF) {
+		$success = true;
+		shn_plus_forgotUsernameEmail($email, $result->fields["user_name"]);
+	}
+
+	if($success) {
+		return array(
+			'sent'         => (boolean)true,
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+	} else {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'sent'         => (boolean)false,
+			'errorCode'    => (int)11,
+			'errorMessage' => (string)$eCodes[11]
+		);
+	}
+}
+
+
+
+/** Used to verify a username / password combination are valid */
+function checkUserAuth($username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	require_once($global['approot']."/inc/lib_security/lib_auth.inc");
+	$success = false;
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+	if($status == 0) {
+		return array(
+			'valid'        => (boolean)true,
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+	} else {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'valid'        => (boolean)false,
+			'errorCode'    => (int)$status,
+			'errorMessage' => (string)$eCodes[$status]
+		);
+	}
+}
+
+
+
+/** Used to verify a username / password combination are valid for Hospital Staff */
+function checkUserAuthHospital($username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	require_once($global['approot']."/inc/lib_security/lib_auth.inc");
+	$success = false;
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+
+	// check user against groups 5 and 6 (hs, hsa)
+	if(!shn_plus_checkUserGroup($username, 5) && !shn_plus_checkUserGroup($username, 6)) {
+		$status = 20;
+	}
+
+	if($status == 0) {
+		return array(
+			'valid'        => (boolean)true,
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+	} else {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'valid'        => (boolean)false,
+			'errorCode'    => (int)$status,
+			'errorMessage' => (string)$eCodes[$status]
+		);
+	}
+}
+
+
+
+/** Used to determine user account status without authenticating */
+function getUserStatus($username) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	$success = false;
+	$pending = false;
+	$active  = false;
+	$locked  = false;
+	$banned  = false;
+
+	$q = "
+		SELECT status
+		FROM users
+		WHERE user_name = '".mysql_real_escape_string($username)."';
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getUserStatus 1"); }
+
+	if($result != null && !$result->EOF) {
+		$success = true;
+
+		if($result->fields["status"] == "active") {
+			$active = true;
+
+		} elseif($result->fields["status"] == "pending") {
+			$pending = true;
+
+		} elseif($result->fields["status"] == "locked") {
+			$locked = true;
+
+		} elseif($result->fields["status"] == "banned") {
+			$banned = true;
+		}
+	}
+	if($success) {
+		return array(
+			'pending'      => (boolean)$pending,
+			'active'       => (boolean)$active,
+			'locked'       => (boolean)$locked,
+			'banned'       => (boolean)$banned,
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+	} else {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'pending'      => (boolean)false,
+			'active'       => (boolean)false,
+			'locked'       => (boolean)false,
+			'banned'       => (boolean)false,
+			'errorCode'    => (int)12,
+			'errorMessage' => (string)$eCodes[12]
+		);
+	}
+}
+
+
+
+/** Used to determine user account status without authenticating */
+function getUserGroup($username) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	$success = false;
+
+	$q = "
+		SELECT *
+		FROM users u, sys_user_groups g, sys_user_to_group x
+		WHERE u.user_name = '".mysql_real_escape_string($username)."'
+		AND x.p_uuid = u.p_uuid
+		AND g.group_id = x.group_id;
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getUserGroup 1"); }
+
+	if($result != null && !$result->EOF) {
+		$success = true;
+	}
+	if($success) {
+		return array(
+			'group_id'     => (int)$result->fields["group_id"],
+			'group_name'   => (string)$result->fields["group_name"],
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+	} else {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'group_id'     => (int)0,
+			'group_name'   => (string)'',
+			'errorCode'    => (int)12,
+			'errorMessage' => (string)$eCodes[12]
+		);
+	}
+}
+
+
+
+/** SEARCH API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// SEARCH API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// SEARCH API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// SEARCH API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// SEARCH API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+
+
+/** performs a search across a specific PUBLIC event with filters, paging, and sort options */
+function search($eventShortname, $searchTerm, $filterStatusMissing, $filterStatusAlive, $filterStatusInjured, $filterStatusDeceased, $filterStatusUnknown, $filterStatusFound, $filterGenderComplex, $filterGenderMale, $filterGenderFemale, $filterGenderUnknown, $filterAgeChild, $filterAgeAdult, $filterAgeUnknown, $filterHospitalSH, $filterHospitalWRNMMC, $filterHospitalOther, $pageStart, $perPage, $sortBy) {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	global $conf;
+	$error = false;
+
+	// verify that the event is a public event...
+	$q = "
+		SELECT *
+		FROM incident
+		WHERE shortname = '".mysql_real_escape_string($eventShortname)."';
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "search 1"); }
+	if($result != null && !$result->EOF) {
+
+		// check if the event is not public...
+		if($result->fields["private_group"] != null) {
+			$error = true;
+			$ecode = 301;
+		}
+
+	// event does not exist with this shortname...
+	} else {
+		$error = true;
+		$ecode = 302;
+	}
+
+	if(!$error) {
+
+		if($conf['enable_solr_for_search'] == true) {
+			$searchMode = "solr";
+		} else {
+			$searchMode = "sql";
+		}
+
+		// find lack of explicit sort order and use last updated as a default...
+		if(strlen((string)$sortBy) < 3) {
+			$sortBy = "updated desc";
+		}
+
+		$filterStatusMissing  = ($filterStatusMissing)  ? 'true' : 'false';
+		$filterStatusAlive    = ($filterStatusAlive)    ? 'true' : 'false';
+		$filterStatusInjured  = ($filterStatusInjured)  ? 'true' : 'false';
+		$filterStatusDeceased = ($filterStatusDeceased) ? 'true' : 'false';
+		$filterStatusUnknown  = ($filterStatusUnknown)  ? 'true' : 'false';
+		$filterStatusFound    = ($filterStatusFound)    ? 'true' : 'false';
+		$filterGenderComplex  = ($filterGenderComplex)  ? 'true' : 'false';
+		$filterGenderMale     = ($filterGenderMale)     ? 'true' : 'false';
+		$filterGenderFemale   = ($filterGenderFemale)   ? 'true' : 'false';
+		$filterGenderUnknown  = ($filterGenderUnknown)  ? 'true' : 'false';
+		$filterAgeChild       = ($filterAgeChild)       ? 'true' : 'false';
+		$filterAgeAdult       = ($filterAgeAdult)       ? 'true' : 'false';
+		$filterAgeUnknown     = ($filterAgeUnknown)     ? 'true' : 'false';
+		$filterHospitalSH     = ($filterHospitalSH)     ? 'true' : 'false';
+		$filterHospitalWRNMMC = ($filterHospitalWRNMMC) ? 'true' : 'false';
+		$filterHospitalOther  = ($filterHospitalOther)  ? 'true' : 'false';
+
+		$sStatus       = $filterStatusMissing.";".$filterStatusAlive.";".$filterStatusInjured.";".$filterStatusDeceased.";".$filterStatusUnknown.";".$filterStatusFound;
+		$sGender       = $filterGenderComplex.";".$filterGenderMale.";".$filterGenderFemale.";".$filterGenderUnknown;
+		$sAge          = $filterAgeChild.";".$filterAgeAdult.";".$filterAgeUnknown;
+		$sHospital     = $filterHospitalSH.";".$filterHospitalWRNMMC.";".$filterHospitalOther;
+		$sPageControls = $pageStart.";".$perPage.";".$sortBy.";true"; // use non-interactive mode
+
+		require_once($global['approot']."/mod/inw/SearchDB.php");
+		$timeElsapsed = 0;
+
+		$search = new SearchDB($searchMode, $eventShortname, $searchTerm, $sStatus, $sGender, $sAge, $sHospital, $sPageControls);
+
+		try {
+			$timeStart = microtime(true);
+			$search->executeSearch();
+			$timeElapsed = microtime(true) - $timeStart;
+		} catch (Exception $e) {
+			$error = true;
+			$ecode = 9999;
+		}
+	}
+
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'resultSet'    => (string)'',
+			'recordsFound' => (int)0,
+			'timeElapsed'  => (double)0,
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+			'resultSet'    => (string)json_encode($search->results),
+			'recordsFound' => (int)count($search->results),
+			'timeElapsed'  => (double)$timeElapsed,
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+	}
+}
+
+
+
+/** Performs a search across a specific event with filters, paging, and sort options with authentication. */
+function searchWithAuth($eventShortname, $searchTerm, $filterStatusMissing, $filterStatusAlive, $filterStatusInjured, $filterStatusDeceased, $filterStatusUnknown, $filterStatusFound, $filterGenderComplex, $filterGenderMale, $filterGenderFemale, $filterGenderUnknown, $filterAgeChild, $filterAgeAdult, $filterAgeUnknown, $filterHospitalSH, $filterHospitalWRNMMC, $filterHospitalOther, $pageStart, $perPage, $sortBy, $username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	global $conf;
+	$error = false;
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+	if($status != 0) {
+		$error = true;
+		$ecode = $status;
+	} else {
+		// check if the user is a member of a group that has access to the event in question
+		$status = shn_plus_checkEventPermissions($username, $eventShortname);
+		if($status != 0) {
+			$error = true;
+			$ecode = $status;
+		}
+	}
+
+	if(!$error) {
+
+		if($conf['enable_solr_for_search'] == true) {
+			$searchMode = "solr";
+		} else {
+			$searchMode = "sql";
+		}
+
+		// find lack of explicit sort order and use last updated as a default...
+		if(strlen((string)$sortBy) < 3) {
+			$sortBy = "updated desc";
+		}
+
+		$filterStatusMissing  = ($filterStatusMissing)  ? 'true' : 'false';
+		$filterStatusAlive    = ($filterStatusAlive)    ? 'true' : 'false';
+		$filterStatusInjured  = ($filterStatusInjured)  ? 'true' : 'false';
+		$filterStatusDeceased = ($filterStatusDeceased) ? 'true' : 'false';
+		$filterStatusUnknown  = ($filterStatusUnknown)  ? 'true' : 'false';
+		$filterStatusFound    = ($filterStatusFound)    ? 'true' : 'false';
+		$filterGenderComplex  = ($filterGenderComplex)  ? 'true' : 'false';
+		$filterGenderMale     = ($filterGenderMale)     ? 'true' : 'false';
+		$filterGenderFemale   = ($filterGenderFemale)   ? 'true' : 'false';
+		$filterGenderUnknown  = ($filterGenderUnknown)  ? 'true' : 'false';
+		$filterAgeChild       = ($filterAgeChild)       ? 'true' : 'false';
+		$filterAgeAdult       = ($filterAgeAdult)       ? 'true' : 'false';
+		$filterAgeUnknown     = ($filterAgeUnknown)     ? 'true' : 'false';
+		$filterHospitalSH     = ($filterHospitalSH)     ? 'true' : 'false';
+		$filterHospitalWRNMMC = ($filterHospitalWRNMMC) ? 'true' : 'false';
+		$filterHospitalOther  = ($filterHospitalOther)  ? 'true' : 'false';
+
+		$sStatus       = $filterStatusMissing.";".$filterStatusAlive.";".$filterStatusInjured.";".$filterStatusDeceased.";".$filterStatusUnknown.";".$filterStatusFound;
+		$sGender       = $filterGenderComplex.";".$filterGenderMale.";".$filterGenderFemale.";".$filterGenderUnknown;
+		$sAge          = $filterAgeChild.";".$filterAgeAdult.";".$filterAgeUnknown;
+		$sHospital     = $filterHospitalSH.";".$filterHospitalWRNMMC.";".$filterHospitalOther;
+		$sPageControls = $pageStart.";".$perPage.";".$sortBy.";true"; // use non-interactive mode
+
+		require_once($global['approot']."/mod/inw/SearchDB.php");
+		$timeElsapsed = 0;
+
+		$search = new SearchDB($searchMode, $eventShortname, $searchTerm, $sStatus, $sGender, $sAge, $sHospital, $sPageControls);
+
+		try {
+			$timeStart = microtime(true);
+			$search->executeSearch();
+			$timeElapsed = microtime(true) - $timeStart;
+		} catch (Exception $e) {
+			$error = true;
+			$ecode = 9999;
+		}
+	}
+
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'resultSet'    => (string)'',
+			'recordsFound' => (int)0,
+			'timeElapsed'  => (double)0,
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+			'resultSet'    => (string)json_encode($search->results),
+			'recordsFound' => (int)count($search->results),
+			'timeElapsed'  => (double)$timeElapsed,
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+	}
+}
+
+
+
+/** performs a search across a specific PUBLIC event with filters, paging, and sort options. Returns a complete data set for each person in the results. */
+function searchComplete($eventShortname, $searchTerm, $filterStatusMissing, $filterStatusAlive, $filterStatusInjured, $filterStatusDeceased, $filterStatusUnknown, $filterStatusFound, $filterGenderComplex, $filterGenderMale, $filterGenderFemale, $filterGenderUnknown, $filterAgeChild, $filterAgeAdult, $filterAgeUnknown, $filterHospitalSH, $filterHospitalWRNMMC, $filterHospitalOther, $pageStart, $perPage, $sortBy) {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	global $conf;
+	$error = false;
+
+	// verify that the event is a public event...
+	$q = "
+		SELECT *
+		FROM incident
+		WHERE shortname = '".mysql_real_escape_string($eventShortname)."';
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) {
+		daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "search 1");
+	}
+	if($result != null && !$result->EOF) {
+
+		// check if the event is not public...
+		if($result->fields["private_group"] != null) {
+			$error = true;
+			$ecode = 301;
+		}
+
+		// event does not exist with this shortname...
+	} else {
+		$error = true;
+		$ecode = 302;
+	}
+
+	if(!$error) {
+
+		if($conf['enable_solr_for_search'] == true) {
+			$searchMode = "solr";
+		} else {
+			$searchMode = "sql";
+		}
+
+		// find lack of explicit sort order and use last updated as a default...
+		if(strlen((string)$sortBy) < 3) {
+			$sortBy = "updated desc";
+		}
+
+		$filterStatusMissing  = ($filterStatusMissing)  ? 'true' : 'false';
+		$filterStatusAlive    = ($filterStatusAlive)    ? 'true' : 'false';
+		$filterStatusInjured  = ($filterStatusInjured)  ? 'true' : 'false';
+		$filterStatusDeceased = ($filterStatusDeceased) ? 'true' : 'false';
+		$filterStatusUnknown  = ($filterStatusUnknown)  ? 'true' : 'false';
+		$filterStatusFound    = ($filterStatusFound)    ? 'true' : 'false';
+		$filterGenderComplex  = ($filterGenderComplex)  ? 'true' : 'false';
+		$filterGenderMale     = ($filterGenderMale)     ? 'true' : 'false';
+		$filterGenderFemale   = ($filterGenderFemale)   ? 'true' : 'false';
+		$filterGenderUnknown  = ($filterGenderUnknown)  ? 'true' : 'false';
+		$filterAgeChild       = ($filterAgeChild)       ? 'true' : 'false';
+		$filterAgeAdult       = ($filterAgeAdult)       ? 'true' : 'false';
+		$filterAgeUnknown     = ($filterAgeUnknown)     ? 'true' : 'false';
+		$filterHospitalSH     = ($filterHospitalSH)     ? 'true' : 'false';
+		$filterHospitalWRNMMC = ($filterHospitalWRNMMC) ? 'true' : 'false';
+		$filterHospitalOther  = ($filterHospitalOther)  ? 'true' : 'false';
+
+		$sStatus       = $filterStatusMissing.";".$filterStatusAlive.";".$filterStatusInjured.";".$filterStatusDeceased.";".$filterStatusUnknown.";".$filterStatusFound;
+		$sGender       = $filterGenderComplex.";".$filterGenderMale.";".$filterGenderFemale.";".$filterGenderUnknown;
+		$sAge          = $filterAgeChild.";".$filterAgeAdult.";".$filterAgeUnknown;
+		$sHospital     = $filterHospitalSH.";".$filterHospitalWRNMMC.";".$filterHospitalOther;
+		$sPageControls = $pageStart.";".$perPage.";".$sortBy.";true"; // use non-interactive mode
+
+		require_once($global['approot']."/mod/inw/SearchDB.php");
+		$timeElsapsed = 0;
+
+		$search = new SearchDB($searchMode, $eventShortname, $searchTerm, $sStatus, $sGender, $sAge, $sHospital, $sPageControls);
+
+		try {
+			$timeStart = microtime(true);
+			$search->executeSearch();
+			$timeElapsed = microtime(true) - $timeStart;
+		} catch (Exception $e) {
+			$error = true;
+			$ecode = 9999;
+		}
+	}
+
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+				'resultSet'    => (string)'',
+				'recordsFound' => (int)0,
+				'timeElapsed'  => (double)0,
+				'errorCode'    => (int)$ecode,
+				'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		if(count($search->results) > 0) {
+			$r = array();
+			foreach($search->results as $result) {
+				$p = new person();
+				$p->p_uuid = $result['p_uuid'];
+				$p->load();
+				$r[] = $p->makeArrayObject();
+			}
+			$json = json_encode($r);
+		} else {
+			$json = "";
+		}
+		return array(
+				'resultSet'    => (string)$json,
+				'recordsFound' => (int)count($search->results),
+				'timeElapsed'  => (double)$timeElapsed,
+				'errorCode'    => (int)0,
+				'errorMessage' => ''
+		);
+	}
+}
+
+
+
+/** Performs a search across a specific event with filters, paging, and sort options with authentication. Returns a complete data set for each person in the results. */
+function searchCompleteWithAuth($eventShortname, $searchTerm, $filterStatusMissing, $filterStatusAlive, $filterStatusInjured, $filterStatusDeceased, $filterStatusUnknown, $filterStatusFound, $filterGenderComplex, $filterGenderMale, $filterGenderFemale, $filterGenderUnknown, $filterAgeChild, $filterAgeAdult, $filterAgeUnknown, $filterHospitalSH, $filterHospitalWRNMMC, $filterHospitalOther, $pageStart, $perPage, $sortBy, $username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	global $conf;
+	$error = false;
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+	if($status != 0) {
+		$error = true;
+		$ecode = $status;
+	} else {
+		// check if the user is a member of a group that has access to the event in question
+		$status = shn_plus_checkEventPermissions($username, $eventShortname);
+		if($status != 0) {
+			$error = true;
+			$ecode = $status;
+		}
+	}
+
+	if(!$error) {
+
+		if($conf['enable_solr_for_search'] == true) {
+			$searchMode = "solr";
+		} else {
+			$searchMode = "sql";
+		}
+
+		// find lack of explicit sort order and use last updated as a default...
+		if(strlen((string)$sortBy) < 3) {
+			$sortBy = "updated desc";
+		}
+
+		$filterStatusMissing  = ($filterStatusMissing)  ? 'true' : 'false';
+		$filterStatusAlive    = ($filterStatusAlive)    ? 'true' : 'false';
+		$filterStatusInjured  = ($filterStatusInjured)  ? 'true' : 'false';
+		$filterStatusDeceased = ($filterStatusDeceased) ? 'true' : 'false';
+		$filterStatusUnknown  = ($filterStatusUnknown)  ? 'true' : 'false';
+		$filterStatusFound    = ($filterStatusFound)    ? 'true' : 'false';
+		$filterGenderComplex  = ($filterGenderComplex)  ? 'true' : 'false';
+		$filterGenderMale     = ($filterGenderMale)     ? 'true' : 'false';
+		$filterGenderFemale   = ($filterGenderFemale)   ? 'true' : 'false';
+		$filterGenderUnknown  = ($filterGenderUnknown)  ? 'true' : 'false';
+		$filterAgeChild       = ($filterAgeChild)       ? 'true' : 'false';
+		$filterAgeAdult       = ($filterAgeAdult)       ? 'true' : 'false';
+		$filterAgeUnknown     = ($filterAgeUnknown)     ? 'true' : 'false';
+		$filterHospitalSH     = ($filterHospitalSH)     ? 'true' : 'false';
+		$filterHospitalWRNMMC = ($filterHospitalWRNMMC) ? 'true' : 'false';
+		$filterHospitalOther  = ($filterHospitalOther)  ? 'true' : 'false';
+
+		$sStatus       = $filterStatusMissing.";".$filterStatusAlive.";".$filterStatusInjured.";".$filterStatusDeceased.";".$filterStatusUnknown.";".$filterStatusFound;
+		$sGender       = $filterGenderComplex.";".$filterGenderMale.";".$filterGenderFemale.";".$filterGenderUnknown;
+		$sAge          = $filterAgeChild.";".$filterAgeAdult.";".$filterAgeUnknown;
+		$sHospital     = $filterHospitalSH.";".$filterHospitalWRNMMC.";".$filterHospitalOther;
+		$sPageControls = $pageStart.";".$perPage.";".$sortBy.";true"; // use non-interactive mode
+
+		require_once($global['approot']."/mod/inw/SearchDB.php");
+		$timeElsapsed = 0;
+
+		$search = new SearchDB($searchMode, $eventShortname, $searchTerm, $sStatus, $sGender, $sAge, $sHospital, $sPageControls);
+
+		try {
+			$timeStart = microtime(true);
+			$search->executeSearch();
+			$timeElapsed = microtime(true) - $timeStart;
+		} catch (Exception $e) {
+			$error = true;
+			$ecode = 9999;
+		}
+	}
+
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+				'resultSet'    => (string)'',
+				'recordsFound' => (int)0,
+				'timeElapsed'  => (double)0,
+				'errorCode'    => (int)$ecode,
+				'errorMessage' => (string)$eCodes[$ecode]
+		);
+		
+	} else {
+		if(count($search->results) > 0) {
+			$r = array();
+			foreach($search->results as $result) {
+				$p = new person();
+				$p->p_uuid = $result['p_uuid'];
+				$p->load();
+				$r[] = $p->makeArrayObject();
+			}
+			$json = json_encode($r);
+		} else {
+			$json = "";
+		}
+		return array(
+				'resultSet'    => (string)$json,
+				'recordsFound' => (int)count($search->results),
+				'timeElapsed'  => (double)$timeElapsed,
+				'errorCode'    => (int)0,
+				'errorMessage' => ''
+		);
+	}
+}
+
+
+
+/** Performs a search across a specific PUBLIC event with filters, paging, and sort options, but only returns the number of results found. */
+function searchCount($eventShortname, $searchTerm, $filterStatusMissing, $filterStatusAlive, $filterStatusInjured, $filterStatusDeceased, $filterStatusUnknown, $filterStatusFound, $filterGenderComplex, $filterGenderMale, $filterGenderFemale, $filterGenderUnknown, $filterAgeChild, $filterAgeAdult, $filterAgeUnknown, $filterHospitalSH, $filterHospitalWRNMMC, $filterHospitalOther, $pageStart, $perPage, $sortBy) {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	global $conf;
+	$error = false;
+	$perPage = 2000;
+
+	// verify that the event is a public event...
+	$q = "
+		SELECT *
+		FROM incident
+		WHERE shortname = '".mysql_real_escape_string($eventShortname)."';
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "search 1"); }
+	if($result != null && !$result->EOF) {
+
+		// check if the event is not public...
+		if($result->fields["private_group"] != null) {
+			$error = true;
+			$ecode = 301;
+		}
+
+	// event does not exist with this shortname...
+	} else {
+		$error = true;
+		$ecode = 302;
+	}
+
+	if(!$error) {
+
+		if($conf['enable_solr_for_search'] == true) {
+			$searchMode = "solr";
+		} else {
+			$searchMode = "sql";
+		}
+
+		// find lack of explicit sort order and use last updated as a default...
+		if(strlen((string)$sortBy) < 3) {
+			$sortBy = "updated desc";
+		}
+
+		$filterStatusMissing  = ($filterStatusMissing)  ? 'true' : 'false';
+		$filterStatusAlive    = ($filterStatusAlive)    ? 'true' : 'false';
+		$filterStatusInjured  = ($filterStatusInjured)  ? 'true' : 'false';
+		$filterStatusDeceased = ($filterStatusDeceased) ? 'true' : 'false';
+		$filterStatusUnknown  = ($filterStatusUnknown)  ? 'true' : 'false';
+		$filterStatusFound    = ($filterStatusFound)    ? 'true' : 'false';
+		$filterGenderComplex  = ($filterGenderComplex)  ? 'true' : 'false';
+		$filterGenderMale     = ($filterGenderMale)     ? 'true' : 'false';
+		$filterGenderFemale   = ($filterGenderFemale)   ? 'true' : 'false';
+		$filterGenderUnknown  = ($filterGenderUnknown)  ? 'true' : 'false';
+		$filterAgeChild       = ($filterAgeChild)       ? 'true' : 'false';
+		$filterAgeAdult       = ($filterAgeAdult)       ? 'true' : 'false';
+		$filterAgeUnknown     = ($filterAgeUnknown)     ? 'true' : 'false';
+		$filterHospitalSH     = ($filterHospitalSH)     ? 'true' : 'false';
+		$filterHospitalWRNMMC = ($filterHospitalWRNMMC) ? 'true' : 'false';
+		$filterHospitalOther  = ($filterHospitalOther)  ? 'true' : 'false';
+
+		$sStatus       = $filterStatusMissing.";".$filterStatusAlive.";".$filterStatusInjured.";".$filterStatusDeceased.";".$filterStatusUnknown.";".$filterStatusFound;
+		$sGender       = $filterGenderComplex.";".$filterGenderMale.";".$filterGenderFemale.";".$filterGenderUnknown;
+		$sAge          = $filterAgeChild.";".$filterAgeAdult.";".$filterAgeUnknown;
+		$sHospital     = $filterHospitalSH.";".$filterHospitalWRNMMC.";".$filterHospitalOther;
+		$sPageControls = $pageStart.";".$perPage.";".$sortBy.";true"; // use non-interactive mode
+
+		require_once($global['approot']."/mod/inw/SearchDB.php");
+		$timeElsapsed = 0;
+
+		$search = new SearchDB($searchMode, $eventShortname, $searchTerm, $sStatus, $sGender, $sAge, $sHospital, $sPageControls);
+
+		try {
+			$timeStart = microtime(true);
+			$search->executeSearch();
+			$timeElapsed = microtime(true) - $timeStart;
+		} catch (Exception $e) {
+			$error = true;
+			$ecode = 9999;
+		}
+	}
+
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'recordsFound' => (int)0,
+			'timeElapsed'  => (double)0,
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+			'recordsFound' => (int)$search->numRowsFound,
+			'timeElapsed'  => (double)$timeElapsed,
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+	}
+}
+
+
+
+/** Performs a search across a specific event with filters, paging, and sort options with authentication, but only returns the number of results found. */
+function searchCountWithAuth($eventShortname, $searchTerm, $filterStatusMissing, $filterStatusAlive, $filterStatusInjured, $filterStatusDeceased, $filterStatusUnknown, $filterStatusFound, $filterGenderComplex, $filterGenderMale, $filterGenderFemale, $filterGenderUnknown, $filterAgeChild, $filterAgeAdult, $filterAgeUnknown, $filterHospitalSH, $filterHospitalWRNMMC, $filterHospitalOther, $pageStart, $perPage, $sortBy, $username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	global $conf;
+	$error = false;
+	$perPage = 2000;
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+	if($status != 0) {
+		$error = true;
+		$ecode = $status;
+	} else {
+		// check if the user is a member of a group that has access to the event in question
+		$status = shn_plus_checkEventPermissions($username, $eventShortname);
+		if($status != 0) {
+			$error = true;
+			$ecode = $status;
+		}
+	}
+
+	if(!$error) {
+
+		if($conf['enable_solr_for_search'] == true) {
+			$searchMode = "solr";
+		} else {
+			$searchMode = "sql";
+		}
+
+		// find lack of explicit sort order and use last updated as a default...
+		if(strlen((string)$sortBy) < 3) {
+			$sortBy = "updated desc";
+		}
+
+		$filterStatusMissing  = ($filterStatusMissing)  ? 'true' : 'false';
+		$filterStatusAlive    = ($filterStatusAlive)    ? 'true' : 'false';
+		$filterStatusInjured  = ($filterStatusInjured)  ? 'true' : 'false';
+		$filterStatusDeceased = ($filterStatusDeceased) ? 'true' : 'false';
+		$filterStatusUnknown  = ($filterStatusUnknown)  ? 'true' : 'false';
+		$filterStatusFound    = ($filterStatusFound)    ? 'true' : 'false';
+		$filterGenderComplex  = ($filterGenderComplex)  ? 'true' : 'false';
+		$filterGenderMale     = ($filterGenderMale)     ? 'true' : 'false';
+		$filterGenderFemale   = ($filterGenderFemale)   ? 'true' : 'false';
+		$filterGenderUnknown  = ($filterGenderUnknown)  ? 'true' : 'false';
+		$filterAgeChild       = ($filterAgeChild)       ? 'true' : 'false';
+		$filterAgeAdult       = ($filterAgeAdult)       ? 'true' : 'false';
+		$filterAgeUnknown     = ($filterAgeUnknown)     ? 'true' : 'false';
+		$filterHospitalSH     = ($filterHospitalSH)     ? 'true' : 'false';
+		$filterHospitalWRNMMC = ($filterHospitalWRNMMC) ? 'true' : 'false';
+		$filterHospitalOther  = ($filterHospitalOther)  ? 'true' : 'false';
+
+		$sStatus       = $filterStatusMissing.";".$filterStatusAlive.";".$filterStatusInjured.";".$filterStatusDeceased.";".$filterStatusUnknown.";".$filterStatusFound;
+		$sGender       = $filterGenderComplex.";".$filterGenderMale.";".$filterGenderFemale.";".$filterGenderUnknown;
+		$sAge          = $filterAgeChild.";".$filterAgeAdult.";".$filterAgeUnknown;
+		$sHospital     = $filterHospitalSH.";".$filterHospitalWRNMMC.";".$filterHospitalOther;
+		$sPageControls = $pageStart.";".$perPage.";".$sortBy.";true"; // use non-interactive mode
+
+		require_once($global['approot']."/mod/inw/SearchDB.php");
+		$timeElsapsed = 0;
+
+		$search = new SearchDB($searchMode, $eventShortname, $searchTerm, $sStatus, $sGender, $sAge, $sHospital, $sPageControls);
+
+		try {
+			$timeStart = microtime(true);
+			$search->executeSearch();
+			$timeElapsed = microtime(true) - $timeStart;
+		} catch (Exception $e) {
+			$error = true;
+			$ecode = 9999;
+		}
+	}
+
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'recordsFound' => (int)0,
+			'timeElapsed'  => (double)0,
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+			'recordsFound' => (int)$search->numRowsFound,
+			'timeElapsed'  => (double)$timeElapsed,
+			'errorCode'    => (int)0,
+			'errorMessage' => ''
+		);
+	}
+}
+
+
+
+/** Assists a fresh install of TriagePic, either de novo or where the local data in Òc:\Shared TriagePic Data\Ó has been wiped. */
+function findMostRecentReportAsFiltered($machine = null, $login = null, $username = null, $hospitalShortName = null, $eventShortName = null, $closedEventsIncl = null, $hospitalEventsIncl = null, $publicEventsIncl = null, $practiceMode = null, $expiredIncl = null) {
+
+	return array(
+			'machine'           => '',
+			'login'             => '',
+			'username'          => '',
+			'hospitalShortName' => '',
+			'eventShortName'    => '',
+			'mcID'              => '',
+			'creationDate'      => ''
+	);
+}
+
+
+
+/** REPORTING API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// REPORTING API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// REPORTING API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// REPORTING API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// REPORTING API FUNCTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+
+
+/** Report a new person */
+function reportPerson($personXML, $eventShortName, $xmlFormat, $username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	global $conf;
+	$url = "";
+	$error = false;
+	$ecode = 0;
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+	if($status != 0) {
+		$error = true;
+		$ecode = $status;
+	} else {
+		// check if the user is a member of a group that has access to the event in question
+		$status = shn_plus_checkEventPermissions($username, $eventShortName);
+		if($status != 0) {
+			$error = true;
+			$ecode = $status;
+		}
+	}
+
+	// figure out the p_uuid of the user who is reporting
+	if(!$error) {
+		$q = "
+			SELECT *
+			FROM users
+			WHERE user_name = '".$username."';
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "reportPerson 2"); }
+		$rep_uuid = $result->fields['p_uuid'];
+	}
+
+	// no errors, we must have permission to report to this event for the given user
+
+	if(!$error) {
+		$p = new person();
+		$p->init();
+		$p->rep_uuid  = $rep_uuid;
+		$p->theString = $personXML;
+		$p->xmlFormat = $xmlFormat;
+		$p->setEvent($eventShortName);
+		$ecode = $p->parseXml();
+
+		if($ecode == 0 || $ecode == 419 || $ecode == 420) { // we accept record with bad images (the images are not saved)
+			$p->insert();
+			$p->plusReportLog();
+		} else {
+			$error = true;
+		}
+	}
+
+	$eCodes = unserialize(ERRORCODES);
+	if($error) {
+		return array(
+			'url'          => (string)'',
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+			'url'          => (string)$p->p_uuid,
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)''
+		);
+	}
+}
+
+
+
+/** Record Revision API FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// Record Revision API FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// Record Revision API FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// Record Revision API FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// //
+/// Record Revision API FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+
+
+/** Re-report a person using XML which will update a current record. */
+function reReportPerson($uuid, $personXML, $eventShortname, $xmlFormat, $username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	global $conf;
+	$error = false;
+	$ecode = null;
+
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+	if($status != 0) {
+		$error = true;
+		$ecode = $status;
+	} else {
+		// check if the user is a member of a group that has access to the event in question
+		$status = shn_plus_checkEventPermissions($username, $eventShortname);
+		if($status != 0) {
+			$error = true;
+			$ecode = $status;
+		}
+	}
+
+	// figure out the p_uuid of the user who is reporting
+	if(!$error) {
+		$q = "
+			SELECT *
+			FROM users
+			WHERE user_name = '".$username."';
+		";
+		$result = $global['db']->Execute($q);
+		$rep_uuid = $result->fields['p_uuid'];
+	}
+
+	// check if the record exists
+	if(!$error && !shn_plus_doesPersonExist($uuid)) {
+		$error = true;
+		$ecode = 410;
+	}
+
+/*
+	// check if the record was reported via PLUS, if not error 416
+	if(!$error && !shn_plus_wasRecordReportedViaPLUS($uuid)) {
+		$error = true;
+		$ecode = 416;
+	}
+*/
+
+	// check if the user is admin, hs, hsa, or record owner
+	if(!$error && !shn_plus_checkCredzTriage($username, $uuid)) {
+		$error = true;
+		$ecode = 408;
+	}
+
+	// no errors, we must have permission to revise this record
+
+
+
+	
+	if(!$error) {
+		$p = new person();
+		$p->p_uuid    = $uuid;
+		$p->updated_by_p_uuid = $rep_uuid;
+		$p->load();
+		$p->theString = $personXML;
+		$p->xmlFormat = $xmlFormat;
+		$p->setEvent($eventShortname);
+		$ecode = $p->parseXml(true);
+
+		// we accept bad images, we'll record the person, not the bad images (419/420!)
+		if($ecode == 0 || $ecode == 419 || $ecode == 420|| $ecode == 422 || $ecode == 423 || $ecode == 424 || $ecode == 425) {
+			$p->update();
+		} else {
+			$error = true;
+		}
+	}
+
+	$eCodes = unserialize(ERRORCODES);
+	if($error) {
+		return array(
+			'url'          => (string)'',
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+			'url'          => (string)$p->p_uuid,
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)$eCodes[$ecode]
+		);
+	}
+}
+
+
+
+/** Owners, admins, and HSA can immediately expire a record, everyone else can submit an expiration request to a moderated queue. */
+function expirePerson($uuid, $explanation, $username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	global $conf;
+	$error = false;
+	$ecode = null;
+	$queued = true;
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+	if($status != 0) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'queued'       => (boolean)false,
+			'errorCode'    => (int)$status,
+			'errorMessage' => (string)$eCodes[$status]
+		);
+	}
+
+	$p = new person();
+	$p->p_uuid = $uuid;
+	$p->updated_by_p_uuid = shn_plus_getUserUuid($username);
+	$p->load();
+	if($p->ecode == 9000) {
+		$ecode = 410; // if we had trouble loading this record, we'll just report that the person does not exist (most likely whats happening)
+		$error = true;
+	}
+	if($p->isAlreadyExpired()) {
+		$ecode = 413;
+		$error = true;
+	}
+	if($ecode == 0) {
+		// check expiration permission
+		$allowed = shn_plus_checkCredzExpiry($username, $uuid);
+		if($allowed) {
+			$p->expire(shn_plus_getUserId($username), $explanation);
+			$queued = false;
+		} else {
+			$p->expireQueue(shn_plus_getUserId($username), $explanation);
+			$queued = true;
+		}
+	}
+
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'queued'       => (boolean)false,
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+			'queued'       => (boolean)$queued,
+			'errorCode'    => (int)0,
+			'errorMessage' => (string)''
+		);
+	}
+}
+
+
+
+function reportAbuse($uuid, $identifier = null) {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	global $conf;
+	
+	// start with invalid uuid until we know the record exists
+	$error = true;
+	$ecode = 410;
+	
+	// check record exists
+	$q = "
+		SELECT *
+		FROM `person_uuid`
+		where p_uuid = '".mysql_real_escape_string($uuid)."';
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "reportAbuse 1"); }
+	if($result != null && !$result->EOF) {
+		$error = false;
+	}
+
+	// check for valid identifier
+	if(!$error) {
+		if($identifier == null || trim($identifier) == "") {
+			$error = true;
+			$ecode = 430;
+		}
+	}
+	
+	// check if user has already flagged this record
+	if(!$error) {
+		$ip = isset($_SERVER['REMOTE_ADDR']) ? "'".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."'" : "'0.0.0.0'";
+		$q = "
+			SELECT *
+			FROM `abuse_queue`
+			WHERE p_uuid = '".mysql_real_escape_string($uuid)."'
+			AND (
+				ip = ".$ip."
+				OR
+				identifier = '".mysql_real_escape_string($identifier)."'
+			);
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "reportAbuse 2"); }
+		if($result != null && !$result->EOF) {
+			$error = true;
+			$ecode = 431;
+		}
+		
+	}
+	
+	// ok, so its a valid record and the user hasn't already reported it, so add it to the queue
+	if(!$error) {
+		$ip = isset($_SERVER['REMOTE_ADDR']) ? "'".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."'" : "'0.0.0.0'";
+		$q = "
+			INSERT INTO `abuse_queue` (
+				`p_uuid`,
+				`identifier`,
+				`ip`
+			) VALUES (
+				'".mysql_real_escape_string((string)$uuid)."',
+				'".mysql_real_escape_string((string)$identifier)."',
+				".$ip."
+			);
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "reportAbuse 3 ((".$q."))"); }		
+	}
+	
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+				'errorCode'    => (int)$ecode,
+				'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+				'errorCode'    => (int)0,
+				'errorMessage' => (string)''
+		);
+	}
+}
+
+
+
+/** Get the datetime in UTC when a person record will expire. */
+function getPersonExpiryDate($uuid) {
+
+	shn_plus_logAccess(__FUNCTION__);
+	global $global;
+	global $conf;
+	$error = true;
+	$ecode = 410;
+
+	$q = "
+		SELECT *
+		FROM `person_uuid`
+		where p_uuid = '".mysql_real_escape_string($uuid)."';
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getPersonExpiryDate 1"); }
+	if($result != null && !$result->EOF) {
+		$error = false;
+		$expiryDate = $result->fields['expiry_date'];
+	}
+
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'expiryDate'   => (string)'',
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+			'expiryDate'   => (string)$expiryDate,
+			'errorCode'    => (int)0,
+			'errorMessage' => (string)''
+		);
+	}
+}
+
+
+
+/** Owners, admins, and HSA can immediately update a records expiry date, everyone else can submit a request to update the expiry date to a moderated queue. */
+function setPersonExpiryDate($uuid, $expiryDate, $username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	global $conf;
+	$error = false;
+	$ecode = null;
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+	if($status != 0) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'errorCode'    => (int)$status,
+			'errorMessage' => (string)$eCodes[$status]
+		);
+	}
+
+	$p = new person();
+	$p->p_uuid = $uuid;
+	$p->updated_by_p_uuid = shn_plus_getUserUuid($username);
+	$p->load();
+	if($p->ecode == 9000) {
+		$ecode = 410; // if we had trouble loading this record, we'll just report that the person does not exist (most likely whats happening)
+		$error = true;
+	}
+
+	if(!checkValidDateTime($expiryDate)) {
+		$ecode = 414;
+		$error = true;
+	}
+
+	if(!$error) {
+		// check expiration permission
+		$allowed = shn_plus_checkCredzExpiry($username, $uuid);
+		if($allowed) {
+			$p->setExpiryDate($expiryDate);
+		} else {
+			$ecode = 408;
+			$error = true;
+		}
+	}
+
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+			'errorCode'    => (int)0,
+			'errorMessage' => (string)''
+		);
+	}
+}
+
+
+
+/** Owners, admins, and HSA can immediately update a records expiry date, everyone else can submit a request to update the expiry date to a moderated queue. The expiry date in this case is updated to exactly one year from the time of the request. */
+function setPersonExpiryDateOneYear($uuid, $username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	global $conf;
+	$error = false;
+	$ecode = null;
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+	if($status != 0) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'errorCode'    => (int)$status,
+			'errorMessage' => (string)$eCodes[$status]
+		);
+	}
+
+	$p = new person();
+	$p->p_uuid = $uuid;
+	$p->updated_by_p_uuid = shn_plus_getUserUuid($username);
+	$p->load();
+	if($p->ecode == 9000) {
+		$ecode = 410; // if we had trouble loading this record, we'll just report that the person does not exist (most likely whats happening)
+		$error = true;
+	}
+
+	if(!$error) {
+		// check expiration permission
+		$allowed = shn_plus_checkCredzExpiry($username, $uuid);
+		if($allowed) {
+			$p->setExpiryDateOneYear();
+		} else {
+			$ecode = 408;
+			$error = true;
+		}
+	}
+
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+			'errorCode'    => (int)0,
+			'errorMessage' => (string)''
+		);
+	}
+}
+
+
+
+/** A simple lookup of the internal uuid of a person based on their mass casualty id (if it exists). */
+function getUuidByMassCasualtyId($mcid, $shortname = null, $username = null, $password = null) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	global $conf;
+	$error = true;
+	$ecode = 407;
+	$uuid = "";
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+	if($status != 0) {
+		$error = true;
+		$ecode = $status;
+	} else {
+		$q = "
+			SELECT *
+			FROM `edxl_co_lpf`
+			where person_id = '".mysql_real_escape_string($mcid)."'
+			and event_name = '".mysql_real_escape_string($shortname)."';
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "getUuidByMassCasualtyId 1"); }
+		if($result != null && !$result->EOF) {
+			$error = false;
+			$uuid = $result->fields['p_uuid'];
+		}
+	}
+
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'uuid'         => (string)'',
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+			'uuid'         => (string)$uuid,
+			'errorCode'    => (int)0,
+			'errorMessage' => (string)''
+		);
+	}
+}
+
+
+
+/** Updates the mass casualty id of a person based on their uuid. */
+function changeMassCasualtyId($newMcid, $uuid, $username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	global $conf;
+	$error = false;
+	$ecode = null;
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+	if($status != 0) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'errorCode'    => (int)$status,
+			'errorMessage' => (string)$eCodes[$status]
+		);
+	}
+
+	$p = new person();
+	$p->p_uuid = $uuid;
+	$p->updated_by_p_uuid = shn_plus_getUserUuid($username);
+	$p->load();
+	if($p->ecode == 9000) {
+		$ecode = 410; // if we had trouble loading this record, we'll just report that the person does not exist (most likely whats happening)
+		$error = true;
+	}
+
+	if(!$error) {
+		// check permissions
+		$allowed = shn_plus_checkCredzTriage($username, $uuid);
+		if($allowed) {
+			$p->setMassCasualtyId($newMcid);
+		} else {
+			$ecode = 408;
+			$error = true;
+		}
+	}
+
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+			'errorCode'    => (int)0,
+			'errorMessage' => (string)''
+		);
+	}
+}
+
+
+
+/** A simple lookup to determine if a record is still an original or has incurred revisions. */
+function hasRecordBeenRevised($uuid, $username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	global $conf;
+	$error = true;
+	$ecode = 410;
+
+	$q = "
+		SELECT *
+		FROM `person_uuid`
+		where p_uuid = '".mysql_real_escape_string($uuid)."';
+	";
+	$result = $global['db']->Execute($q);
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "hasRecordBeenRevised 1"); }
+	if($result != null && !$result->EOF) {
+		$error = false;
+		// person exists...so count revisions
+		$q = "
+			SELECT count(*)
+			FROM `person_updates`
+			where p_uuid = '".mysql_real_escape_string($uuid)."';
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "hasRecordBeenRevised 2"); }
+		if($result != null && !$result->EOF) {
+			$revisionsMade = $result->fields['count(*)'];
+		} else {
+			$error = true;
+			$ecode = 9999;
+		}
+	}
+
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'revisionsMade' => (int)0,
+			'errorCode'     => (int)$ecode,
+			'errorMessage'  => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+			'revisionsMade' => (int)$revisionsMade,
+			'errorCode'     => (int)0,
+			'errorMessage'  => (string)''
+		);
+	}
+}
+
+
+
+/** Find out who has permission to revise a record. */
+function getPersonPermissions($uuid, $username, $password) {
+
+	shn_plus_logAccess(__FUNCTION__, $username);
+	global $global;
+	global $conf;
+	$error = false;
+	$ecode = null;
+
+	// check auth, if fails, return w/ error code/message
+	$status = shn_plus_checkCredz($username, $password);
+	if($status != 0) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'errorCode'    => (int)$status,
+			'errorMessage' => (string)$eCodes[$status]
+		);
+	}
+
+	$p = new person();
+	$p->p_uuid = $uuid;
+	$p->load();
+	if($p->ecode == 9000) {
+		$ecode = 410; // if we had trouble loading this record, we'll just report that the person does not exist (most likely whats happening)
+		$error = true;
+	}
+
+	if($error) {
+		$eCodes = unserialize(ERRORCODES);
+		return array(
+			'errorCode'    => (int)$ecode,
+			'errorMessage' => (string)$eCodes[$ecode]
+		);
+	} else {
+		return array(
+			'owner'        => (string)$p->getOwner(),
+			'groupIDs'     => (string)$p->getRevisionPermissionGroupIDs(),
+			'errorCode'    => (int)0,
+			'errorMessage' => (string)''
+		);
+	}
+}
+
+
+
