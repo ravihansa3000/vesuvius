@@ -7,3 +7,5 @@ vesuvius/www/.htaccess
 vesuvius/time
 vesuvius/version
 vesuvius/.externalToolBuilders
+vesuvius/res/translation_log.txt
+nbproject

@@ -89,10 +89,14 @@ $result = $client->call('search', array(
 	'sortBy'=>''
 ));
 */
-$per = unserialize(json_decode($result['export_person']));
-echo 'test: ' . $per->full_name;
-echo '<pre>';
-print_r($per);
+$list = $result['export_person'];
+foreach ($list as $serP) {
+    $per = unserialize($serP);
+    echo 'test: ' . $per->full_name;
+//    echo '<pre>';
+//    print_r($per);
+}
+
 //$data = $per->images[0]->fileContentBase64;
 //header("Content-type: image/jpg");
 //echo '<img src="data:image/jpg;base64,' . $data . '" />';

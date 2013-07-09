@@ -922,6 +922,46 @@ function shn_plus_registerAll($namespace) {
 		$namespace,
 		"Returns a list of the images that have been removed from the system (either deleted or expired)."
 	);
+    
+    // test exporting API
+    shn_plus_registerOne($server, 'exportPerson',
+		array(
+			'in' => array(
+                'incidentId'  => 'xsd:integer',
+			),
+			'out' => array(
+				'export_person' => 'xsd:string',
+				'errorCode'    => 'xsd:integer',
+				'errorMessage' => 'xsd:string'
+			)
+		),
+		$namespace,
+		"test Exporting Person data..."
+	);
+}
+
+// test exportPFIF data for inicidentId
+function exportPerson($incidentId) {
+	shn_plus_logAccess("exportPerson");
+	global $global;
+        
+    $sql = "SELECT * from person_uuid where incident_id='".mysql_real_escape_string($incidentId)."'";
+	$result = $global['db']->Execute($sql);
+        
+    $list = array();
+	while (!$result == NULL && !$result->EOF) {
+            $p = new Person();
+            $p->p_uuid = $result->fields['p_uuid'];
+            $p->load();
+            $p->prepareSerialize();
+            $list[] = serialize($p);            
+            $result->MoveNext();
+	}
+	return array(
+		'export_person' => (string)json_encode($list),
+		'errorCode'    => (int)0,
+		'errorMessage' => null
+	);
 }
 
 

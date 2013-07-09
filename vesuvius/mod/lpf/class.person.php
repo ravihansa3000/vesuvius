@@ -206,6 +206,9 @@ class person {
 	public $arrival_website;
 	public $arrival_pfif;
 	public $arrival_vanilla_email;
+    
+    //Person update history
+    public $update_history;
 
 	// Constructor:
 	public function	__construct() {
@@ -370,6 +373,8 @@ class person {
 		$this->arrival_website       = false;
 		$this->arrival_pfif          = false;
 		$this->arrival_vanilla_email = false;
+        
+        $this->update_history   = array();
 	}
 
 
@@ -2809,6 +2814,58 @@ class person {
 		}		
 	}
 	
+    /*
+     * Set null for filecontent string and database details
+     * set update histroy to the array
+     */
+    public function prepareSerialize() {
+        foreach ($this->images as $personImage) {
+            $personImage->fileContent = null;
+            $personImage->OfileContent = null;
+            
+            $personImage->db = null;
+        }
+        
+        //Fetch update history from person_updates
+        $q = "
+            SELECT * 
+            from person_updates 
+            where p_uuid='".mysql_real_escape_string((string)$this->p_uuid)."';
+        ";
+        $results = $this->db->Execute($q);
+        
+        while (!$results == NULL && !$results->EOF) {
+            $p_his = array(
+                'update_index'      => (string)$results->fields["update_index"],
+                'p_uuid'            => (string)$results->fields["p_uuid"],
+                'update_time'       => (string)$results->fields["update_time"],
+                'updated_table'     => (string)$results->fields["updated_table"],
+                'updated_column'    => (string)$results->fields["updated_column"],
+                'old_value'         => (string)$results->fields["old_value"],
+                'new_value'         => (string)$results->fields["new_value"],
+                'updated_by_p_uuid' => (string)$results->fields["updated_by_p_uuid"],
+            );
+            $this->update_history[] = $p_his;
+            $results->MoveNext();
+        }
+        
+        $this->db = null;
+    }
+    
+    /*
+     * resetting deleted values
+     */
+    public function postSerialize() {
+        global $global;
+        foreach ($this->images as $personImage) {
+            
+            $personImage->decode();
+            $personImage->OfileContent = $personImage->fileContent;
+            
+            $personImage->db = $global['db'];
+        }
+        $this->db = $global['db'];
+    }
 	
 	// end class
 }
