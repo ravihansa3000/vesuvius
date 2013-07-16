@@ -2707,5 +2707,59 @@ function getNullTokenList($tokenStart, $tokenEnd, $key) {
 	);
 }
 
+/** Returns list of newly created records & updates. */
+function pull($incidentId, $lastSyncDate) {
+    
+	shn_plus_logAccess("pull");
+	global $global;
+    
+    /** Newly created person records from last sync. */
+    $q = "
+        SELECT  p.`p_uuid`
+        FROM    `person_uuid` p, `person_status` s
+        WHERE   p.`incident_id`='".mysql_real_escape_string($incidentId)."'
+        AND     p.`p_uuid` = s.`p_uuid`
+        AND     s.`creation_time` > '".mysql_real_escape_string($lastSyncDate)."'
+        ";
+//    $sql = "SELECT * from person_uuid where incident_id='".mysql_real_escape_string($incidentId)."'";
+	$result = $global['db']->Execute($q); 
+    $newRecordList = array();
+	while (!$result == NULL && !$result->EOF) {
+            $syncP = new syncPerson();
+            $syncP->p_uuid = $result->fields['p_uuid'];
+            $syncP->load();
+            $syncP->prepareSerialize();
+            $newRecordList[] = serialize($syncP);            
+            $result->MoveNext();
+	}
+    
+    /** Fetch updates for existing person record. */
+    $q = "
+        SELECT  p.`p_uuid`
+        FROM    `person_uuid` p, `person_status` s
+        WHERE   p.`incident_id`='".mysql_real_escape_string($incidentId)."'
+        AND     p.`p_uuid` = s.`p_uuid`
+        AND     s.`last_updated` > '".mysql_real_escape_string($last_sync)."'
+        AND     s.`creation_time` < '".mysql_real_escape_string($last_sync)."'
+        ";
+    $result = $global['db']->Execute($q); 
+    $updateRecords = array();
+	while (!$result == NULL && !$result->EOF) {
+            $syncP = new syncPerson();
+            $syncP->p_uuid = $result->fields['p_uuid'];
+            $syncP->load();
+            $syncP->prepareSerialize();
+            $updateRecords[] = serialize($syncP);            
+            $result->MoveNext();
+	}
+        
+	return array(
+		'new'           => (string)json_encode($newRecordList),
+		'updates'       => (string)json_encode($updateRecords),
+		'errorCode'     => (int)0,
+		'errorMessage'  => null
+	);
+}
+
 
 

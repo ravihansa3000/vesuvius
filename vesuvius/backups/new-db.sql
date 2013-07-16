@@ -2425,6 +2425,36 @@ INSERT INTO `voice_note_seq` (`id`) VALUES (1668);
 /*!40000 ALTER TABLE `voice_note_seq` ENABLE KEYS */;
 UNLOCK TABLES;
 
+
+
+--
+-- Table structure for table `sync_updates`
+--
+
+DROP TABLE IF EXISTS `sync_updates`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sync_updates` (
+  `sync_update_id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `incident_id` bigint(20) NOT NULL,
+  `instance_uuid` varchar(64) NOT NULL,
+  PRIMARY KEY (`sync_update_id`),
+  CONSTRAINT `sync_updates_ibfk_1` FOREIGN KEY (`incident_id`) REFERENCES `incident` (`incident_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sync_updates`
+--
+
+LOCK TABLES `sync_updates` WRITE;
+/*!40000 ALTER TABLE `sync_updates` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sync_updates` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+
 --
 -- Dumping routines for database 'tmp'
 --

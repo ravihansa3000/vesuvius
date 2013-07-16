@@ -1131,7 +1131,7 @@ function shn_eap_edit() {
 							".$principal." );
 					";
 					$result = $global['db']->Execute($q);
-					if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "eap insert image ((".$q."))"); } else {
+					if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "eap insert image ((".$q."))"); } else {
 						$num++; // we just added an image
 					}
 
@@ -2592,7 +2592,7 @@ echo '<hr>';
 			AND p.p_uuid = '".$_SESSION['user_p_uuid']."';
 		";
 		$result = $global['db']->Execute($q);
-		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "edit make static pfif note ((".$q."))"); }
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "edit make static pfif note ((".$q."))"); }
 
 		if($result != NULL && !$result->EOF) {
 			$n->author_name  = $result->fields['full_name'];

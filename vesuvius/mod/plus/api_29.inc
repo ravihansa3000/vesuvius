@@ -13,6 +13,7 @@
 
 global $api_version;
 $api_version = 29;
+require_once($global['approot']."mod/lpf/class.syncPerson.php");
 
 // This function is called by the Document/Literal SOAP server upon initalization to register all the api services from this module's api.
 function shn_plus_registerAll($namespace) {
@@ -923,46 +924,25 @@ function shn_plus_registerAll($namespace) {
 		"Returns a list of the images that have been removed from the system (either deleted or expired)."
 	);
     
-    // test exporting API
-    shn_plus_registerOne($server, 'exportPerson',
+    /** pull request to be passive instance in synchronization... */
+    shn_plus_registerOne($server, 'pull',
 		array(
 			'in' => array(
-                'incidentId'  => 'xsd:integer',
+                'incidentId'    => 'xsd:integer',
+                'lastSyncDate'    => 'xsd:string',
 			),
 			'out' => array(
-				'export_person' => 'xsd:string',
-				'errorCode'    => 'xsd:integer',
-				'errorMessage' => 'xsd:string'
+				'new'           => 'xsd:string',
+                'updates'       => 'xsd:string',
+				'errorCode'     => 'xsd:integer',
+				'errorMessage'  => 'xsd:string'
 			)
 		),
 		$namespace,
-		"test Exporting Person data..."
+		"pull person data act as slave instance..."
 	);
 }
 
-// test exportPFIF data for inicidentId
-function exportPerson($incidentId) {
-	shn_plus_logAccess("exportPerson");
-	global $global;
-        
-    $sql = "SELECT * from person_uuid where incident_id='".mysql_real_escape_string($incidentId)."'";
-	$result = $global['db']->Execute($sql);
-        
-    $list = array();
-	while (!$result == NULL && !$result->EOF) {
-            $p = new Person();
-            $p->p_uuid = $result->fields['p_uuid'];
-            $p->load();
-            $p->prepareSerialize();
-            $list[] = serialize($p);            
-            $result->MoveNext();
-	}
-	return array(
-		'export_person' => (string)json_encode($list),
-		'errorCode'    => (int)0,
-		'errorMessage' => null
-	);
-}
 
 
 
