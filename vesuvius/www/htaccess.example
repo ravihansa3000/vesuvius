@@ -62,6 +62,7 @@ RewriteRule ^(stat|statistics)$                $2?mod=stat [QSA]
 RewriteRule ^(tp|triagepic)$                   $2?mod=tp [QSA]
 RewriteRule ^(pref|settings)$                  $2?mod=pref [QSA]
 RewriteRule ^(xst|xmlstreamer)$                $2?mod=xst [QSA]
+RewriteRule ^(sync|sync)$                      $2?mod=sync [QSA]
 
 ##### matches /shortname
 RewriteRule ^([^/][a-z0-9]+)$ $2?shortname=$1 [QSA]

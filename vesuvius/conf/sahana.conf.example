@@ -61,9 +61,6 @@ $conf['default_action'] = 'default';
 $conf['default_module_event'] = 'inw';
 $conf['default_action_event'] = 'default';
 
-$conf['default_module_event'] = 'sync';
-$conf['default_action_event'] = 'default';
-
 # Password Policy
 $conf['pwd_min_chars']       = 8;
 $conf['pwd_max_chars']       = 16;
