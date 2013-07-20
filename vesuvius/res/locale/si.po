@@ -8,14 +8,14 @@ msgstr ""
 "Project-Id-Version: vesuvius\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2013-03-30 21:12+0530\n"
-"PO-Revision-Date: 2013-05-11 03:04+0000\n"
+"PO-Revision-Date: 2013-07-19 12:50+0000\n"
 "Last-Translator: Kaushika Rukshan Athukorala <kaushikaruk@gmail.com>\n"
 "Language-Team: Sinhala <si@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2013-05-12 05:39+0000\n"
-"X-Generator: Launchpad (build 16598)\n"
+"X-Launchpad-Export-Date: 2013-07-20 06:10+0000\n"
+"X-Generator: Launchpad (build 16696)\n"
 
 #: ../www/theme/lpf3/header.php:59
 msgid "of"
@@ -245,7 +245,7 @@ msgstr "ප්‍රතිස්ථාපනය නවතා දැමුණි.
 #: ../mod/snap/xajax.inc:334
 msgctxt "Snapshot-Log-Message"
 msgid "Renamed Snapshot:"
-msgstr ""
+msgstr "නැවත නම් කෙරූ පිටපත"
 
 #: ../mod/snap/xajax.inc:336
 msgctxt "Snapshot-Log-Message"
@@ -440,7 +440,7 @@ msgstr "රෝහල් ප්‍රතිපත්ති"
 #: ../mod/ha/xajax.inc:493
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "PatientID prefix"
-msgstr ""
+msgstr "රෝගී අනන්‍යතා උපසර්ගය"
 
 #: ../mod/ha/xajax.inc:497
 msgctxt "Hospitals-EditHospitalForm-TextField"
@@ -470,7 +470,7 @@ msgstr "ඡායාරූප ශිල්පියාගේ නම අවශ්
 #: ../mod/ha/xajax.inc:517
 msgctxt "Hospitals-EditHospitalForm-TextField"
 msgid "Legalese"
-msgstr ""
+msgstr "නෛතික"
 
 #: ../mod/ha/xajax.inc:521
 msgctxt "Hospitals-EditHospitalForm-TextField"
@@ -480,7 +480,7 @@ msgstr ""
 #: ../mod/ha/xajax.inc:527
 msgctxt "Hospitals-EditHospitalForm-Text"
 msgid "Hospital Icon"
-msgstr ""
+msgstr "රෝහල් සුරුවම"
 
 #: ../mod/ha/xajax.inc:530
 msgctxt "Hospitals-EditHospitalForm-TextField"
@@ -583,7 +583,7 @@ msgstr "ACL ඒකකය"
 #: ../mod/admin/main.inc:46
 msgctxt "Admin-Menu"
 msgid "Event Log"
-msgstr ""
+msgstr "සිදුවීම් ලොගය"
 
 #: ../mod/admin/main.inc:163
 msgid "Rows are Users ,Columns are the possible status values"
@@ -886,7 +886,7 @@ msgstr "පිටුව #"
 #: ../mod/rez/xajax.inc:642 ../mod/rez/xajax.inc:643
 msgctxt "ResourcePages-Table-Header"
 msgid "Menu/Page Title"
-msgstr ""
+msgstr "මෙනු/පිටු නාමය"
 
 #: ../mod/rez/xajax.inc:83
 msgctxt "ResourcePages-Table-Header"
@@ -902,17 +902,17 @@ msgstr ""
 #: ../mod/rez/xajax.inc:85 ../mod/rez/xajax.inc:175
 msgctxt "ResourcePages-Table-Header"
 msgid "Edit"
-msgstr ""
+msgstr "සකසන්න"
 
 #: ../mod/rez/xajax.inc:86
 msgctxt "ResourcePages-Table-Header"
 msgid "Delete"
-msgstr ""
+msgstr "මකා දමන්න"
 
 #: ../mod/rez/xajax.inc:87
 msgctxt "ResourcePages-Table-Header"
 msgid "Translate"
-msgstr ""
+msgstr "පරිවර්තනය කරන්න"
 
 #: ../mod/rez/xajax.inc:88
 msgctxt "ResourcePages-Table-Header"
@@ -922,22 +922,22 @@ msgstr ""
 #: ../mod/rez/xajax.inc:130
 msgctxt "ResourcePages-Visibility-Select"
 msgid "Public"
-msgstr ""
+msgstr "පොදු"
 
 #: ../mod/rez/xajax.inc:130
 msgctxt "ResourcePages-Visibility-Select"
 msgid "Hidden"
-msgstr ""
+msgstr "සැඟවුණු"
 
 #: ../mod/rez/xajax.inc:130
 msgctxt "ResourcePages-Visibility-Select"
 msgid "INTERNAL"
-msgstr ""
+msgstr "අන්තර්"
 
 #: ../mod/rez/xajax.inc:133 ../mod/rez/xajax.inc:215
 msgctxt "ResourcePages-Button"
 msgid "Edit"
-msgstr ""
+msgstr "සකසන්න"
 
 #: ../mod/rez/xajax.inc:135
 msgctxt "ResourcePages-Delete-Confirm"
