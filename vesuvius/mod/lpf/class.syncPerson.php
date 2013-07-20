@@ -11,7 +11,7 @@
 class syncPerson extends person {
     
     public $update_history;
-    public $update_startDate;
+    public $last_sync;
 
 	// Constructor:
 	public function	__construct() {
@@ -34,7 +34,7 @@ class syncPerson extends person {
             SELECT  * 
             FROM    person_updates 
             WHERE   p_uuid='".mysql_real_escape_string((string)$this->p_uuid)."'
-            AND     `update_time` > '".mysql_real_escape_string((string)$this->update_startDate)."'
+            AND     `update_time` > '".mysql_real_escape_string((string)$this->last_sync)."'
         ";
         $results = $this->db->Execute($q);
         
