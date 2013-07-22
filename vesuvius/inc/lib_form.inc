@@ -263,7 +263,7 @@ function shn_form_fclose()
 function shn_form_submit($name, $submit_opts = null)
 {
     global $shn_tabindex;
-    echo "<input type=\"submit\" value=\"" . $name . "\" " . $submit_opts . " tabindex=\"" . ++$shn_tabindex . "\" />";
+    echo "<input type=\"submit\" value=\"" . $name . "\" name=\"submit\" " . $submit_opts . " tabindex=\"" . ++$shn_tabindex . "\" />";
 }
 
 
