@@ -26,25 +26,27 @@ function getLocation(pos) {
 	longitude = pos.coords.longitude;
 	load_map();
 	geocoder.geocode({'latLng': marker.getPosition()}, function(results, status) {
-		if (status == google.maps.GeocoderStatus.OK) {
+			if (status == google.maps.GeocoderStatus.OK) {
 			if (results[0]) {
-				$('#address').val(results[0].formatted_address);
-				$('#latitude').val(marker.getPosition().lat());
-				$('#longitude').val(marker.getPosition().lng());
+			$('#address').val(results[0].formatted_address);
+			$('#latitude').val(marker.getPosition().lat());
+			$('#longitude').val(marker.getPosition().lng());
 			}
-		}
-	});
+			}
+			});
 }
 
 
 function unknownLocation() {
 	alert('Could not find location');
+
 }
 
 
 function detect_load() {
 	navigator.geolocation.getCurrentPosition(getLocation, unknownLocation);
 }
+
 
 
 function load_map(latitude, longitude, street) {
@@ -54,75 +56,75 @@ function load_map(latitude, longitude, street) {
 	}
 	var latlng = new google.maps.LatLng(latitude, longitude);
 	var config = {
-		zoom: 13,
-		center: latlng,
-		disableDefaultUI: true,
-		navigationControl: true,
-		navigationControlOptions: {
-			style: google.maps.NavigationControlStyle.ZOOM_PAN
-		},
-		mapTypeControl: true,
+zoom: 13,
+      center: latlng,
+      disableDefaultUI: true,
+      navigationControl: true,
+      navigationControlOptions: {
+style: google.maps.NavigationControlStyle.ZOOM_PAN
+      },
+mapTypeControl: true,
 		mapTypeControlOptions: {
-			style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
 		},
-		mapTypeId: google.maps.MapTypeId.ROADMAP
+mapTypeId: google.maps.MapTypeId.ROADMAP
 	};
 	map = new google.maps.Map(document.getElementById("mapCanvas"), config);
 
 	geocoder = new google.maps.Geocoder();
 
 	marker = new google.maps.Marker({
-		map: map,
-		draggable: true
-	});
+map: map,
+draggable: true
+});
 
-	$(function() {
+$(function() {
 		$("#address").autocomplete({
 
 			// This bit uses the geocoder to fetch address values
-			source: function(request, response) {
-				geocoder.geocode( {'address': request.term }, function(results, status) {
-					response($.map(results, function(item) {
-						return {
-							label:  item.formatted_address,
-							value: item.formatted_address,
-							latitude: item.geometry.location.lat(),
-							longitude: item.geometry.location.lng()
-						}
-					}));
-				})
-			},
+source: function(request, response) {
+geocoder.geocode( {'address': request.term }, function(results, status) {
+	response($.map(results, function(item) {
+			return {
+label:  item.formatted_address,
+value: item.formatted_address,
+latitude: item.geometry.location.lat(),
+longitude: item.geometry.location.lng()
+}
+}));
+	})
+},
 
-			// This bit is executed upon selection of an address
-			select: function(event, ui) {
-				$("#latitude").val(ui.item.latitude);
-				$("#longitude").val(ui.item.longitude);
-				var location = new google.maps.LatLng(ui.item.latitude, ui.item.longitude);
-				marker.setPosition(location);
-				map.setCenter(location);
-			}
-		});
-	});
+// This bit is executed upon selection of an address
+select: function(event, ui) {
+$("#latitude").val(ui.item.latitude);
+$("#longitude").val(ui.item.longitude);
+var location = new google.maps.LatLng(ui.item.latitude, ui.item.longitude);
+marker.setPosition(location);
+map.setCenter(location);
+	}
+});
+});
 
-	// Add listener to marker for reverse geocoding
-	google.maps.event.addListener(marker, 'drag', function() {
+// Add listener to marker for reverse geocoding
+google.maps.event.addListener(marker, 'drag', function() {
 		geocoder.geocode({'latLng': marker.getPosition()}, function(results, status) {
 			if (status == google.maps.GeocoderStatus.OK) {
-				if (results[0]) {
-					$('#address').val(results[0].formatted_address);
-					$('#latitude').val(marker.getPosition().lat());
-					$('#longitude').val(marker.getPosition().lng());
-				}
+			if (results[0]) {
+			$('#address').val(results[0].formatted_address);
+			$('#latitude').val(marker.getPosition().lat());
+			$('#longitude').val(marker.getPosition().lng());
 			}
+			}
+			});
 		});
-	});
 
-	$("#latitude").val(latitude);
-	$("#longitude").val(longitude);
-	$("#address").val(street);
-	var location = new google.maps.LatLng(latitude, longitude);
-	marker.setPosition(location);
-	map.setCenter(location);
+$("#latitude").val(latitude);
+$("#longitude").val(longitude);
+$("#address").val(street);
+var location = new google.maps.LatLng(latitude, longitude);
+marker.setPosition(location);
+map.setCenter(location);
 
 }
 
@@ -151,6 +153,7 @@ function em_get_data() {
 	r.externalReport   = htmlspecialchars($("#externalReport").val());
 	r.eventParent      = $("#eventParent").val();
 	r.eventType        = $("#eventType").val();
+	r.category         = htmlspecialchars($(".chzn-select-no-results").val());
 	r.eventVisibility  = $("#eventVisibility").val();
 	r.eventDate        = $("#eventDate").val();
 	r.eventId          = $("#eventId").val();
@@ -164,8 +167,8 @@ function em_get_data() {
 	} else {
 		r.eventDefault = 0;
 	}
-
 	var rj = array2json(r);
+	alert(rj);
 	return(rj);
 }
 
@@ -214,8 +217,57 @@ function array2json(arr) {
 function initDate() {
 	$("#eventDate").datepicker({ dateFormat: 'yy-mm-dd' });
 }
+function chosen() {
+	$(".chzn-select-no-results").chosen({no_results_text: "No matching categories for : "});
+}
+function getXMLHTTP() {
+	var x = false;
+	try {
+		x = new XMLHttpRequest();
+	}catch(e) {
+		try {
+			x = new ActiveXObject("Microsoft.XMLHTTP");
+		}catch(ex) {
+			try {
+				req = new ActiveXObject("Msxml2.XMLHTTP");
+			}
+			catch(e1) {
+				x = false;
+			}
+		}
+	}
+	return x;
+}
 
-
+function add_category(id){
+	{
+		var val= document.getElementById("new_cat").value;
+		alert(val);
+		alert(id);
+		var strURL="../../mod/em/add_cat.php?category="+val+"&inc_id="+id;
+		var req = getXMLHTTP();
+		if (req)
+		{
+			req.onreadystatechange = function()
+			{
+				if (req.readyState == 4)
+				{
+					// only if "OK"
+					if (req.status == 200)
+					{
+						document.getElementById('chzn-select-no-results').innerHTML=req.responseText;
+						document.getElementById('new_cat').value='';
+						$(".chzn-select-no-results").trigger('liszt:updated');
+					} else {
+						alert("There was a problem while using XMLHTTP:\n" + req.statusText);
+					}
+				}
+			}
+			req.open("GET", strURL, true);
+			req.send(null);
+		}
+	}
+}
 
 // from http://goo.gl/CLJxF
 function htmlspecialchars(string, quote_style, charset, double_encode) {
@@ -238,8 +290,13 @@ function htmlspecialchars(string, quote_style, charset, double_encode) {
 	// *     returns 2: 'ab"c&#039;d'
 	// *     example 3: htmlspecialchars("my "&entity;" is still here", null, null, false);
 	// *     returns 3: 'my &quot;&entity;&quot; is still here'
+	if (string === null)
+	{
+		string = 'Default';
+		return string;
+	}
 	var optTemp = 0, i = 0,
-	noquotes = false;
+	    noquotes = false;
 
 	if (typeof quote_style === 'undefined' || quote_style === null) {
 		quote_style = 2;
