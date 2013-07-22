@@ -33,9 +33,7 @@ function shn_sync_default() {
     
     $x = file_get_contents($global['approot']."mod/plus/reference_REUNITE4.xml");
     $result = $client->call('pull', array('incidentId' => 1, 'lastSyncDate' => $lastSyncDate));
-    
- echo 'testMy';
-    
+        
     echo "
         <h2>wsdl: ".$wsdl."</h2>
         <pre>".var_export($result, true)."</pre> 
@@ -44,7 +42,7 @@ function shn_sync_default() {
     $new = json_decode($result['new']);
     __addNewRecords($new);
 
-    $updates = json_decode($result['new']);
+    $updates = json_decode($result['updates']);
     __resolveUpdates($updates, $lastSyncDate);
 
     echo "
@@ -66,6 +64,7 @@ function __addNewRecords($newRecords) {
         $per = unserialize($serP);
         $per->postSerialize($global['db']);
 //        $per->save();
+
         echo 'test: ' . $per->full_name;
         echo '<pre>';
         print_r($per);
@@ -75,18 +74,18 @@ function __addNewRecords($newRecords) {
 /** Resolve updates on slave from last sync. */
 function __resolveUpdates($updates, $lastSyncDate) {
     global $global;
-    
+        
     //resolve each person record
     foreach ($updates as $serP) {
         $slave_person = unserialize($serP);
         $slave_person->postSerialize($global['db']);
-//        echo 'test: ' . $slave_person->full_name;
-//        echo '<pre>';
-//        print_r($slave_person);
+        echo 'test: ' . $slave_person->full_name;
+        echo '<pre>';
+        print_r($slave_person);
         
         $local = new syncPerson();
         $local->p_uuid = $slave_person->p_uuid;
-        $local->update_startDate = $lastSyncDate;
+        $local->last_sync = $lastSyncDate;
         $local->load();
         
         /** 
@@ -103,6 +102,22 @@ function __resolveUpdates($updates, $lastSyncDate) {
          *  
          *  
          */   
+        foreach ($slave_person->update_history as $s_up) {
+            foreach ($local->update_history as $l_up) {
+                if(($s_up['updated_table']==$l_up['updated_table']) && ($s_up['updated_column']==$l_up['updated_column'])) {
+                    if($s_up['update_time'] > $l_up['update_time']) {
+                        //set slave value to person
+                    } else {
+                        // No changes need for local instance but send data to slave
+                    }                        
+                } else {
+                    //set slave value to person
+                    
+                }
+                
+            }
+        }
+        
     }
 }
 
