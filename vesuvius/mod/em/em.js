@@ -217,6 +217,8 @@ function array2json(arr) {
 function initDate() {
 	$("#eventDate").datepicker({ dateFormat: 'yy-mm-dd' });
 }
+
+//Disaster Category select Box
 function chosen() {
 	$(".chzn-select-no-results").chosen({no_results_text: "No matching categories for : "});
 }
@@ -240,21 +242,16 @@ function getXMLHTTP() {
 }
 
 function add_category(id){
-	{
 		var val= document.getElementById("new_cat").value;
 		alert(val);
 		alert(id);
 		var strURL="../../mod/em/add_cat.php?category="+val+"&inc_id="+id;
 		var req = getXMLHTTP();
-		if (req)
-		{
-			req.onreadystatechange = function()
-			{
-				if (req.readyState == 4)
-				{
+		if (req){
+			req.onreadystatechange = function(){
+				if (req.readyState == 4){
 					// only if "OK"
-					if (req.status == 200)
-					{
+					if (req.status == 200){
 						document.getElementById('chzn-select-no-results').innerHTML=req.responseText;
 						document.getElementById('new_cat').value='';
 						$(".chzn-select-no-results").trigger('liszt:updated');
@@ -267,7 +264,6 @@ function add_category(id){
 			req.send(null);
 		}
 	}
-}
 
 // from http://goo.gl/CLJxF
 function htmlspecialchars(string, quote_style, charset, double_encode) {

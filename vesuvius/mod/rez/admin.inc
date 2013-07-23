@@ -41,7 +41,7 @@ function shn_rez_adm_default() {
 	setTimeout("rez_show_pages();", 1500);
 	window.rezPageSaved = true;
 
-	function checkSaved() {
+	function checkSaved(id) {
 		if(!window.rezPageSaved) {
 			var answer = confirm('Are you sure you want to close this document? It has not been saved.');
 			if(answer) {
@@ -53,6 +53,7 @@ function shn_rez_adm_default() {
 		} else {
 			rez_append_log('Closing editor...<br>');
 			area2.removeInstance('pageContent');
+			setTimeout(function(){rez_perform_delete(id,'',true);},200)
 			setTimeout('rez_show_pages();', 500);
 			window.rezPageSaved = true;
 		}
@@ -81,7 +82,6 @@ function shn_rez_adm_default() {
 		}
 		return x;
 	}	
-
 	function render_fields(id)	{
 		var value = document.getElementById(id).value;
 		var strURL="../../mod/rez/render_fields.php?type="+id+"&id="+value+"&actual=2";
@@ -99,6 +99,7 @@ function shn_rez_adm_default() {
 						div.innerHTML = content;
 						var content = div.firstChild.nodeValue;	
 						document.getElementById('menuTitle').value=title;
+						document.getElementById('pageContent').value=content;
 						nicEditors.findEditor('pageContent').setContent(content);
 					} else {
 						alert("There was a problem while using XMLHTTP:\n" + req.statusText);
@@ -135,6 +136,7 @@ function shn_rez_adm_default() {
 							var content = (((div.getElementsByTagName('textarea'))[0].innerHTML));
 							div.innerHTML = content;
 							var content = div.firstChild.nodeValue;	
+							document.getElementById('menuTitle').value=content;
 							nicEditors.findEditor('pageContent').setContent(content);
 						} else {
 							alert("There was a problem while using XMLHTTP:\n" + req.statusText);

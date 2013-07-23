@@ -39,6 +39,7 @@ header('Content-type: text/html; charset=UTF-8')
 <meta name="google-site-verification" content="Y2Ts00HnBQEr3M3KegrKRRAMVuQPejmqeqPKDsMGRGw" />
 <link rel="chrome-webstore-item" href="https://chrome.google.com/webstore/detail/fbnpmpdcnjkhfcgeeklebjmopaheplce">
 <link rel="stylesheet" media="screen, projection" type="text/css" href="theme/<?php echo $global['theme'];?>/sahana.css" />
+<link rel="stylesheet" media="screen, projection" type="text/css" href="theme/<?php echo $global['theme'];?>/chosen.css" />
 <link rel="stylesheet" media="print" type="text/css" href="theme/<?php echo $global['theme'];?>/print.css" />
 <link rel="stylesheet" media="handheld" type="text/css" href="theme/<?php echo $global['theme'];?>/mobile.css" />
 <?

@@ -210,9 +210,9 @@ function rez_show_pages($internal = FALSE) {
 		} else {
 			$evenOddClass = "mainRowOdd";
 		}
-		$htmlMain .= "<tr><td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".abs($page_id)."</td><td style=\"padding-left: 8px;\" class=\"".$evenOddClass."\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"#\" onclick=\"rez_perform_edit(".$page_id.");\">".$menu_title."</a></td>";
+		$htmlMain .= "<tr><td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".abs($page_id)."</td><td style=\"padding-left: 8px;\" class=\"".$evenOddClass."\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"#\" onclick=\"rez_perform_edit(".$page_id.",'');\">".$menu_title."</a></td>";
 
-		$htmlMain .= "<td style=\"text-align: center;\" class=\"".$evenOddClass."\"><input class=\"styleTehButton\" type=\"button\" onclick=\"rez_perform_edit(".$page_id.");\" value=\""._t("ResourcePages-Button|Edit")."\"></td>";
+		$htmlMain .= "<td style=\"text-align: center;\" class=\"".$evenOddClass."\"><input class=\"styleTehButton\" type=\"button\" onclick=\"rez_perform_edit(".$page_id.",'');\" value=\""._t("ResourcePages-Button|Edit")."\"></td>";
 
 		$i++;
 		$eo++;
@@ -227,8 +227,7 @@ function rez_show_pages($internal = FALSE) {
 	//
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	$pageControlHtml = '<input class="styleTehButton" type="button" onclick="javascript: rez_append_log(\''._t("ResourcePages-Message|Creating a new page...").'<br>\'); rez_perform_edit(0);" value="'._t("ResourcePages-Button|Create a new Page").'"><input class="styleTehButton" type="button" onclick="javascript: rez_append_log(\''._t("ResourcePages-Message|Creating a new System page...").'<br>\'); rez_perform_edit("s");" value="'._t("ResourcePages-Button|Create new System Page").'">'
-		.'&nbsp;&nbsp;&nbsp;&nbsp;';
+	$pageControlHtml = '<input class="styleTehButton" type="button" onclick="javascript: rez_append_log(\''._t("ResourcePages-Message|Creating a new page...").'<br>\'); rez_perform_edit(\'res\',\'\');" value="'._t("ResourcePages-Button|Create a new Page").'"><input class="styleTehButton" type="button" onclick="javascript: rez_append_log(\''._t("ResourcePages-Message|Creating a new System page...").'<br>\'); rez_perform_edit(\'system\',\'\');" value="'._t("ResourcePages-Button|Create new System Page").'">&nbsp;&nbsp;&nbsp;&nbsp;';
 	// <input class="controlButton" type="button" onclick="javascript: rez_append_log(\'Showing Help...<br>\'); rez_show_help();" value="Help">';
 
 	//---- internally, no ajax, just pass back data
@@ -399,47 +398,80 @@ function rez_perform_move_up($page_id) {
 
 
 // create a new page with default content and return its new page_id
-function rez_perform_new() {
+function rez_perform_new($type) {
 	global $global;
+	if ($type =='system')
+	{
+		$q = "
+			SELECT *
+			FROM rez_pages
+			WHERE rez_page_id < 0
+			ORDER BY rez_page_id ASC;
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) {
+			daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "rez new 1");
+		}
+		$row = $result->FetchRow();
+		$mID = $row['rez_page_id'] -1;
 
-	// find last menu order #, +1
-	$q = "
-		SELECT *
-		FROM rez_pages
-		ORDER BY rez_menu_order DESC
-		LIMIT 1;
-	";
-	$result = $global['db']->Execute($q);
-	if($result === false) {
-		daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "rez new 1");
+		$q2 = "
+			SELECT *
+			FROM rez_pages
+			WHERE rez_page_id =".$mID."; 
+		";
+		$q = "
+			INSERT INTO rez_pages (rez_page_id,rez_locale,rez_menu_title,rez_content, rez_timestamp, rez_visibility)
+			VALUES (".$mID.",'en_US','new system page','new system page content','".date('Y-m-d H:i:s')."', 'Hidden');
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) {
+			daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "rez new 2");
+		}
+		return $mID;
+
 	}
-	$row = $result->FetchRow();
-	$mID = isset($row['rez_menu_order']) ? $row['rez_menu_order'] : 0;
-	$mID++;
+	else
+	{
+		// find last menu order #, +1
+		$q = "
+			SELECT *
+			FROM rez_pages
+			WHERE rez_page_id > 0
+			ORDER BY rez_menu_order DESC
+			LIMIT 1;
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) {
+			daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "rez new 1");
+		}
+		$row = $result->FetchRow();
+		$mID = isset($row['rez_menu_order']) ? $row['rez_menu_order'] : 0;
+		$mID++;
+		$q2 = "
+			SELECT *
+			FROM rez_pages
+			ORDER BY rez_page_id DESC;
+		";
+		$q = "
+			INSERT INTO rez_pages (rez_locale,rez_menu_title, rez_menu_order, rez_content, rez_timestamp, rez_visibility)
+			VALUES ('en_US','new page', '".$mID."','new page content', '".date('Y-m-d H:i:s')."', 'Hidden');
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) {
+			daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "rez new 2");
+		}
+		// find id of newest page we just created
+		$result = $global['db']->Execute($q2);
+		if($result === false) {
+			daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "rez new 3");
+		}
+		$row3 = $result->FetchRow();
+		return $row3['rez_page_id'];
 
+	}
 	// insert a new page
-	$q = "
-		INSERT INTO rez_pages (rez_locale,rez_menu_title, rez_menu_order, rez_content, rez_timestamp, rez_visibility)
-		VALUES ('en_US','new page', '".$mID."','new page content', '".date('Y-m-d H:i:s')."', 'Hidden');
-	";
-	$result = $global['db']->Execute($q);
-	if($result === false) {
-		daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "rez new 2");
-	}
 
-	// find id of newest page we just created
-	$q = "
-		SELECT *
-		FROM rez_pages
-		ORDER BY rez_page_id DESC;
-	";
-	$result = $global['db']->Execute($q);
-	if($result === false) {
-		daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "rez new 3");
-	}
-	$row3 = $result->FetchRow();
-
-	return $row3['rez_page_id'];
 }
 
 
@@ -447,6 +479,11 @@ function rez_perform_new() {
 // saves the edit's page content/attributes to the database
 function rez_perform_save($page_id, $r) {
 	global $global;
+	//if locale is not set .. switch to default value - en_US
+	if (!$r['locale']) 
+	{
+		$r['locale'] = 'en_US';
+	}
 	$q = "select rez_page_id from rez_pages
 		where rez_page_id='{$page_id}'
 		and rez_locale='{$r['locale']}'";
@@ -502,15 +539,25 @@ function rez_perform_save($page_id, $r) {
 // presents a gui to edit a page and its corresponding fields
 function rez_perform_edit($page_id, $locale) {
 	global $global;
+	// if locale is not set .. Switch to default value - en_Us
+	if (!$locale)
+	{
+		$locale='en_US';
+	}
 	//This implies that the current page is a System Page
-	if($page_id < 0 or $page_id == "s")
+	if($page_id < 0 or $page_id == "system")
 	{
 		$type='system';
 	}
-
-	// if page_id = 0, must create a new page then continue to edit it
-	if($page_id == 0 or $page_id == 's') {
-		$page_id = rez_perform_new();
+	// if page_id = res, must create a new resource page then continue to edit it
+	if($page_id == "res")
+	{
+		$page_id = rez_perform_new("res");
+	}
+	// if page_id = system, must create a new system page then continue to edit it
+	else if($page_id == "system")
+	{
+		$page_id = rez_perform_new('system');
 	}
 	// get page info
 	$q = "
@@ -650,8 +697,8 @@ function rez_perform_edit($page_id, $locale) {
 	}
 
 	$editControlHtml = '
-		<input class="styleTehButton" type="button" onclick="javascript:  window.rezPageSaved = true; if(nicEditors.editors.length>0){nicEditors.findEditor(\'pageContent\').saveContent();} rez_perform_save('.$page_id.', xajax.getFormValues(\'editPageForm\'));" value="'._t("ResourcePages-EditForm-Button|Save and Publish Changes").'">
-		<input class="styleTehButton" type="button" onclick="checkSaved()" value="Close Editor">
+		<input class="styleTehButton" type="button" onclick="javascript: alert(xajax.getFormValues(\'editPageForm\'));  window.rezPageSaved = true; if(nicEditors.editors.length>0){nicEditors.findEditor(\'pageContent\').saveContent();} rez_perform_save('.$page_id.', xajax.getFormValues(\'editPageForm\'));" value="'._t("ResourcePages-EditForm-Button|Save and Publish Changes").'">
+		<input class="styleTehButton" type="button" onclick="checkSaved('.$page_id.')" value="Close Editor">
 		&nbsp; &nbsp; &nbsp; <span class="toggle">View editor as:
 		<input id="wysiwyg" class="styleTehButton" type="button" onclick="javascript: document.getElementById(\'wysiwyg\').disabled = true; document.getElementById(\'htmlcode\').disabled = false; area2 = new nicEditor({fullPanel : true}).panelInstance(\'pageContent\');" value="WYSIWYG">
 		<input id="htmlcode" class="styleTehButton" type="button" onclick="javascript: area2.removeInstance(\'pageContent\'); document.getElementById(\'wysiwyg\').disabled = false; document.getElementById(\'htmlcode\').disabled = true; nicEditors.editors = []; " value="HTML"></span>';
@@ -674,6 +721,11 @@ function rez_perform_delete($page_id, $locale, $confirm) {
 	global $global;
 
 	if($confirm == "true") {
+		// if locale is not set... Switch to default -en_US
+		if(!$locale){
+
+		$locale='en_US';
+		}
 
 		//---- delete the page from db table
 		$q = "

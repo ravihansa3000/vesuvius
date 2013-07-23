@@ -117,7 +117,7 @@ function em_show_events($internal = FALSE) {
 		";
 		$select='';
 		$categories = $global['db']->Execute($event_q1);
-		if($categories === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "show scenario 1"); }
+		if($categories === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "show disaster categories 1"); }
 		while($type_id = $categories->FetchRow()){
 			//get the name of the disaster category from ids
 			$event_q2="
@@ -126,18 +126,20 @@ function em_show_events($internal = FALSE) {
 				WHERE `category_id` =".$type_id['disaster_type'].";
 			";
 			$type_name = $global['db']->Execute($event_q2);
-			if($type_name === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "show scenario 1"); }
+			if($type_name === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "show disaster categories 2"); }
 			$name=$type_name->FetchRow();
 			$select.=$name['name'];
 			$select.=' ';
 
 		}
+		//if no disaster category --> incident mapping exists, mark it as default.
 		if ($select === '')
 		{
 			$disaster_category ='Default';
 		}
 		else
 		{
+		//Comma based separation
 			$select=explode(" ",$select,-1);
 			$select= join(",",$select);
 			$disaster_category =$select;
@@ -240,6 +242,7 @@ function em_show_events($internal = FALSE) {
 			$longname      = $row['name'];
 			$shortname     = $row['shortname'];
 			$default       = $row['default'];
+			//Fill Here
 			$closed        = $row['closed'];
 			$private_group = $row['private_group'];
 
@@ -274,6 +277,42 @@ function em_show_events($internal = FALSE) {
 			} else {
 				$evenOddClass = "mainRowOdd";
 			}
+			//get list of disaster categories for a event
+			$event_q1= " 
+				SELECT *
+				FROM scenario 
+				WHERE `incident_id` = ".$row['incident_id'].";
+			";
+			$select='';
+			$categories = $global['db']->Execute($event_q1);
+			if($categories === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "show disaster categories 4"); }
+			while($type_id = $categories->FetchRow()){
+				//get the name of the disaster category from ids
+				$event_q2="
+					SELECT *
+					FROM disaster_category
+					WHERE `category_id` =".$type_id['disaster_type'].";
+				";
+				$type_name = $global['db']->Execute($event_q2);
+				if($type_name === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "show disaster categories 5"); }
+				$name=$type_name->FetchRow();
+				$select.=$name['name'];
+				$select.=' ';
+
+			}
+			//if no mapping exists show Default
+			if ($select === '')
+			{
+				$disaster_category ='Default';
+			}
+			else
+			{
+			//comma based separation
+				$select=explode(" ",$select,-1);
+				$select= join(",",$select);
+				$disaster_category =$select;
+			}
+
 
 			$htmlMain .= "
 				<tr>
@@ -281,6 +320,7 @@ function em_show_events($internal = FALSE) {
 				<td style=\"padding-left: 8px;\" class=\"".$evenOddClass."\">".$longname."</td>
 				<td style=\"padding-left: 8px;\" class=\"".$evenOddClass."\">".$shortname."</td>
 				<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".$type2."</td>
+				<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".$disaster_category."</td>
 				<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".$defaultText."</td>
 				<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".$groupText."</td>
 				<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".$closedText."</td>
@@ -361,6 +401,39 @@ function em_show_events($internal = FALSE) {
 				} else {
 					$evenOddClass = "mainRowOdd";
 				}
+				$event_q1= " 
+					SELECT *
+					FROM scenario 
+					WHERE `incident_id` = ".$row['incident_id'].";
+				";
+				$select='';
+				$categories = $global['db']->Execute($event_q1);
+				if($categories === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "show scenario 1"); }
+				while($type_id = $categories->FetchRow()){
+					//get the name of the disaster category from ids
+					$event_q2="
+						SELECT *
+						FROM disaster_category
+						WHERE `category_id` =".$type_id['disaster_type'].";
+					";
+					$type_name = $global['db']->Execute($event_q2);
+					if($type_name === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "show scenario 1"); }
+					$name=$type_name->FetchRow();
+					$select.=$name['name'];
+					$select.=' ';
+
+				}
+				if ($select === '')
+				{
+					$disaster_category ='Default';
+				}
+				else
+				{
+					$select=explode(" ",$select,-1);
+					$select= join(",",$select);
+					$disaster_category =$select;
+				}
+
 
 				$htmlMain .= "
 					<tr>
@@ -368,6 +441,7 @@ function em_show_events($internal = FALSE) {
 					<td style=\"padding-left: 8px;\" class=\"".$evenOddClass."\">".$longname."</td>
 					<td style=\"padding-left: 8px;\" class=\"".$evenOddClass."\">".$shortname."</td>
 					<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".$type2."</td>
+					<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".$disaster_category."</td>
 					<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".$defaultText."</td>
 					<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".$groupText."</td>
 					<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".$closedText."</td>
@@ -748,19 +822,19 @@ function em_perform_save($page_id, $rj) {
 		delete FROM
 		scenario
 		WHERE `incident_id` ='".$eventId."';
-		";
+	";
 	$result = $global['db']->Execute($q);
-        if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "delete categories"); }
+	if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "delete categories"); }
 	$catgry_ids=explode(',',$disaster_cats);
 	foreach ($catgry_ids as $value)
 	{
-	$q = "INSERT INTO scenario
-		(incident_id,disaster_type)
-		VALUES
-		('".$eventId."','".$value."');
-	";
-	$result = $global['db']->Execute($q);
-        if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "insert categories"); }
+		$q = "INSERT INTO scenario
+			(incident_id,disaster_type)
+			VALUES
+			('".$eventId."','".$value."');
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "insert categories"); }
 
 	}
 
@@ -828,13 +902,13 @@ function em_perform_delete($incident_id, $confirm) {
 
 	if ($confirm == "true") {
 		//delete category --> incident mapping
-		 $q= "
-                delete FROM
-                scenario
-                WHERE `incident_id` ='".$incident_id."';
-                ";
-        	$result = $global['db']->Execute($q);
-	        if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "delete categories2"); }
+		$q= "
+			delete FROM
+			scenario
+			WHERE `incident_id` ='".$incident_id."';
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "delete categories2"); }
 
 		// email audit...
 		$q = "
@@ -908,13 +982,13 @@ function em_perform_purge($incident_id, $confirm) {
 
 	if ($confirm == "true") {
 		//delete category --> event mapping
-		 $q= "
-                delete FROM
-                scenario
-                WHERE `incident_id` ='".$incident_id."';
-                ";
-        	$result = $global['db']->Execute($q);
-	        if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "delete categories3"); }
+		$q= "
+			delete FROM
+			scenario
+			WHERE `incident_id` ='".$incident_id."';
+		";
+		$result = $global['db']->Execute($q);
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "delete categories3"); }
 
 
 		// email audit...
@@ -1289,48 +1363,48 @@ function em_perform_edit($incident_id) {
 	// end PFIF options
 
 	//generate Disaster Category Select Box
-		$names=array();
-	    	$q= " 
-                        SELECT *
-                        FROM scenario 
-                        WHERE `incident_id` = ".$incident_id.";
-                ";
-                $categories = $global['db']->Execute($q);
-                if($categories === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "generate categry 1"); }
-                while($type_id = $categories->FetchRow()){
-                        //get the name of the disaster category from ids
-                        $q="
-                                SELECT *
-                                FROM disaster_category
-                                WHERE `category_id` =".$type_id['disaster_type'].";
-                        ";
-                        $type_name = $global['db']->Execute($q);
-                        if($type_name === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "generate category 2"); }
-                        $name=$type_name->FetchRow();
-			$names[]=$name['name'];
-                }
+	$names=array();
+	$q= " 
+		SELECT *
+		FROM scenario 
+		WHERE `incident_id` = ".$incident_id.";
+	";
+	$categories = $global['db']->Execute($q);
+	if($categories === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "generate categry 1"); }
+	while($type_id = $categories->FetchRow()){
+		//get the name of the disaster category from ids
 		$q="
 			SELECT *
 			FROM disaster_category
-			ORDER BY name;
-			";
-		$categories=$global['db']->Execute($q);
-		$cats='';
-		$cats.="<select data-placeholder=\"Select from Existing Categories\" class=\"chzn-select-no-results\" name=\"rez_select\" multiple  id= \"chzn-select-no-results\" style=\"width: 300px\";";
-                if($categories === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "generate categry 3"); }
-		while($name=$categories->FetchRow())
+			WHERE `category_id` =".$type_id['disaster_type'].";
+		";
+		$type_name = $global['db']->Execute($q);
+		if($type_name === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "generate category 2"); }
+		$name=$type_name->FetchRow();
+		$names[]=$name['name'];
+	}
+	$q="
+		SELECT *
+		FROM disaster_category
+		ORDER BY name;
+	";
+	$categories=$global['db']->Execute($q);
+	$cats='';
+	$cats.="<select data-placeholder=\"Select from Existing Categories\" class=\"chzn-select-no-results\" name=\"rez_select\" multiple  id= \"chzn-select-no-results\" style=\"width: 300px\";";
+	if($categories === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "generate categry 3"); }
+	while($name=$categories->FetchRow())
+	{
+		if(in_array($name['name'],$names))
 		{
-			if(in_array($name['name'],$names))
-			{
-				$cats.='<option selected value="'.$name['category_id'].' ">' . $name['name'] . '</option>';
-			}
-			else
-			{
-				$cats.='<option value="'.$name['category_id'].'">' . $name['name'] . '</option>';
-			}
+			$cats.='<option selected value="'.$name['category_id'].' ">' . $name['name'] . '</option>';
 		}
-		$cats.='</select>';
-	
+		else
+		{
+			$cats.='<option value="'.$name['category_id'].'">' . $name['name'] . '</option>';
+		}
+	}
+	$cats.='</select>';
+
 
 	// generate visibility select box
 	// if no parent, then you can change these settings...

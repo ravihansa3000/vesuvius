@@ -18,6 +18,7 @@ $type =(mysql_real_escape_string(($_GET['type'])));
 $id = intval(mysql_real_escape_string(($_GET['id'])));
 if ($type == 'suggest_page')
 {
+	//Revert back to original page data
 	if ($actual == 1)
 	{
 		$q="
@@ -33,6 +34,7 @@ if ($type == 'suggest_page')
 		echo"<titles>".$row['rez_menu_title']."</titles><textarea>".$row['rez_content']."</textarea>";
 
 	}
+	//Show the content of the selected page template
 	elseif ($actual == 2)
 	{
 		$q="
