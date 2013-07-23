@@ -17,7 +17,7 @@ class person {
 	public $theString; // object is initialized as a string first, then parsed into an array
 	public $xmlFormat; // enumerated constant denoting type of the XML being loaded ~ REUNITE, TRIAGEPIC
 	public $a; // holds the array of the parsed xml
-
+    
 	// table person_uuid
 	public $p_uuid;
 	public $full_name;
@@ -97,6 +97,32 @@ class person {
 	private $Olast_seen;
 	private $Olast_clothing;
 	private $Oother_comments;
+    
+    
+    // HACK table person_physical
+    public $opt_blood_type;
+    public $height;
+    public $weight;
+    public $opt_eye_color;
+    public $opt_skin_color;
+    public $opt_hair_color;
+    public $injuries;
+    public $comments;
+    
+    // HACK original values (initialized at load and checked against when saved)
+    public $Oopt_blood_type;
+    public $Oheight;
+    public $Oweight;
+    public $Oopt_eye_color;
+    public $Oopt_skin_color;
+    public $Oopt_hair_color;
+    public $Oinjuries;
+    public $Ocomments;
+    
+    // HACK table contact
+    public $contact_type_value;
+    public $Ocontact_type_value;
+    
 
 	// table person_to_report
 	public $rep_uuid;
@@ -182,7 +208,7 @@ class person {
 	private $sql_Olast_clothing;
 	private $sql_Oother_comments;
 	private $sql_Orep_uuid;
-
+    
 	// used for when we recieve emails from mpres to make a pfif_note
 	public $author_name;
 	public $author_email;
@@ -206,7 +232,7 @@ class person {
 	public $arrival_website;
 	public $arrival_pfif;
 	public $arrival_vanilla_email;
-
+    
 	// Constructor:
 	public function	__construct() {
 
@@ -249,7 +275,7 @@ class person {
 		$this->last_clothing  = null;
 		$this->other_comments = null;
 		$this->rep_uuid       = null;
-
+        
 		$this->Op_uuid         = null;
 		$this->Ofull_name      = null;
 		$this->Ofamily_name    = null;
@@ -283,6 +309,30 @@ class person {
 		$this->Oother_comments = null;
 		$this->Orep_uuid       = null;
 
+        // ---------- HACK person_physical and contact variables ---------------
+        $this->opt_blood_type   = null;
+        $this->height           = null;
+        $this->weight           = null;
+        $this->opt_eye_color    = null;
+        $this->opt_skin_color   = null;
+        $this->opt_hair_color   = null;
+        $this->injuries         = null;
+        $this->comments         = null;
+        
+        $this->Oopt_blood_type   = null;
+        $this->Oheight           = null;
+        $this->Oweight           = null;
+        $this->Oopt_eye_color    = null;
+        $this->Oopt_skin_color   = null;
+        $this->Oopt_hair_color   = null;
+        $this->Oinjuries         = null;
+        $this->Ocomments         = null;
+        
+        $this->contact_type_value   = array();
+        $this->Ocontact_type_value  = array();
+        
+        // ------------ End HACK -----------------------------------------------
+        
 		$this->images         = array();
 		$this->edxl           = null;
 		$this->voice_notes    = array();
@@ -446,6 +496,30 @@ class person {
 		$this->Oother_comments = null;
 		$this->Orep_uuid       = null;
 
+        // ------------ HACK person_physical and contact variables -------------
+        $this->opt_blood_type   = null;
+        $this->height           = null;
+        $this->weight           = null;
+        $this->opt_eye_color    = null;
+        $this->opt_skin_color   = null;
+        $this->opt_hair_color   = null;
+        $this->injuries         = null;
+        $this->comments         = null;
+        
+        $this->Oopt_blood_type   = null;
+        $this->Oheight           = null;
+        $this->Oweight           = null;
+        $this->Oopt_eye_color    = null;
+        $this->Oopt_skin_color   = null;
+        $this->Oopt_hair_color   = null;
+        $this->Oinjuries         = null;
+        $this->Ocomments         = null;
+        
+        $this->contact_type_value   = null;
+        $this->Ocontact_type_value  = null;
+        
+        // -------------------- End HACK ----------------------
+        
 		$this->images          = null;
 		$this->edxl            = null;
 		$this->voice_notes      = null;
@@ -685,8 +759,61 @@ class person {
 		$this->loadEdxl();
 		$this->loadPfif();
 		$this->loadVoiceNotes();
-    $this->loadPersonNotes();
+        $this->loadPersonNotes();
+        
+        /* HACK for person_physical and contact table detail */
+        $this->loadPhysical();
+        $this->loadContactDetails();
 	}
+    
+    /* HACK load contents from person_physical table */
+    private function loadPhysical() {
+        
+        // fetch all person_physical record for this person
+		$q = "
+			SELECT  *
+			FROM    person_physical
+			WHERE   p_uuid = '".mysql_real_escape_string((string)$this->p_uuid)."' ;
+		";
+        $result = $this->db->Execute($q);
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "person_physical 1"); }
+		if($result != NULL && !$result->EOF) {
+			$this->opt_blood_type   = $result->fields['opt_blood_type'];
+            $this->height           = $result->fields['height'];
+            $this->weight           = $result->fields['weight'];
+            $this->opt_eye_color    = $result->fields['opt_eye_color'];
+            $this->opt_skin_color   = $result->fields['opt_skin_color'];
+            $this->opt_hair_color   = $result->fields['opt_hair_color'];
+            $this->injuries         = $result->fields['injuries'];
+            $this->comments         = $result->fields['comments'];
+
+            $this->Oopt_blood_type   = $result->fields['opt_blood_type'];
+            $this->Oheight           = $result->fields['height'];
+            $this->Oweight           = $result->fields['weight'];
+            $this->Oopt_eye_color    = $result->fields['opt_eye_color'];
+            $this->Oopt_skin_color   = $result->fields['opt_skin_color'];
+            $this->Oopt_hair_color   = $result->fields['opt_hair_color'];
+            $this->Oinjuries         = $result->fields['injuries'];
+            $this->Ocomments         = $result->fields['comments'];
+		}
+    }
+    
+    /* HACK load contents from contact table */
+    private function loadContactDetails() {
+        // fetch all person_physical record for this person
+		$q = "
+			SELECT *
+			FROM contact
+			WHERE p_uuid = '".mysql_real_escape_string((string)$this->p_uuid)."' ;
+		";
+        $result = $this->db->Execute($q);
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "person_physical 1"); }
+		while(!$result == NULL && !$result->EOF) {
+            $this->contact_type_value[]   = $result->fields['opt_contact_type'] . '<::>' . $result->fields['contact_value'];
+            $this->Ocontact_type_value[]  = $result->fields['opt_contact_type'] . '<::>' . $result->fields['contact_value'];
+            $result->MoveNext();
+        }
+    }
 
 
 	private function loadImages() {
@@ -1214,6 +1341,25 @@ class person {
 			$this->updatePfif();
 			$this->updateVoiceNotes();
 
+            // -------- HACK person_physical and contact updates ---------------
+            $q = "
+				UPDATE person_physical
+				SET
+					opt_blood_type  = ".$this->opt_blood_type.",
+                    height          = ".$this->height.",
+                    weight          = ".$this->weight.",
+                    opt_eye_color   = ".$this->opt_eye_color.",
+                    opt_skin_color  = ".$this->opt_skin_color.",
+                    opt_hair_color  = ".$this->opt_hair_color.",
+                    injuries        = ".$this->injuries.",
+                    comments        = ".$this->comments.",
+				WHERE p_uuid = ".$this->sql_p_uuid.";
+			";
+			$result = $this->db->Execute($q);
+			if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "person person_details update ((".$q."))"); }
+            
+            // to-do contact array updates later
+            
 			$this->modified = false;
 		}
 	}
@@ -1342,6 +1488,16 @@ class person {
 		if($this->last_clothing   != $this->Olast_clothing)   { $this->saveRevision($this->sql_last_clothing,   $this->sql_Olast_clothing,   'person_details',   'last_clothing' ); }
 		if($this->other_comments  != $this->Oother_comments)  { $this->saveRevision($this->sql_other_comments,  $this->sql_Oother_comments,  'person_details',   'other_comments'); }
 		if($this->rep_uuid        != $this->Orep_uuid)        { $this->saveRevision($this->sql_rep_uuid,        $this->sql_Orep_uuid,        'person_to_report', 'rep_uuid'      ); }
+		
+        // -------------- HACK person_physical data updates --------------------
+        if($this->opt_blood_type  != $this->Oopt_blood_type)  { $this->saveRevision($this->opt_blood_type,      $this->Oopt_blood_type,      'person_physical',  'opt_blood_type'); }
+        if($this->height          != $this->Oheight)          { $this->saveRevision($this->height,              $this->Oheight,              'person_physical',  'height'        ); }
+        if($this->weight          != $this->Oweight)          { $this->saveRevision($this->weight,              $this->Oweight,              'person_physical',  'weight'        ); }
+        if($this->opt_eye_color   != $this->Oopt_eye_color)   { $this->saveRevision($this->opt_eye_color,       $this->Oopt_eye_color,       'person_physical',  'opt_eye_color' ); }
+        if($this->opt_skin_color  != $this->Oopt_skin_color)  { $this->saveRevision($this->opt_skin_color,      $this->Oopt_skin_color,      'person_physical',  'opt_skin_color'); }
+        if($this->opt_hair_color  != $this->Oopt_hair_color)  { $this->saveRevision($this->opt_hair_color,      $this->Oopt_hair_color,      'person_physical',  'opt_hair_color'); }
+        if($this->injuries        != $this->Oinjuries)        { $this->saveRevision($this->injuries,            $this->Oinjuries,            'person_physical',  'injuries'      ); }
+        if($this->comments        != $this->Ocomments)        { $this->saveRevision($this->comments,            $this->Ocomments,            'person_physical',  'comments'      ); }
 	}
 
 

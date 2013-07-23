@@ -12,6 +12,7 @@ class syncPerson extends person {
     
     public $update_history;
     public $last_sync;
+    public $synced_instance;
 
 	// Constructor:
 	public function	__construct() {
@@ -53,6 +54,19 @@ class syncPerson extends person {
             $results->MoveNext();
         }
     }
+    
+    // Updates due to synchronizatoin with other instance... 
+	function saveRevision($newValue, $oldValue, $table, $column) {
+
+		$this->modified = true;
+		// note the revision
+		$q = "
+			INSERT into person_updates (`p_uuid`, `updated_table`, `updated_column`, `old_value`, `new_value`, `updated_by_p_uuid`)
+			VALUES (".$this->sql_p_uuid.", '".$table."', '".$column."', ".$oldValue.", ".$newValue.", '".$this->synced_instance."');
+		";
+		$result = $this->db->Execute($q);
+		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "person saveRevision ((".$q."))"); }
+	}
     
     /*
      * Set null for filecontent string and database details
