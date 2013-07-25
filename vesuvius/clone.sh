@@ -1,47 +1,63 @@
-#!clones the existing Vesuvius branch into new instances
-echo "enter shortname"
-read shortname
- mkdir /var/www/${shortname}
- #copy recursively into newInstances1
+#!/bin/bash
+#clones the existing Vesuvius branch into new instances
 
- cp -R  /var/www/project_vesu /var/www/${shortname}
+sname=${1}
+dbname=${2}
+pswrd=${3}
+host=${4}
+dbuser=${5}
+#echo "enter db user"
+#read dbUser
+ mkdir /var/www/${sname}
+ #mysql -u root -psneha227 -e "create user '$2'@'localhost' indentified by '$3';";
+ #copy recursively into newInstancessname
+
+ cp -R  /var/www/project_vesu/vesuvius/vesuvius /var/www/${sname}
  #creates new db and new user and grants the privileges
- echo "enter name of database"
- read dbname
- mysql -u root -psneha227 -e "create database ${dbname}"; 
+ #echo "enter name of database $dbname"
+ 
+ mysql -u root -psneha227 -e "create database ${2};"; 
  #MYSQL = `which mysql`
  #EXPECTED_ARGS=3
- #Q1="CREATE USER 'testusertest'@'localhost' IDENTIFIED BY  'password1234';"
+ Q1="CREATE USER '$5'@'$4' identified by '$3';"
  Q2="use ${dbname};"
- Q3="GRANT ALL ON *.* TO 'testusertest'@'localhost' IDENTIFIED BY 'password1234';"
+ Q3="GRANT ALL ON *.* TO '$5'@'$4' identified by '$3';"
  Q4="FLUSH PRIVILEGES;"
- sql="${Q2}${Q3}${Q4}"
+ sql="${Q1}${Q2}${Q3}${Q4}"
  mysql -u root -psneha227 -e "$sql";
  #dumps the required tables into the current database
- mysqldump -u testusertest -ppassword1234 ${dbname} < /var/www/${shortname}/project_vesu/vesuvius/vesuvius/backups/vesuviusStarterDb_v092.sql;
- mysql -u testusertest -p ${dbname} < /var/www/project_vesu/vesuvius/vesuvius/backups/vesuviusStarterDb_v092.sql;
+ mysqldump -u${5} -p${3} ${dbname}  < /var/www/${sname}/vesuvius/backups/vesuviusStarterDb_v092.sql;
+ mysql -u${5} -p${3} ${dbname} < /var/www/${sname}/vesuvius/backups/vesuviusStarterDb_v092.sql;
 #copies the configuration file
-#cp /var/www/project_vesu/vesuvius/vesuvius/conf/sahana.conf.example /var/www/newInstance1/project_vesu/vesuvius/vesuvius/conf/sahana1.conf
-sed -i 's/snehatest/'${dbname}'/' /var/www/${shortname}/project_vesu/vesuvius/vesuvius/conf/sahana.conf
-sed -i 's/root/testusertest/' /var/www/${shortname}/project_vesu/vesuvius/vesuvius/conf/sahana.conf
-sed -i 's/sneha227/password1234/' /var/www/${shortname}/project_vesu/vesuvius/vesuvius/conf/sahana.conf
+#cp /var/www/project_vesu/vesuvius/vesuvius/conf/sahana.conf.example /var/www/${sname}/vesuvius/conf/sahana.conf
+rep1='$conf['db_name'] = ""' 
+rep2='$conf['db_host'] = ""'
+rep3='$conf['db_user'] = ""'
+rep4='$conf['db_pass'] = ""'
+r1='$conf['db_name'] = "${dbname}"' 
+r2='$conf['db_host'] = "${host}"'
+r3='$conf['db_user'] = "${dbuser}"' 
+r4='$conf['db_pass'] = "${pswrd}"'
+sed -i 's/snehatest/'${dbname}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
+sed -i 's/root/'${dbuser}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
+sed -i 's/sneha227/'${pswrd}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
 #copies the .htaccess file
-#cp /var/www/project_vesu/vesuvius/vesuvius/www/htaccess.example /var/www/newInstance1/project_vesu/vesuvius/vesuvius/www/.htaccess
+#cp /var/www/${sname}/vesuvius/www/htaccess.example /var/www/${sname}/vesuvius/www/.htaccess
 
-sed -i 's:project_vesu/vesuvius/vesuvius/:'${shortname}'/project_vesu/vesuvius/vesuvius/:' /var/www/${shortname}/project_vesu/vesuvius/vesuvius/www/.htaccess
+sed -i 's:project_vesu/vesuvius/vesuvius/:'${sname}'/vesuvius/:' /var/www/${sname}/vesuvius/www/.htaccess
 #creates a symlink
-#ln -s /var/www/newInstance1/project_vesu/vesuvius/vesuvius/www /var/www/newInstance1
+ln -s /var/www/${sname}/vesuvius/www /var/www/${sname}
 
- mkdir /var/www/${shortname}/project_vesu/vesuvius/vesuvius/www/tmp ;
- mkdir /var/www/${shortname}/project_vesu/vesuvius/vesuvius/www/tmp/pfif_logs ;
- mkdir /var/www/${shortname}/project_vesu/vesuvius/vesuvius/www/tmp/pfif_cache ;
- mkdir /var/www/${shortname}/project_vesu/vesuvius/vesuvius/www/tmp/plus_cache ;
- mkdir /var/www/${shortname}/project_vesu/vesuvius/vesuvius/www/tmp/rap_cache ;
- mkdir /var/www/${shortname}/project_vesu/vesuvius/vesuvius/www/tmp/mpres_cache ;
+ #mkdir /var/www/${sname}/vesuvius/www/tmp ;
+ #mkdir /var/www/${sname}/vesuvius/www/tmp/pfif_logs ;
+ #mkdir /var/www/${sname}/vesuvius/www/tmp/pfif_cache ;
+ #mkdir /var/www/${sname}/vesuvius/www/tmp/plus_cache ;
+ #mkdir /var/www/${sname}/vesuvius/www/tmp/rap_cache ;
+ #mkdir /var/www/${sname}/vesuvius/www/tmp/mpres_cache ;
  #deletes the root user from database
- #p1="use testdb;"
+ #p1="use ${dbname};"
  #p2="DELETE FROM `users` WHERE `users`.`user_id` = 1 ; "
  #del="${p1}${p2}";
- #mysql -u testusertest -ppassword1234 -e "$del";
+ #mysql -u${dbuser} -p${pswrd} -e "$del";
  
 
