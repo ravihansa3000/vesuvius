@@ -8,7 +8,7 @@ $t=$_POST['dbname'];
 $s=$_POST['pswrd'];
 $w=$_POST['hname'];
 $v=$_POST['dbUser'];
-$output =shell_exec("sh /home/sneha/clone.sh $u $t $s $w $v");
+$output =shell_exec("sh clone.sh $u $t $s $w $v");
 //$output =shell_exec("echo " . $uname  );
 var_dump ($output);
 }
@@ -16,7 +16,6 @@ var_dump ($output);
 //shell_exec('sh /home/sneha/clone.sh " $uname "');
 //echo "<pre>$output</pre>";
 //$output = array();
-//exec('sh /home/sneha/clone.sh', $output);
 //var_dump($output);
 
 
