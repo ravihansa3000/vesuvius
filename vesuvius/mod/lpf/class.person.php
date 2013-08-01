@@ -1025,6 +1025,37 @@ class person {
 			$this->makeStaticPfifNote();
 			$this->insertVoiceNotes();
       $this->insertPersonNotes();
+      
+      /*
+            // -------- HACK person_physical and contact updates ---------------
+            $q = "
+				INSERT INTO `person_physical` (
+                    `p_uuid`,
+                    `opt_blood_type`,
+                    `height`, 
+                    `weight`, 
+                    `opt_eye_color`, 
+                    `opt_skin_color`, 
+                    `opt_hair_color`, 
+                    `injuries`, 
+                    `comments`)
+                VALUES (
+                    ".$this->p_uuid.",
+                    ".$this->opt_blood_type.",
+                    ".$this->height.",
+                    ".$this->weight.",
+                    ".$this->opt_eye_color.",
+                    ".$this->opt_skin_color.",
+                    ".$this->opt_hair_color.",
+                    ".$this->injuries.",
+                    ".$this->comments." );
+			";
+            $result = $this->db->Execute($q);
+            if ($result === false) {
+                daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "person person_details update ((" . $q . "))");
+            }
+        */
+            // to-do contact array updates later
 
 			$this->saved = true;
 			$this->modified = false;
@@ -1341,6 +1372,7 @@ class person {
 			$this->updatePfif();
 			$this->updateVoiceNotes();
 
+        /*
             // -------- HACK person_physical and contact updates ---------------
             $q = "
 				UPDATE person_physical
@@ -1359,6 +1391,7 @@ class person {
 			if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "person person_details update ((".$q."))"); }
             
             // to-do contact array updates later
+        */
             
 			$this->modified = false;
 		}

@@ -27,7 +27,7 @@ class syncPerson extends person {
     }
     
     // calls parent load from person object and get update histpry
-	public function load() {
+	public function loadWithUpdates() {
         parent::load();
         
         //Fetch update history from person_updates table
@@ -93,6 +93,98 @@ class syncPerson extends person {
         }
         $this->db = $global['db'];
     }
+    
+    /*
+     * 
+     */
+    public function setAttr($attr, $val) {
+        if($attr == 'p_uuid') 
+            $this->p_uuid = $val;
+        else if($attr == 'full_name') 
+            $this->full_name = $val;
+        else if($attr == 'family_name') 
+            $this->family_name = $val;
+        else if($attr == 'given_name') 
+            $this->given_name = $val;
+        else if($attr == 'alternate_names') 
+            $this->alternate_names = $val;
+        else if($attr == 'profile_urls') 
+            $this->profile_urls = $val;
+        else if($attr == 'incident_id') 
+            $this->incident_id = $val;
+        else if($attr == 'hospital_uuid') 
+            $this->hospital_uuid = $val;
+        else if($attr == 'expiry_date') 
+            $this->expiry_date = $val;
+        
+        else if($attr == 'opt_status') 
+            $this->opt_status = $val;
+        else if($attr == 'last_updated') 
+            $this->last_updated = $val;
+        else if($attr == 'creation_time') 
+            $this->creation_time = $val;
+        else if($attr == 'street1') 
+            $this->street1 = $val;
+        else if($attr == 'street2') 
+            $this->street2 = $val;
+        else if($attr == 'neighborhood') 
+            $this->neighborhood = $val;
+        else if($attr == 'city') 
+            $this->city = $val;
+        else if($attr == 'region') 
+            $this->region = $val;
+        else if($attr == 'postal_code') 
+            $this->postal_code = $val;
+        else if($attr == 'country') 
+            $this->country = $val;
+        else if($attr == 'latitude') 
+            $this->latitude = $val;
+        else if($attr == 'longitude') 
+            $this->longitude = $val;
+        else if($attr == 'birth_date') 
+            $this->birth_date = $val;
+        else if($attr == 'opt_race') 
+            $this->opt_race = $val;
+        else if($attr == 'opt_religion') 
+            $this->opt_religion = $val;
+        else if($attr == 'opt_gender') 
+            $this->opt_gender = $val;
+        else if($attr == 'years_old') 
+            $this->years_old = $val;
+        else if($attr == 'minAge') 
+            $this->minAge = $val;
+        else if($attr == 'maxAge') 
+            $this->maxAge = $val;
+        else if($attr == 'last_seen') 
+            $this->last_seen = $val;
+        else if($attr == 'last_clothing') 
+            $this->last_clothing = $val;
+        else if($attr == 'other_comments') 
+            $this->other_comments = $val;
+        else if($attr == 'rep_uuid') 
+            $this->rep_uuid = $val;
+        
+        else if($attr == 'opt_blood_type') 
+            $this->opt_blood_type = $val;
+        else if($attr == 'height') 
+            $this->height = $val;
+        else if($attr == 'weight') 
+            $this->weight = $val;
+        else if($attr == 'opt_eye_color') 
+            $this->opt_eye_color = $val;
+        else if($attr == 'opt_skin_color') 
+            $this->opt_skin_color = $val;
+        else if($attr == 'opt_hair_color') 
+            $this->opt_hair_color = $val;
+        else if($attr == 'injuries') 
+            $this->injuries = $val;
+        else if($attr == 'comments') 
+            $this->comments = $val;
+        
+//        else if($attr == 'contact_type_value') 
+//            $this->contact_type_value = $val;
+    }
+    
     
     //end class
      

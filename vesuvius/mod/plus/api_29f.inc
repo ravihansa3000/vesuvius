@@ -2747,7 +2747,7 @@ function pull($incidentId, $lastSyncDate) {
 	while (!$result == NULL && !$result->EOF) {
         $syncP = new syncPerson();
         $syncP->p_uuid = $result->fields['p_uuid'];
-        $syncP->load();
+        $syncP->loadWithUpdates();
         $syncP->prepareSerialize();
         $updateRecords[] = serialize($syncP);            
         $result->MoveNext();
