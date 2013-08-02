@@ -1,0 +1,21 @@
+=== modified file 'vesuvius/www/theme/lpf3/sahana.css'
+--- vesuvius/www/theme/lpf3/sahana.css	2013-04-24 07:21:23 +0000
++++ vesuvius/www/theme/lpf3/sahana.css	2013-04-28 18:22:37 +0000
+@@ -871,7 +871,7 @@
+ .mainRowEven	{background-color: #e5eaef; }
+ .mainRowOdd	{background-color: #ffffff; }
+ .mainArea	{padding: 0px; margin-top: 0px;}
+-.logArea	{padding: 10px;background-color: #fcfcfc ;border-radius: 5px;-moz-border-radius: 5px;-webkit-border-radius: 5px;margin-top: 0px; overflow-x: hidden ;overflow-y: scroll; height: 20px;
++.logArea	{padding: 5px;background-color: #fcfcfc ;border-radius: 5px;-moz-border-radius: 5px;-webkit-border-radius: 5px;margin-top: 0px; overflow-x: hidden ;overflow-y: scroll; height: 30px;
+ 
+ box-shadow: 1px 1px 6px rgba(191,191,191,0.6);
+ border-radius: 5px;
+ @@ -884,6 +884,8 @@
+ 	-webkit-box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.5);
+ 	box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.5);
+ 	border-radius: 5px;
++	overflow: scroll;
++	height: 500px;
+ }
+ 
+ .controlArea	{padding: 10px;margin-top: 0px;text-align: center;border-top:none;border-bottom:none;}
