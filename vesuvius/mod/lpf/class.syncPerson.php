@@ -36,6 +36,7 @@ class syncPerson extends person {
             FROM    person_updates 
             WHERE   p_uuid='".mysql_real_escape_string((string)$this->p_uuid)."'
             AND     `update_time` > '".mysql_real_escape_string((string)$this->last_sync)."'
+            ORDER BY update_time DESC
         ";
         $results = $this->db->Execute($q);
         
@@ -52,6 +53,22 @@ class syncPerson extends person {
             );
             $this->update_history[] = $p_his;
             $results->MoveNext();
+        }
+    }
+    
+    /* 
+     * Remove redundant data on update_history -- largest index-->> old change
+     * it's costly --->>  TO-DO performance improvement  
+     */
+    public function removeUpdateRedundancy() {
+        for($i=0; $i < sizeof($this->update_history); $i++) {
+            for($j=$i+1; $j < sizeof($this->update_history); $j++) {
+                if (($this->update_history[$i]['updated_table'] == $this->update_history[$j]['updated_table']) && 
+                        ($this->update_history[$i]['updated_column'] == $this->update_history[$j]['updated_column'])) {
+                    // remove the element and rearrange the array index elements..
+                    array_splice($this->update_history, $j, 1);
+                }               
+            }
         }
     }
     
@@ -93,7 +110,7 @@ class syncPerson extends person {
         }
         $this->db = $global['db'];
     }
-    
+        
     /*
      * 
      */

@@ -2761,5 +2761,39 @@ function pull($incidentId, $lastSyncDate) {
 	);
 }
 
+function push($new, $updates) {
+    
+    shn_plus_logAccess("push");
+	global $global;
+    
+    $newRecords = json_decode($new);
+    foreach ($newRecords as $serP) {
+        $per = unserialize($serP);
+        $per->postSerialize($global['db']);
+        $per->init();       // these are new records... 
+        $per->insert();
+//        echo 'test: ' . $per->full_name;
+//        echo '<pre>';
+//        print_r($per);
+    }
+    
+    $updateRecords = json_decode($updates);
+    foreach ($updateRecords as $serP) {
+        $m_per = unserialize($serP);
+        $m_per->postSerialize($global['db']);
+        
+        $local = new syncPerson();
+        $local->p_uuid = $m_per->p_uuid;
+        $local->last_sync = $m_per->last_sync;
+        $local->load();
+        
+        foreach ($m_per->update_history as $m_up) {
+            $local->setAttr($m_up['updated_column'], $m_up['new_value']);
+        }
+        
+        $local->update();
+    }
+}
+
 
 

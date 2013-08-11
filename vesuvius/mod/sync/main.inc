@@ -13,6 +13,11 @@
  * @author  Gurutharshan Nadarajah <gurutharshan@gmail.com>
  */
 
+//include_once ($global['approot'].'/inc/lib_menu.inc');
+//include_once ($global['approot'].'/inc/lib_errors.inc');
+//require_once ($global['approot'].'/inc/handler_db.inc');
+//include_once ($global['approot'].'/inc/lib_xajax.inc');
+
 require_once($global['approot']."mod/lpf/class.person.php"); 
 require_once($global['approot']."mod/lpf/class.syncPerson.php"); 
 require_once($global['approot']."mod/lpf/class.personEdxl.php");
@@ -27,21 +32,107 @@ function shn_sync_default() {
     /** Last sync date-time. */
     // todo query from sync update table...
     $lastSyncDate = '2012-01-01 00:00:00';
+    $incidentId = 1;
     
     $wsdl = "http://localhost/vesuvius_dev/vesuvius/www/?wsdl&api=29";
     $client = new nusoap_client($wsdl);
     
     $x = file_get_contents($global['approot']."mod/plus/reference_REUNITE4.xml");
-    $result = $client->call('pull', array('incidentId' => 1, 'lastSyncDate' => $lastSyncDate));
+    $pullResult = $client->call('pull', array('incidentId' => $incidentId, 'lastSyncDate' => $lastSyncDate));
         
     echo "
         <h2>wsdl: ".$wsdl."</h2>
-        <pre>".var_export($result, true)."</pre> 
+        <pre>".var_export($pullResult, true)."</pre> 
     ";
 
-    __addNewRecords(json_decode($result['new']));
-
-    /** Fetch updates for existing person record to send push request. */
+    __addNewRecords(json_decode($pullResult['new']));
+    
+    $skipForPush = "";
+    $updatesForPush = array();
+    
+    /* Resolve conflicts for each person. */
+    $slave_updates = json_decode($pullResult['updates']);
+    foreach ($slave_updates as $serP) {
+        $slave_person = unserialize($serP);
+        $slave_person->postSerialize($global['db']);
+        /* Remove redundundant data on update_history */
+        $slave_person->removeUpdateRedundancy();
+        
+        $local = new syncPerson();
+        $local->p_uuid = $slave_person->p_uuid;
+        $local->last_sync = $lastSyncDate;
+        $local->loadWithUpdates();
+        $local->removeUpdateRedundancy();
+        
+        /**
+        * conflicts resolving algo 
+        * loop all the elements in slave's update history
+        *  checks with local update elements
+        *  if nothing same table & elem
+        *      then just add new values to person obj and save
+        *  else if any same t&e found 
+        *      if local greater date
+        *          then dont do anything
+        *      else 
+        *          add slave's value to person obj & save.. also delete from local array which is gonna push to slave later 
+        *  
+        *  
+        */
+       foreach ($slave_person->update_history as $s_up) {
+           $matched = FALSE;
+           foreach ($local->update_history as $key=>$l_up) {
+               if (($s_up['updated_table'] == $l_up['updated_table']) && ($s_up['updated_column'] == $l_up['updated_column'])) {
+                   if ($s_up['update_time'] > $l_up['update_time']) {
+                       //set slave value to person based on recent update...  
+                       $local->setAttr($s_up['updated_column'], $s_up['new_value']);
+                       array_splice($local->update_history, $key, 1);
+                   }
+                   $matched = TRUE;
+                   break;
+               }
+           }
+           //set slave value if there is no matched
+           if (!$matched) 
+               $local->setAttr($l_up['updated_column'], $s_up['new_value']);
+       }
+       
+       // Add relavent local objects to push data...
+       if (sizeof($local->update_history) > 0) {
+           $local->prepareSerialize();
+           array_push($updatesForPush, serialize($local));
+       }
+       // collect local p_uuid to avoid while fetching for push...
+       $p_uuid = $local->p_uuid . ", ";
+       $skipForPush .= $p_uuid;
+       
+       $local->update();            //update the content
+    }
+    
+    /** Newly created person records from last sync. */
+    $q = "
+        SELECT  p.`p_uuid`
+        FROM    `person_uuid` p, `person_status` s
+        WHERE   p.`incident_id`='".mysql_real_escape_string($incidentId)."'
+        AND     p.`p_uuid` = s.`p_uuid`
+        AND     s.`creation_time` > '".mysql_real_escape_string($lastSyncDate)."'
+        ";
+//    $sql = "SELECT * from person_uuid where incident_id='".mysql_real_escape_string($incidentId)."'";
+	$result = $global['db']->Execute($q); 
+    $newRecordList = array();
+	while (!$result == NULL && !$result->EOF) {
+        $syncP = new syncPerson();
+        $syncP->p_uuid = $result->fields['p_uuid'];
+        $syncP->load();
+        $syncP->prepareSerialize();
+        $newRecordList[] = serialize($syncP);            
+        $result->MoveNext();
+	}    
+    
+    /** 
+     * Fetch other (other than conflicts) local updates to send push request. 
+     * 
+     * query with exception from already resolved p_uuid 
+     */
     $q = "
             SELECT  p.`p_uuid`
             FROM    `person_uuid` p, `person_status` s
@@ -49,76 +140,22 @@ function shn_sync_default() {
             AND     p.`p_uuid` = s.`p_uuid`
             AND     s.`last_updated` > '".mysql_real_escape_string($lastSyncDate)."'
             AND     s.`creation_time` < '".mysql_real_escape_string($lastSyncDate)."'
+            NOT IN  ('".$skipForPush."')
+            ORDER BY last_updated DESC
         ";
-    $result = $global['db']->Execute($q); 
-    $updatesForPush = array();
+    $result = $global['db']->Execute($q);
 	while (!$result == NULL && !$result->EOF) {
         $syncP = new syncPerson();
         $syncP->p_uuid = $result->fields['p_uuid'];
         $syncP->loadWithUpdates();
         $syncP->prepareSerialize();
-        $updatesForPush[] = serialize($syncP);            
+        array_push($updatesForPush, serialize($syncP));   
         $result->MoveNext();
 	}
-    
-    /* Resolve conflicts for each person. */
-    $slave_updates = json_decode($result['updates']);
-    foreach ($slave_updates as $serP) {
-        $slave_person = unserialize($serP);
-        $slave_person->postSerialize($global['db']);
-//        echo 'test: ' . $slave_person->full_name;
-//        echo '<pre>';
-//        print_r($slave_person);
         
-        $local = new syncPerson();
-        $local->p_uuid = $slave_person->p_uuid;
-        $local->last_sync = $lastSyncDate;
-        $local->loadWithUpdates();
-        
-        /** 
-         * conflicts resolving algo 
-         * loop all the elements in slave's update history
-         *  checks with local update elements
-         *  if nothing same table & elem
-         *      then just add new values to person obj and save
-         *  else if any same t&e found 
-         *      if local greater date
-         *          then dont do anything
-         *      else 
-         *          add slave's value to person obj & save.. also delete from local array which is gonna push to slave later 
-         *  
-         *  
-         */   
-        foreach ($slave_person->update_history as $s_up) {
-            foreach ($local->update_history as syncPerson::$l_up) {
-                if(($s_up['updated_table']==$l_up['updated_table']) && ($s_up['updated_column']==$l_up['updated_column'])) {
-                    if($s_up['update_time'] > $l_up['update_time']) {
-                        //set slave value to person
-                        $l_up->setAttr($s_up['updated_column'], $s_up['new_value']);
-                    } else {
-                        // No changes need for local instance but change on push data to slave.
-                        
-                    }
-                } else {
-                    //set slave value to person
-                    $l_up->setAttr($s_up['updated_column'], $s_up['new_value']);
-                }
-                
-            }
-        }
-        
-    }
-    
-    /*
-    echo "
-        <h2>Request</h2>
-        <pre>".htmlspecialchars($client->request, ENT_QUOTES)."</pre>
-        <h2>Response</h2>
-        <pre>".htmlspecialchars($client->response, ENT_QUOTES)."</pre>
-        <h2>Debug</h2>
-        <pre>".htmlspecialchars($client->debug_str, ENT_QUOTES)."</pre>
-    "; 
-     */
+    /** push request to slave... */
+    $pushResult = $client->call('push', array('new'     => (string)json_encode($newRecordList),
+                                              'updates' => (string)json_encode($updatesForPush)));
     
 }
 
@@ -129,14 +166,14 @@ function __addNewRecords($newRecords) {
     foreach ($newRecords as $serP) {
         $per = unserialize($serP);
         $per->postSerialize($global['db']);
-               
         $per->init();       // these are new records... 
         $per->insert();
-//
-        echo 'test: ' . $per->full_name;
+        /* echo 'test: ' . $per->full_name;
         echo '<pre>';
         print_r($per);
+        */
     }
 }
+
 
 ?>

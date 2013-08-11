@@ -941,6 +941,23 @@ function shn_plus_registerAll($namespace) {
 		$namespace,
 		"pull person data act as slave instance..."
 	);
+    
+    /** push request to get updates from master while sync.. */
+    shn_plus_registerOne($server, 'push',
+		array(
+			'in' => array(
+                'new'       => 'xsd:integer',
+                'updates'   => 'xsd:string',
+			),
+			'out' => array(
+				'message'       => 'xsd:string',
+				'errorCode'     => 'xsd:integer',
+				'errorMessage'  => 'xsd:string'
+			)
+		),
+		$namespace,
+		"push person data to get relevant updates for synchronization"
+	);
 }
 
 
