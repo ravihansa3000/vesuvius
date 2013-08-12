@@ -29,17 +29,35 @@ require_once($global['approot'].'3rd/nusoap/lib/nusoap.php');
 function shn_sync_default() {
     global $global;
     
-    $currentSyncDateTime = date('Y-m-d H:i:s');
+    $sync_conf_id = 1;
+    $q = "
+        SELECT  *
+        FROM    `sync_conf`
+        WHERE   `id` = '".mysql_real_escape_string($sync_conf_id)."'
+       ";
+    $sync_conf = $global['db']->Execute($q); 
+    $localIncidentId = $sync_conf->fields['incident_id'];
+    $foreignIncidentId = $sync_conf->fields['foreign_incident_id'];
+    $syncMode = $sync_conf->fields['mode'];
+    $slave_wsdl = $sync_conf->fields['instance_uuid'];
+    
     /** Last sync date-time. */
-    // todo query from sync update table...
-    $lastSyncDate = '2012-01-01 00:00:00';
-    $incidentId = 1;
+    $q = "
+        SELECT  MAX(`update_time`)
+        FROM    `sync_updates`
+        WHERE   `conf_id` = '".mysql_real_escape_string($sync_conf_id)."'
+        ";
+    $res = $global['db']->Execute($q);
+    if (!$res == NULL)
+        $lastSyncDate = $res->fields['update_time']; 
+    else
+        $lastSyncDate = '2012-01-01 00:00:00';
     
-    $slave_wsdl = "http://localhost/vesuvius_dev/vesuvius/www/?wsdl&api=29";
+    $currentSyncDateTime = date('Y-m-d H:i:s');
+//    $slave_wsdl = "http://localhost/vesuvius_dev/vesuvius/www/?wsdl&api=29";
     $client = new nusoap_client($slave_wsdl);
-    
     $x = file_get_contents($global['approot']."mod/plus/reference_REUNITE4.xml");
-    $pullResult = $client->call('pull', array('incidentId' => $incidentId, 'lastSyncDate' => $lastSyncDate));
+    $pullResult = $client->call('pull', array('incidentId' => $foreignIncidentId, 'lastSyncDate' => $lastSyncDate));
     
     
     echo "
@@ -50,8 +68,7 @@ function shn_sync_default() {
     __addNewRecords(json_decode($pullResult['new']));
     
     $skipForPush = "";
-    $updatesForPush = array();
-    
+    $updatesForPush = array();    
     /* Resolve conflicts for each person. */
     $slave_updates = json_decode($pullResult['updates']);
     foreach ($slave_updates as $serP) {
@@ -59,7 +76,6 @@ function shn_sync_default() {
         $slave_person->postSerialize($global['db']);
         /* Remove redundundant data on update_history */
         $slave_person->removeUpdateRedundancy();
-        
         $local = new syncPerson();
         $local->p_uuid = $slave_person->p_uuid;
         $local->last_sync = $lastSyncDate;
@@ -114,11 +130,11 @@ function shn_sync_default() {
     $q = "
         SELECT  p.`p_uuid`
         FROM    `person_uuid` p, `person_status` s
-        WHERE   p.`incident_id`='".mysql_real_escape_string($incidentId)."'
+        WHERE   p.`incident_id`='".mysql_real_escape_string($localIncidentId)."'
         AND     p.`p_uuid` = s.`p_uuid`
         AND     s.`creation_time` > '".mysql_real_escape_string($lastSyncDate)."'
         ";
-//    $sql = "SELECT * from person_uuid where incident_id='".mysql_real_escape_string($incidentId)."'";
+//    $sql = "SELECT * from person_uuid where incident_id='".mysql_real_escape_string($localIncidentId)."'";
 	$result = $global['db']->Execute($q); 
     $newRecordList = array();
 	while (!$result == NULL && !$result->EOF) {
@@ -138,7 +154,7 @@ function shn_sync_default() {
     $q = "
             SELECT  p.`p_uuid`
             FROM    `person_uuid` p, `person_status` s
-            WHERE   p.`incident_id`='".mysql_real_escape_string($incidentId)."'
+            WHERE   p.`incident_id`='".mysql_real_escape_string($localIncidentId)."'
             AND     p.`p_uuid` = s.`p_uuid`
             AND     s.`last_updated` > '".mysql_real_escape_string($lastSyncDate)."'
             AND     s.`creation_time` < '".mysql_real_escape_string($lastSyncDate)."'
@@ -160,7 +176,7 @@ function shn_sync_default() {
     $pushResult = $client->call('push', array('new'         => (string)json_encode($newRecordList),
                                               'updates'     => (string)json_encode($updatesForPush),
                                               'syncDateTime'=> (string)json_encode($currentSyncDateTime),
-                                              'incidentId'  => (string)json_encode($incidentId),
+                                              'incidentId'  => (string)json_encode($foreignIncidentId),
                                               'master_wsdl' => (string)json_encode($this_wsdl),
         ));
     $msg = json_decode($pushResult['message']);
@@ -170,13 +186,11 @@ function shn_sync_default() {
      */
     $q = "
         INSERT INTO sync_updates (
-            update_time,
-			incident_id,
-			instance_uuid )
+            conf_id,
+            update_time,)
         VALUES (
+            ". $sync_conf_id .",
             ". $currentSyncDateTime .",
-            ". $incidentId .",
-            ". $slave_wsdl .",
     ";
     $result = $global['db']->Execute($q);
     if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "synchronizatoin update sync_updates insert ((".$q."))"); }

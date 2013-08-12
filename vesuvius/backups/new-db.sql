@@ -2426,6 +2426,33 @@ INSERT INTO `voice_note_seq` (`id`) VALUES (1668);
 UNLOCK TABLES;
 
 
+--
+-- Table structure for table `sync_conf`
+--
+
+DROP TABLE IF EXISTS `sync_conf`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sync_conf` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `incident_id` bigint(20) NOT NULL,
+  `instance_uuid` varchar(64) NOT NULL,
+  `foreign_incident_id` bigint(20) NOT NULL;
+  `mode` varchar(10) NOT NULL, 
+  PRIMARY KEY (`id`),
+  CONSTRAINT `sync_conf_ibfk_1` FOREIGN KEY (`incident_id`) REFERENCES `incident` (`incident_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sync_updates`
+--
+
+LOCK TABLES `sync_conf` WRITE;
+/*!40000 ALTER TABLE `sync_updates` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sync_updates` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `sync_updates`
@@ -2435,12 +2462,11 @@ DROP TABLE IF EXISTS `sync_updates`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `sync_updates` (
-  `sync_update_id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `conf_id` bigint(20) NOT NULL,
   `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `incident_id` bigint(20) NOT NULL,
-  `instance_uuid` varchar(64) NOT NULL,
-  PRIMARY KEY (`sync_update_id`),
-  CONSTRAINT `sync_updates_ibfk_1` FOREIGN KEY (`incident_id`) REFERENCES `incident` (`incident_id`) ON DELETE CASCADE ON UPDATE CASCADE
+  PRIMARY KEY (`id`),
+  CONSTRAINT `sync_updates_ibfk_1` FOREIGN KEY (`conf_id`) REFERENCES `sync_conf` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
