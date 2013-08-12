@@ -2761,7 +2761,7 @@ function pull($incidentId, $lastSyncDate) {
 	);
 }
 
-function push($new, $updates) {
+function push($new, $updates, $syncDateTime, $incidentId, $master_wsdl) {
     
     shn_plus_logAccess("push");
 	global $global;
@@ -2793,6 +2793,28 @@ function push($new, $updates) {
         
         $local->update();
     }
+    
+    /**
+     * update to the sync into sync_updates table.
+     */
+    $q = "
+        INSERT INTO sync_updates (
+            update_time,
+			incident_id,
+			instance_uuid )
+        VALUES (
+            ". $syncDateTime .",
+            ". $incidentId .",
+            ". $master_wsdl .",
+    ";
+    $result = $global['db']->Execute($q);
+    if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "synchronizatoin update sync_updates insert ((".$q."))"); }
+   
+    return array(
+		'message'       => (string)json_encode("successfully updated."),
+		'errorCode'     => (int)0,
+		'errorMessage'  => null
+	);
 }
 
 

@@ -946,8 +946,11 @@ function shn_plus_registerAll($namespace) {
     shn_plus_registerOne($server, 'push',
 		array(
 			'in' => array(
-                'new'       => 'xsd:integer',
-                'updates'   => 'xsd:string',
+                'new'           => 'xsd:integer',
+                'updates'       => 'xsd:string',
+                'syncDateTime'  => 'xsd:string',
+                'incidentId'    => 'xsd:string', 
+                'master_wsdl'   => 'xsd:string',
 			),
 			'out' => array(
 				'message'       => 'xsd:string',

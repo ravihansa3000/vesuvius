@@ -29,19 +29,21 @@ require_once($global['approot'].'3rd/nusoap/lib/nusoap.php');
 function shn_sync_default() {
     global $global;
     
+    $currentSyncDateTime = date('Y-m-d H:i:s');
     /** Last sync date-time. */
     // todo query from sync update table...
     $lastSyncDate = '2012-01-01 00:00:00';
     $incidentId = 1;
     
-    $wsdl = "http://localhost/vesuvius_dev/vesuvius/www/?wsdl&api=29";
-    $client = new nusoap_client($wsdl);
+    $slave_wsdl = "http://localhost/vesuvius_dev/vesuvius/www/?wsdl&api=29";
+    $client = new nusoap_client($slave_wsdl);
     
     $x = file_get_contents($global['approot']."mod/plus/reference_REUNITE4.xml");
     $pullResult = $client->call('pull', array('incidentId' => $incidentId, 'lastSyncDate' => $lastSyncDate));
-        
+    
+    
     echo "
-        <h2>wsdl: ".$wsdl."</h2>
+        <h2>wsdl: ".$slave_wsdl."</h2>
         <pre>".var_export($pullResult, true)."</pre> 
     ";
 
@@ -154,9 +156,31 @@ function shn_sync_default() {
 	}
         
     /** push request to slave... */
-    $pushResult = $client->call('push', array('new'     => (string)json_encode($newRecordList),
-                                              'updates' => (string)json_encode($updatesForPush)));
+    $this_wsdl = "localhost/vesuvius_dev/vesuvius/29";      // TO-DO fetch from conf file.
+    $pushResult = $client->call('push', array('new'         => (string)json_encode($newRecordList),
+                                              'updates'     => (string)json_encode($updatesForPush),
+                                              'syncDateTime'=> (string)json_encode($currentSyncDateTime),
+                                              'incidentId'  => (string)json_encode($incidentId),
+                                              'master_wsdl' => (string)json_encode($this_wsdl),
+        ));
+    $msg = json_decode($pushResult['message']);
     
+    /**
+     * update to the sync into sync_updates table.
+     */
+    $q = "
+        INSERT INTO sync_updates (
+            update_time,
+			incident_id,
+			instance_uuid )
+        VALUES (
+            ". $currentSyncDateTime .",
+            ". $incidentId .",
+            ". $slave_wsdl .",
+    ";
+    $result = $global['db']->Execute($q);
+    if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "synchronizatoin update sync_updates insert ((".$q."))"); }
+
 }
 
 /** Save new person records which created on slave from last sync. */
