@@ -685,20 +685,20 @@ WHERE EXISTS (
   GROUP BY t2.p_uuid
   HAVING (MAX(t2.in_date) = t1.in_date));
 
-DROP VIEW IF EXISTS crs_client_search;
+DROP VIEW IF EXISTS crs_client_seachr;
 CREATE VIEW crs_client_search
 AS
 SELECT
   p.p_uuid,
   p.given_name,
-  p.custom_name,
+  /*p.custom_name,*/
   p.family_name,
-  p.full_name,
+  /*p.full_name,*/
   p.incident_id,
   pd.birth_date,
   pd.years_old,
-  pd.opt_country,
-  pd.occupation,
+  /*pd.opt_country,*/
+  /*pd.occupation,*/
   pd.opt_gender,
   ps.opt_status,
   ps.last_updated,
@@ -762,4 +762,4 @@ FROM person_uuid p
   LEFT JOIN crs_emerg_cont ec ON p.p_uuid = ec.p_uuid
   LEFT JOIN crs_med_alert ma ON p.p_uuid = ma.p_uuid
   LEFT JOIN crs_group_details gd ON p.p_uuid = gd.p_uuid
-WHERE ps.isdeleted = 0
+/*WHERE ps.isdeleted = 0*/

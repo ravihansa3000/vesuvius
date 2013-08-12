@@ -271,7 +271,7 @@ function client_save($uuid = null)
     setPersonStatus('in', $uuid);
 
     // Check for any failed transactions
-    $error = $global['db']->HasFailedTrans();
+    //$error = $global['db']->HasFailedTrans();
 
     // Close transaction
     $global['db']->CompleteTrans();

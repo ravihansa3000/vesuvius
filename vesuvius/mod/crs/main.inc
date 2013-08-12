@@ -11,12 +11,14 @@ function shn_crs_default()
     global $global;
     global $conf;
 
+    echo "<script type=\"text/javascript\" src=\"res/js/jquery-1.6.4.min.js\" ></script>";
+
     $control = "";
 
     shn_tabmenu_open();
     shn_tabmenu_item("default", _t("Client-Menu|About"), "crs");
     shn_tabmenu_item("client_add", _t("Client-Menu|Add Person"), "crs");
-    shn_tabmenu_item("default", _t("Client-Menu|Registry Search"), "crs");
+    shn_tabmenu_item("search", _t("Client-Menu|Registry Search"), "crs");
     shn_tabmenu_item("default", _t("Client-Menu|Dashboard"), "crs");
     shn_tabmenu_item("default", _t("Client-Menu|Reports"), "crs");
     shn_tabmenu_close();
@@ -50,6 +52,8 @@ function shn_crs_default()
         $control = "shn_crs_client_add";
     } elseif(isset($_GET['client_save_new'])) {
         $control = "shn_crs_client_save_new";
+    } elseif(isset($_GET['search'])) {
+        $control = "shn_crs_search";
     }
 
     if ($control == "") {
@@ -236,4 +240,44 @@ function shn_crs_client_save_new()
         add_error("Unable to save new client do to errors.");
         shn_crs_client_add();
     }
+}
+
+function shn_crs_search()
+{
+    // Validate group access
+    if (!check_groupAccess(array(1, 2))) {
+        add_error("You do not have permission to search the shelter registry.");
+        return;
+    }
+
+    // Validate group access
+    if (!check_validIncident()) {
+        add_error("You must select an open event before attempting to perform this action.");
+
+        shn_crs_default();
+        return;
+    }
+
+    global $global;
+
+    // Get facilities
+    $facilities = get_facilities();
+
+    // Get the list of facility groups
+    $sql = "SELECT DISTINCT f.facility_group FROM fms_facility f
+        INNER JOIN fms_facility_to_event fti ON fti.facility_uuid = f.facility_uuid
+        WHERE fti.incident_id = ?
+        ORDER BY facility_group;";
+
+    // Execute query
+    try {
+        $sql = $global['db']->Prepare($sql);
+        $facilityGroups = $global['db']->Execute($sql, $_SESSION['incident']);
+    } catch (exception $e) {
+        add_error("<pre>" . $e->getMessage() . "</pre>");
+    }
+
+    $minAge = (isset($_SESSION['minAge'])) ? trim($_SESSION['minAge']) : '';
+    $maxAge = (isset($_SESSION['maxAge'])) ? trim($_SESSION['maxAge']) : '';
+    include_once 'templates/client_search.php';
 }
