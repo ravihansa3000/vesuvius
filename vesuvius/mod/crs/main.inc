@@ -6,12 +6,20 @@ require_once 'inc/security.inc';
 require_once 'inc/functions.inc';
 require_once 'inc/client_definition.inc';
 
+require_once($global['approot'].'/inc/lib_xajax.inc');
+require_once($global['approot'].'/mod/crs/xajax.inc');
+
+shn_xajax_registerFunction('crs_test');
+
 function shn_crs_default()
 {
     global $global;
     global $conf;
 
-    echo "<script type=\"text/javascript\" src=\"res/js/jquery-1.6.4.min.js\" ></script>";
+    echo "<script type=\"text/javascript\" src=\"res/js/jquery-1.6.4.min.js\" ></script>
+        <script type=\"text/javascript\" src=\"res/js/jquery-ui-autocomplete.min.js\" ></script>
+		<script type=\"text/javascript\" src=\"res/js/jquery-ui-datepicker.min.js\" ></script>
+		<script type=\"text/javascript\" >".file_get_contents($global['approot']."/mod/crs/crs.js")."</script>";
 
     $control = "";
 
@@ -180,7 +188,7 @@ function shn_crs_client_add()
     shn_form_submit("Save", "class=\"styleTehButton\""); echo '&nbsp&nbsp';
     shn_form_submit("Save + Continue", "class=\"styleTehButton\""); echo '&nbsp&nbsp';
     shn_form_submit("Save + Add Group Member", "class=\"styleTehButton\"");
-
+    echo "<script>initDate();</script>";
     shn_form_fclose();
     echo "<br><br>";
 }
