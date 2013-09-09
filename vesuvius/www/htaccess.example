@@ -19,7 +19,7 @@ RewriteBase /public_html/vesuvius/vesuvius/www/
 ##### make mod_rewrite skip the subsequent rules if the file or folder exists already (the number must be incremented each time a new rule is added below)
 RewriteCond %{REQUEST_FILENAME} -d [OR]
 RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule .* - [S=37]
+RewriteRule .* - [S=40]
 
 ##### matches /person.XXXXX for the person uuid's as urls
 RewriteRule ^(person.[0-9]+)$ ?mod=eap&val=$1 [L]
@@ -62,6 +62,9 @@ RewriteRule ^(stat|statistics)$                $2?mod=stat [QSA]
 RewriteRule ^(tp|triagepic)$                   $2?mod=tp [QSA]
 RewriteRule ^(pref|settings)$                  $2?mod=pref [QSA]
 RewriteRule ^(xst|xmlstreamer)$                $2?mod=xst [QSA]
+RewriteRule ^(crs|client)$                     $2?mod=crs [QSA]
+RewriteRule ^(fms|facility)$                   $2?mod=fms [QSA]
+RewriteRule ^(srs|staff)$                      $2?mod=srs [QSA]
 
 ##### matches /shortname
 RewriteRule ^([^/][a-z0-9]+)$ $2?shortname=$1 [QSA]

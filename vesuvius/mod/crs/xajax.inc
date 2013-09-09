@@ -18,59 +18,59 @@ array_push($global['xajax_functions'],'crs_test');
 function crs_test($name_query, $minAge, $maxAge, $facility_group, $facility){
 
     global $global;
-    global $conf;
-
-    $values = array();
-    $where_clause = "";
-
-    // Apply filters
-    if (isset($_SESSION['incident']) && $_SESSION['incident'] != '') {
-        $logic = (isset($values[0])) ? "AND" : "WHERE";
-        $values[] = $_SESSION['incident'];
-        $where_clause .= "$logic incident_id = ? \n";
-    }
-
-    if (isset($name_query)) {
-        $logic = (isset($values[0])) ? "AND" : "WHERE";
-        $values[] = $name_query;
-        $where_clause .= "$logic full_name LIKE CONCAT('%',?,'%') \n";
-    }
-
-    if (isset($facility_group) && $facility_group != 'all') {
-        $logic = (isset($values[0])) ? "AND" : "WHERE";
-        $values[] = $facility_group;
-        $where_clause .= "$logic facility_group LIKE CONCAT('%',?,'%') \n";
-    }
-
-    if (isset($facility) && $facility != 'all') {
-        $logic = (isset($values[0])) ? "AND" : "WHERE";
-        $values[] = $facility;
-        $where_clause .= "$logic facility_uuid = ? \n";
-    }
-
-    if (isset($minAge) && $minAge != '') {
-        $logic = (isset($values[0])) ? "AND" : "WHERE";
-        $values[] = $minAge;
-        $where_clause .= "$logic years_old >= ? \n";
-    }
-
-    if (isset($maxAge) && $maxAge != '') {
-        $logic = (isset($values[0])) ? "AND" : "WHERE";
-        $values[] = $maxAge;
-        $where_clause .= "$logic years_old <= ? \n";
-    }
-
-    $query = "SELECT COUNT(p_uuid) AS count FROM crs_client_search \n";
-    $query .= $where_clause;
-
-    // Execute query
-    try {
-        $result = $global['db']->Execute($query, $values);
-    } catch (exception $e) {
-        print("<pre>" . $e->getMessage() . "</pre>");
-    }
-
-    $count = $result->Fields('count');
+//    global $conf;
+//
+//    $values = array();
+//    $where_clause = "";
+//
+//    // Apply filters
+//    if (isset($_SESSION['incident']) && $_SESSION['incident'] != '') {
+//        $logic = (isset($values[0])) ? "AND" : "WHERE";
+//        $values[] = $_SESSION['incident'];
+//        $where_clause .= "$logic incident_id = ? \n";
+//    }
+//
+//    if (isset($name_query)) {
+//        $logic = (isset($values[0])) ? "AND" : "WHERE";
+//        $values[] = $name_query;
+//        $where_clause .= "$logic full_name LIKE CONCAT('%',?,'%') \n";
+//    }
+//
+//    if (isset($facility_group) && $facility_group != 'all') {
+//        $logic = (isset($values[0])) ? "AND" : "WHERE";
+//        $values[] = $facility_group;
+//        $where_clause .= "$logic facility_group LIKE CONCAT('%',?,'%') \n";
+//    }
+//
+//    if (isset($facility) && $facility != 'all') {
+//        $logic = (isset($values[0])) ? "AND" : "WHERE";
+//        $values[] = $facility;
+//        $where_clause .= "$logic facility_uuid = ? \n";
+//    }
+//
+//    if (isset($minAge) && $minAge != '') {
+//        $logic = (isset($values[0])) ? "AND" : "WHERE";
+//        $values[] = $minAge;
+//        $where_clause .= "$logic years_old >= ? \n";
+//    }
+//
+//    if (isset($maxAge) && $maxAge != '') {
+//        $logic = (isset($values[0])) ? "AND" : "WHERE";
+//        $values[] = $maxAge;
+//        $where_clause .= "$logic years_old <= ? \n";
+//    }
+//
+//    $query = "SELECT COUNT(p_uuid) AS count FROM crs_client_search \n";
+//    $query .= $where_clause;
+//
+//    // Execute query
+//    try {
+//        //$result = $global['db']->Execute($query, $values);
+//    } catch (exception $e) {
+//        print("<pre>" . $e->getMessage() . "</pre>");
+//    }
+//
+//    $count = $result->Fields('count');
 
     // calculate the total pages for the query
 //        if ($count > 0 && $limit > 0) {
@@ -95,8 +95,8 @@ function crs_test($name_query, $minAge, $maxAge, $facility_group, $facility){
 //        }
 
     // Now create the real data query
-    $query = "SELECT * FROM crs_client_search ";
-    $query .= $where_clause;
+  //  $query = "SELECT * FROM crs_client_search ";
+   // $query .= $where_clause;
 
     // Sort ordering
 //        if ($sidx) {
@@ -182,28 +182,28 @@ function crs_test($name_query, $minAge, $maxAge, $facility_group, $facility){
 //        } else {
 //            $query .= "LIMIT $limit";
 //        }
+//
+//    // Execute query
+//    try {
+//        $query = $global['db']->Prepare($query);
+//        //$results = $global['db']->Execute($query, $values);
+//
+//        $html = '';
+//        $html .= "<tr>";
+//        $html .= "<th>#</th>";
+//        $html .= "<th>First Name</th>";
+//        $html .= "<th>Last Name</th>";
+//        $html .= "<th>Gender</th>";
+//        $html .= "<th>Shelter</th>";
+//        $html .= "</tr>";
+//
+//        $global['xajax_res']->addAssign('userdata','innerHTML',$html);
+//
+//        dao_error_log();
+//    } catch (exception $e) {
+//        add_error("<pre>" . $e->getMessage() . "</pre>");
+//    }
 
-    // Execute query
-    try {
-        $query = $global['db']->Prepare($query);
-        $results = $global['db']->Execute($query, $values);
-
-        $html = '';
-        $html .= "<tr>";
-        $html .= "<th>#</th>";
-        $html .= "<th>First Name</th>";
-        $html .= "<th>Last Name</th>";
-        $html .= "<th>Gender</th>";
-        $html .= "<th>Shelter</th>";
-        $html .= "</tr>";
-
-        $global['xajax_res']->addAssign('userdata','innerHTML',$html);
-
-        dao_error_log();
-    } catch (exception $e) {
-        add_error("<pre>" . $e->getMessage() . "</pre>");
-    }
-
-    $global['xajax_res']->addScript('');
+    $global['xajax_res']->addScript('alert("To do");');
     return $global['xajax_res']->getXML();
 }
