@@ -19,8 +19,9 @@ global $conf;
     $(document).ready(function(){
 
         $.tgrid = {};
-    
+
         showresults();
+
 
         $("#searchbutton").click(function(){
             showresults();
@@ -40,7 +41,7 @@ global $conf;
         $("#pagenum").change(function(){
             showresults();
         });
-    
+
         $("#first").click(function(){
             $("#pagenum").val(1);
             showresults();
@@ -55,7 +56,7 @@ global $conf;
             $("#pagenum").val(parseInt($("#pagenum").val())+1);
             showresults();
         });
-    
+
         $("#last").click(function(){
             $("#pagenum").val(parseInt($("#lastpage").val()));
             showresults();
@@ -76,110 +77,109 @@ global $conf;
 
         function showresults() {
 
-            var url = "index.php";
-            var page = $("#pagenum").val();
+            $name_query = $("#searchbox").val(),
+            $minAge = $("#minAge").val(),
+            $maxAge =  $("#maxAge").val(),
+            $facility_group = $("#facility_group").val(),
+            $facility = $("#facility").val(),
 
-            if(page < 1) {
-                page = 1;
-            }
+            crs_test($name_query, $minAge, $maxAge, $facility_group, $facility);
 
-            // Clear table
-            $("#userdata thead").html("");
-            $("#userdata tbody").html("");
 
-            $.getJSON(url, {
-                stream:"json", 
-                mod: "crs",
-                act: "client_search",
-                name_query: $("#searchbox").val(),
-                minAge: $("#minAge").val(),
-                maxAge: $("#maxAge").val(),
-                facility_group: $("#facility_group").val(),
-                facility: $("#facility").val(),
-                limit: $("#maxlimit").val(),
-                page: page,
-                sidx: $.tgrid.sidx,
-                sord: $.tgrid.sord
-            }, 
-            function(data) {
-
-                // paginator
-                if(!data.page){
-                    $.tgrid.page = 1;
-                } else {
-                    $.tgrid.page = data.page;
-                }
-                $("#pagenum").val($.tgrid.page);
-                $("#lastpage").val(data.total);
-                $("#results").html(addCommas(data.records));
-                $("#totalpages").html(data.total);
-
-                // header
-                var h = 0;
-                var head = "<tr>";
-                head += "<th>#</th>";
-
-                var sortasc;
-                var sortdesc;
-                if(data.records > 0) {
-                    $.each(data.rows[0], function(key, value){
-
-                        if(key == data.sidx && data.sord == 'asc'){
-                            sortasc = 'sortbuttonselected';
-                        } else {
-                            sortasc = 'sortbutton';
-                        }
-
-                        if(key == data.sidx && data.sord == 'desc'){
-                            sortdesc = 'sortbuttonselected';
-                        } else {
-                            sortdesc = 'sortbutton';
-                        }
-
-                        head += '<th id="' + key + '">';
-                        head += '<a href="#">' + data.colnames[h++] + '</a> ';
-                        head += '<span title="ascending" class="'+ sortasc +'">&#x25B2;</span>';
-                        head += '<span title="descending" class="'+ sortdesc +'">&#x25BC;</span>';
-                        head += '</th>';
-                    });
-                } else {
-                    $.each(data.colnames, function(key, value){
-                        head += '<th id="' + key + '">' + value + '</th>';
-                    });
-                }
-        
-                head += "</tr>";
-                $(head).appendTo("#userdata thead");
-
-                // rows
-                var row = '';
-                if(data.records > 0) {
-                    $.each(data.rows, function(i, person) {
-                        row += "<tr>";
-                        var rownum = i+1+(($.tgrid.page-1)*data.limit);
-                        row += "<td>"+rownum+"</td>";
-                        $.each(person, function(key, value){
-                            row += "<td>"+value+"</td>";
-                        });
-                        row += "</tr>";
-                    });
-                } else {
-                    row = '<tr><td colspan="'+(data.colnames.length+1)+'" align="center">No Results Found</td></tr>';
-                }
-        
-                $(row).appendTo("#userdata tbody")
-
-                $('#userdata thead th').click(function(){
-                    $.tgrid.sidx = $(this).attr('id');
-                    if($.tgrid.sord == 'desc'){
-                        $.tgrid.sord = "asc";
-                    } else {
-                        $.tgrid.sord = "desc";
-                    }
-                    showresults();
-                });
-
-            });
+//
+//            $.getJSON(url, {
+//                stream:"json",
+//                mod: "crs",
+//                act: "client_search",
+//                name_query: $("#searchbox").val(),
+//                minAge: $("#minAge").val(),
+//                maxAge: $("#maxAge").val(),
+//                facility_group: $("#facility_group").val(),
+//                facility: $("#facility").val(),
+//                limit: $("#maxlimit").val(),
+//                page: page,
+//                sidx: $.tgrid.sidx,
+//                sord: $.tgrid.sord
+//            },
+//            function(data) {
+//
+//                // paginator
+//                if(!data.page){
+//                    $.tgrid.page = 1;
+//                } else {
+//                    $.tgrid.page = data.page;
+//                }
+//                $("#pagenum").val($.tgrid.page);
+//                $("#lastpage").val(data.total);
+//                $("#results").html(addCommas(data.records));
+//                $("#totalpages").html(data.total);
+//
+//                // header
+//                var h = 0;
+//                var head = "<tr>";
+//                head += "<th>#</th>";
+//
+//                var sortasc;
+//                var sortdesc;
+//                if(data.records > 0) {
+//                    $.each(data.rows[0], function(key, value){
+//
+//                        if(key == data.sidx && data.sord == 'asc'){
+//                            sortasc = 'sortbuttonselected';
+//                        } else {
+//                            sortasc = 'sortbutton';
+//                        }
+//
+//                        if(key == data.sidx && data.sord == 'desc'){
+//                            sortdesc = 'sortbuttonselected';
+//                        } else {
+//                            sortdesc = 'sortbutton';
+//                        }
+//
+//                        head += '<th id="' + key + '">';
+//                        head += '<a href="#">' + data.colnames[h++] + '</a> ';
+//                        head += '<span title="ascending" class="'+ sortasc +'">&#x25B2;</span>';
+//                        head += '<span title="descending" class="'+ sortdesc +'">&#x25BC;</span>';
+//                        head += '</th>';
+//                    });
+//                } else {
+//                    $.each(data.colnames, function(key, value){
+//                        head += '<th id="' + key + '">' + value + '</th>';
+//                    });
+//                }
+//
+//                head += "</tr>";
+//                $(head).appendTo("#userdata thead");
+//
+//                // rows
+//                var row = '';
+//                if(data.records > 0) {
+//                    $.each(data.rows, function(i, person) {
+//                        row += "<tr>";
+//                        var rownum = i+1+(($.tgrid.page-1)*data.limit);
+//                        row += "<td>"+rownum+"</td>";
+//                        $.each(person, function(key, value){
+//                            row += "<td>"+value+"</td>";
+//                        });
+//                        row += "</tr>";
+//                    });
+//                } else {
+//                    row = '<tr><td colspan="'+(data.colnames.length+1)+'" align="center">No Results Found</td></tr>';
+//                }
+//
+//                $(row).appendTo("#userdata tbody")
+//
+//                $('#userdata thead th').click(function(){
+//                    $.tgrid.sidx = $(this).attr('id');
+//                    if($.tgrid.sord == 'desc'){
+//                        $.tgrid.sord = "asc";
+//                    } else {
+//                        $.tgrid.sord = "desc";
+//                    }
+//                    showresults();
+//                });
+//
+//            });
         };
     });
 </script>

@@ -830,7 +830,7 @@ function shn_form_date($label, $name, $extra_opts = null)
     //including the script file only once
     static $script_include = false;
     if (!$script_include) {
-        echo "<script type='text/javascript' src='res/js/scw.js'></script>";
+        //echo "<script type='text/javascript' src='res/js/scw.js'></script>";
         $script_include = true;
     }
     $format = (isset($extra_opts['format'])) ? $extra_opts['format'] : 'yyyy-mm-dd';

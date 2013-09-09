@@ -685,7 +685,7 @@ WHERE EXISTS (
   GROUP BY t2.p_uuid
   HAVING (MAX(t2.in_date) = t1.in_date));
 
-DROP VIEW IF EXISTS crs_client_seachr;
+DROP VIEW IF EXISTS crs_client_search;
 CREATE VIEW crs_client_search
 AS
 SELECT
