@@ -2,7 +2,7 @@
 /**
  * @name         Demo Instance
  * @version      1.0
- * @package      demo
+ * @package      demoM
  * @author       Sneha Bhattacharya
  * @about        Developed in whole or part by the U.S. National Library of Medicine and the Sahana Foundation
  * @link         https://pl.nlm.nih.gov/about
@@ -12,7 +12,7 @@
  */
 
 
-$conf['mod_demo_name']         = _t("Demo instance");   // Defines the name of the module
-$conf['mod_demo_menuorder']    =  333;                             // Defines this module's main menu priority
-$conf['mod_demo_dependencies'] = "";
-$conf['mod_demo_version']      = 1.0;
+$conf['mod_demoM_name']         = _t("Demo Instance");   // Defines the name of the module
+$conf['mod_demoM_menuorder']    =  333;                             // Defines this module's main menu priority
+$conf['mod_demoM_dependencies'] = "";
+$conf['mod_demoM_version']      = 1.0;
