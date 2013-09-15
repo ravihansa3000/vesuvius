@@ -43,6 +43,7 @@ r4='$conf['db_pass'] = "${pswrd}"'
 sed -i 's/project/'${dbname}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
 sed -i 's/project/'${dbuser}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
 sed -i 's/123456/'${pswrd}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
+sed -i 's/Sahana Vesuvius/'${sname}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
 #copies the .htaccess file
 #cp /var/www/${sname}/vesuvius/www/htaccess.example /var/www/${sname}/vesuvius/www/.htaccess
 

@@ -25,6 +25,7 @@ while($row = mysql_fetch_array($res, MYSQL_ASSOC)){
 	$email=$row['email'];
 	$current=now();
 	if($exp>$current){
+		
 	$to_time = strtotime("$exp");
 	$from_time = strtotime("$current");
 

@@ -50,27 +50,19 @@ require_once($global['approot']."/inc/lib_security/lib_acl.inc");
 	else if($_SESSION['group_id']==1){
 
  	shn_tabmenu_open();
-	shn_tabmenu_item("session",  _t("Demo-TableHeader|Session Information"), "demoM");
-	shn_tabmenu_item("password", _t("Demo-TableHeader|Change My Password"),  "demoM");
+	
 	shn_tabmenu_item("adminDashboard", _t("Demo-TableHeader|Admin Dashboard"),  "demoM");
 	shn_tabmenu_item("createInstance", _t("Demo-TableHeader|Create Instance"),  "demoM");
 	shn_tabmenu_item("testInstance", _t("Demo-TableHeader|Test Instance"),  "demoM");
 	shn_tabmenu_item("pendingNotifications", _t("Demo-TableHeader|View pending notifications"),  "demoM");
 	shn_tabmenu_item("show_notifications", _t("Demo-TableHeader|Show notifications"),  "demoM");
+	shn_tabmenu_item("deleteInstance", _t("Demo-TableHeader|Delete instance"),  "demoM");
+
 	shn_tabmenu_close();
 
 	
 
-	if(isset($_GET['forgot'])) {
-		$control = "shn_demo_forgotPassword";
-
-	} elseif(isset($_GET['password'])) {
-		$control = "shn_demo_ch_passwd";
-
-	} elseif(isset($_GET['passwdp'])) {
-		$control = "shn_demo_ch_passwd_p";
-
-	} elseif(isset($_GET['create2'])) {
+	 if(isset($_GET['create2'])) {
 		$control = "shn_demoM_create2";
 
 	}
@@ -79,6 +71,16 @@ require_once($global['approot']."/inc/lib_security/lib_acl.inc");
 
 	} elseif(isset($_GET['login'])) {
 		$control = "shn_demo_loginForm";
+	}
+	elseif(isset($_GET['deleteInstance'])) {
+		$control = "shn_demoM_deleteInstance";
+	}
+	elseif(isset($_GET['delete2'])) {
+		$control = "shn_demoM_delete2";
+
+	}
+	elseif(isset($_GET['delete3'])) {
+		$control = "shn_demo_delete3";
 	}
 	elseif(isset($_GET['adminDashboard'])){
         $control="shn_demoM_adminDashboard";
@@ -121,26 +123,50 @@ function shn_demoM_reqInstance(){
 	$row=mysql_fetch_array($res);
 	$val=$row['created'];
 	
+	
 	if($val==1){
-		$result="select * from created where sname = '$user';";
-		$res=mysql_query($result);
-		echo "<table class=\"emTable\">
-			<tr>
-				<td style=\"font-size: 120%; padding-left: 8px;\" ><b>Organisation</b></td>
-				<td style=\"font-size: 120%; padding-left: 8px;text-align: center;\" ><b>Short Name</b></td>
-				<td style=\"font-size: 120%; padding-left: 8px;text-align: center;\" ><b>Time left</b></td>
-			</tr>";
-			echo "<meta http-equiv='refresh' content='10;'>";
-		
-		
-		  		
+		$result="select * from created where username = '$user';";
+		$res=mysql_query($result); 	
+		$row = mysql_fetch_array($res, MYSQL_ASSOC);
+		echo "<br><div id=\"home\">";
+		 echo '
+		<div id="rezMain" class="mainArea" style="opacity: 1; width: 300px;">
+			<table class="emTable">
+				<tbody>
+				<tr>
+					<td style="padding-left: 8px; text-align: left; font-weight: bold;" colspan=2 class="mainRowOdd">Your demo instance details</td>
+				</tr>
+				<tr>
+					<td style="padding-left: 8px; text-align: right;" class="mainRowEven">Username</td>
+					<td style="padding-left: 8px; text-align: left; font-weight: bold;" class="mainRowEven">'.$row['username'].'</td>
+				</tr>
+				<tr>
+					<td style="padding-left: 8px; text-align: right;" class="mainRowOdd">Shortname</td>
+					<td style="padding-left: 8px; text-align: left; font-weight: bold;" class="mainRowOdd">'.$row['sname'].'</td>
+				</tr>
+				<tr>
+					<td style="padding-left: 8px; text-align: right;" class="mainRowEven">Email</td>
+					<td style="padding-left: 8px; text-align: left; font-weight: bold;" class="mainRowEven">'.$row['Email'].'</td>
+				</tr>
+				<tr>
+					<td style="padding-left: 8px; text-align: right;" class="mainRowOdd">URL</td>
+					<td style="padding-left: 8px; text-align: left; font-weight: bold;" class="mainRowOdd"><a href=\"'.$row['url'].'\">'.$row['url'].'</a></td>
+				</tr>
+				</tbody>
+			</table>
+		</div>
+	';
+	echo "</div>";
+     		
 
 		while($row = mysql_fetch_array($res, MYSQL_ASSOC)){
 	
 		 $temp=$row['exptime'];
          $date = new DateTime("$temp");
          $now = new DateTime();
-         echo "<tr><td>" . $row['sname'] . "</td><td>" . $row['username'] . "</td><td>" . $date->diff($now)->format("%d days, %h hours and %i minutes") . "</td></tr>";
+        
+	     
+
     
 		//echo "<tr><td>" . $row['sname'] . "</td><td>" . $row['Db_name'] . "</td><td>" . $left . "</td></tr>";
 
@@ -194,7 +220,7 @@ function shn_demoM_request()
 {
 	$ret = shn_demoM_addUser($_POST['sname'],($_POST['org_name']),($_POST['username']),($_POST['pswrd']) , ($_POST['email']));
 	if($ret) {
-			$msg = "A new user account has been created for you and is now active. Please login below using your credentials.";
+			$msg = "A new demo instance request has been sent. Please wait till our admin confirms.";
 			add_confirmation($msg);
 			
 		}
@@ -277,33 +303,8 @@ function shn_demoM_pendingNotifications(){
 
 	}
 
-	$total=$count;
-	$i=1;
-	$eo=0;
-	while($i <= $count) {
-		$row           = $users[$i-1];
-		$type          = "<b><span style=\"color: blue;\">".$char."</span> &nbsp; </b>";
-		$uuid          = $row['uuid'];
-		$name          = "<b>".$row['org_name']."</b>";
-		$shortname     = $row['sname'];
-		
-		// find class to color the row...
-		if(($eo % 2) == 0) {
-			$evenOddClass = "mainRowEven";
-		} else {
-			$evenOddClass = "mainRowOdd";
-		}
-
-		
-		echo "<tr>
-				<td style=\"padding-left: 8px;\" class=\"".$evenOddClass."\">".$type."<a href=\"\" onclick=\"javascript: shn_form_fopen('createInstance');\">".$name."<a/></td>
-				<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\"><input class=\"styleTehButton\" type=\"button\" onclick=\"javascript: demoM_createInstance(".$uuid.");\" value=\"Create\"></td>
-				</tr>
-		";
-		//shn_form_fopen("create2");
-		$i++;
-		$eo++;
-	}
+	
+	
 
 	echo "</table>";
 	
@@ -323,12 +324,14 @@ function shn_demoM_createInstance($uuid) {
 	
 	shn_form_text("Shortname", 'sname', 'size="30"', $extra_opts);
 	shn_form_text("Database name", 'db_name','size="30"', $extra_opts);
+	shn_form_text("Username", 'username','size="30"', $extra_opts);
 	shn_form_text("Db User", 'db_user','size="30"', $extra_opts);
 	shn_form_password("Password for Login and db", "pswrd", null, $extra_opts);
 	shn_form_text("Hostname", 'hname', 'size="30"', $extra_opts);
 	shn_form_text("Timelimit", 'exptime', 'size="30"', $extra_opts);
 	shn_form_text("Email", 'email', 'size="30"', $extra_opts);
 	
+
 
 	shn_form_fsclose();
 	$extra_opts['req']=true;
@@ -343,16 +346,23 @@ function shn_demoM_createInstance($uuid) {
 function shn_demoM_create2() {
 
 	shn_demoM_createInstance();
-	if ((isset($_POST['sname'])) && (isset($_POST['db_name']))&& (isset($_POST['db_user'])) && (isset($_POST['pswrd'])) && (isset($_POST['hname'])) && (isset($_POST['exptime'])) && (isset($_POST['email'])))
-	{	
+	if ((isset($_POST['sname'])) && (isset($_POST['db_name']))&& (isset($_POST['db_user'])) && (isset($_POST['pswrd'])) && (isset($_POST['hname'])) && (isset($_POST['exptime'])) && (isset($_POST['email'])) && (isset($_POST['username'])))
+	 {	
 	   	$ret = shn_demoM_create3($_POST['sname'], $_POST['db_name'], $_POST['pswrd'], $_POST['hname'], $_POST['db_user'], $_POST['exptime']);
-	   	 $p ="INSERT INTO created(sname,db_name,pswrd,ctime,exptime,email)
-			VALUES('".mysql_real_escape_string($_POST['sname'])."','".mysql_real_escape_string($_POST['db_name'])."','".$_POST['pswrd']."',now(),'".$_POST['exptime']."','".mysql_real_escape_string($_POST['email'])."');";
+	   	$hname=$_POST['hname'];
+	   	$sname=$_POST['sname'];
+		$url="$hname/$sname";
+	    
+	   	 $p ="INSERT INTO created(sname,db_name,pswrd,ctime,exptime,email,username,hname,url)
+			VALUES('".mysql_real_escape_string($_POST['sname'])."','".mysql_real_escape_string($_POST['db_name'])."','".$_POST['pswrd']."',now(),'".$_POST['exptime']."','".mysql_real_escape_string($_POST['email'])."','".mysql_real_escape_string($_POST['username'])."','".mysql_real_escape_string($_POST['hname'])."','".$url."');";
 		$res=mysql_query($p);
-		$user=$_SESSION['user'];
+		$user=$_POST['db_user'];
 		$q="update flag set created = 1 where user = '".$user."';";
 		mysql_query($q);
-		$msg = "New instance created.";	
+		$sname=$_POST['sname'];
+		$r="delete from notify where sname='$sname';";
+		mysql_query($r);
+		
 	   	
 		
 		} 
@@ -447,7 +457,14 @@ function shn_demoM_test3($sname)
 }
 function shn_demoM_deleteInstance()
 {
+	echo "<div id=\"formcontainer\">";
+	shn_form_fopen("delete2", null);
 	shn_form_text("Shortname",    'sname',    'size="30"', $extra_opts);
+	shn_form_fsclose();
+	shn_form_submit(_t("Submit"), "class=\"styleTehButton\"");
+	echo "</br><br/><br/>";
+	shn_form_fclose();
+	echo "</div>";
 	//shn_demoM_delete($sname);
 }
 function shn_demoM_delete2(){
