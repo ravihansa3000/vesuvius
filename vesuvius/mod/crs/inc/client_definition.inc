@@ -110,6 +110,7 @@ function get_client($uuid)
     try {
         $sql = $global['db']->Prepare($sql);
         $rs = $global['db']->Execute($sql, $uuid);
+
     } catch (exception $e) {
         add_error("<pre>" . $e->getMessage() . "</pre>");
     }

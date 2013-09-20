@@ -56,23 +56,9 @@ function staff_save($uuid = null)
     isset($_REQUEST['postal']) ? $postal = $_REQUEST['postal'] : $postal = null;
     isset($_REQUEST['opt_country']) ? $opt_country = $_REQUEST['opt_country'] : $opt_country = null;
 
-    // Work Address
-    isset($_REQUEST['w_street_1']) ? $w_street_1 = $_REQUEST['w_street_1'] : $w_street_1 = null;
-    isset($_REQUEST['w_street_2']) ? $w_street_2 = $_REQUEST['w_street_2'] : $w_street_2 = null;
-    isset($_REQUEST['w_city']) ? $w_city = $_REQUEST['w_city'] : $w_city = null;
-    isset($_REQUEST['w_state']) ? $w_state = $_REQUEST['w_state'] : $w_state = null;
-    isset($_REQUEST['w_postal']) ? $w_postal = $_REQUEST['w_postal'] : $w_postal = null;
-    isset($_REQUEST['w_opt_country']) ? $w_opt_country = $_REQUEST['w_opt_country'] : $w_opt_country = null;
-
-    // Home Phone
-    isset($_REQUEST['hp1']) ? $hp1 = $_REQUEST['hp1'] : $hp1 = null;
-    isset($_REQUEST['hp2']) ? $hp2 = $_REQUEST['hp2'] : $hp2 = null;
-    isset($_REQUEST['hp3']) ? $hp3 = $_REQUEST['hp3'] : $hp3 = null;
 
     // Work Phone
-    isset($_REQUEST['wp1']) ? $wp1 = $_REQUEST['wp1'] : $wp1 = null;
-    isset($_REQUEST['wp2']) ? $wp2 = $_REQUEST['wp2'] : $wp2 = null;
-    isset($_REQUEST['wp3']) ? $wp3 = $_REQUEST['wp3'] : $wp3 = null;
+    isset($_REQUEST['home']) ? $wp1 = $_REQUEST['home'] : $wp1 = null;
 
     // Demographics
     isset($_REQUEST['gender']) ? $gender = trim($_REQUEST['gender']) : $gender = null;
@@ -80,50 +66,37 @@ function staff_save($uuid = null)
     isset($_REQUEST['skills']) ? $skills = $_REQUEST['skills'] : $skills = null;
 
     // Languages
-    isset($_REQUEST['lang1']) ? $lang1 = $_REQUEST['lang1'] : $lang1 = null;
-    isset($_REQUEST['lang2']) ? $lang2 = $_REQUEST['lang2'] : $lang2 = null;
-    isset($_REQUEST['lang3']) ? $lang3 = $_REQUEST['lang3'] : $lang3 = null;
+    isset($_REQUEST['altlang1']) ? $lang1 = $_REQUEST['altlang1'] : $lang1 = null;
+    isset($_REQUEST['altlang2']) ? $lang2 = $_REQUEST['altlang2'] : $lang2 = null;
+    isset($_REQUEST['altlang3']) ? $lang3 = $_REQUEST['altlang3'] : $lang3 = null;
 
     // Date of birth
-    isset($_REQUEST['dobMonth']) ? $dobMonth = $_REQUEST['dobMonth'] : $dobMonth = null;
-    isset($_REQUEST['dobDay']) ? $dobDay = $_REQUEST['dobDay'] : $dobDay = null;
-    isset($_REQUEST['dobYear']) ? $dobYear = $_REQUEST['dobYear'] : $dobYear = null;
-    isset($_REQUEST['dobHour']) ? $dobHour = $_REQUEST['dobHour'] : $dobHour = null;
-    isset($_REQUEST['dobMinute']) ? $dobMinute = $_REQUEST['dobMinute'] : $dobMinute = null;
+    isset($_REQUEST['dob']) ? $dob = $_REQUEST['dob'] : $dob = null;
 
     // Facility
     isset($_REQUEST['facility']) ? $facility = $_REQUEST['facility'] : $facility = null;
 
     // Entry date
-    isset($_REQUEST['entryMonth']) ? $entryMonth = $_REQUEST['entryMonth'] : $entryMonth = null;
-    isset($_REQUEST['entryDay']) ? $entryDay = $_REQUEST['entryDay'] : $entryDay = null;
-    isset($_REQUEST['entryYear']) ? $entryYear = $_REQUEST['entryYear'] : $entryYear = null;
+    isset($_REQUEST['checkInDate']) ? $entryDate = $_REQUEST['checkInDate'] : $entryDate = null;
     isset($_REQUEST['entryHour']) ? $entryHour = $_REQUEST['entryHour'] : $entryHour = null;
     isset($_REQUEST['entryMinute']) ? $entryMinute = $_REQUEST['entryMinute'] : $entryMinute = null;
 
     // Org Info
     $orgId = isset($_REQUEST['org_id']) ? $_REQUEST['org_id'] : null;
-    $volStatusId = isset($_REQUEST['vol_status']) ? $_REQUEST['vol_status'] : null;
-    $staffId = isset($_REQUEST['staff_type']) ? $_REQUEST['staff_type'] : null;
+    $volStatusId = isset($_REQUEST['volStatus']) ? $_REQUEST['volStatus'] : null;
+    $staffId = isset($_REQUEST['staffType']) ? $_REQUEST['staffType'] : null;
 
     $incidentId = $_SESSION['incident'];
 
-
-    // Phones
-    if ($hp1 && $hp2 && $hp3) {
-        $homePhone = $hp1 . $hp2 . $hp3;
-    } else {
-        $homePhone = null;
-    }
-    if ($wp1 && $wp2 && $wp3) {
-        $workPhone = $wp1 . $wp2 . $wp3;
+    if ($wp1) {
+        $workPhone = $wp1;
     } else {
         $workPhone = null;
     }
 
     // Birth day
-    if ($dobDay && $dobMonth && $dobYear) {
-        $dob = "$dobYear-$dobMonth-$dobDay";
+    if ($dob) {
+        $dob = "$dob";
     } else {
         $dob = null;
     }
@@ -153,7 +126,7 @@ function staff_save($uuid = null)
     if ($mode == "INSERT") {
 
         // Format the entry date in a SQL ASNI format
-        $now = "$entryYear-$entryMonth-$entryDay $entryHour:$entryMinute:00";
+        $now = "$entryDate-$entryHour:$entryMinute:00";
 
         $table = 'fms_person_to_facility';
         $record = array();
@@ -228,13 +201,7 @@ function staff_save($uuid = null)
     save_contact_info("city", $city, $uuid);
     save_contact_info("state", $state, $uuid);
     save_contact_info("postal", $postal, $uuid);
-    save_contact_info("curr", $homePhone, $uuid);
-    save_contact_info("w_street_1", $w_street_1, $uuid);
-    save_contact_info("w_street_2", $w_street_2, $uuid);
-    save_contact_info("w_city", $w_city, $uuid);
-    save_contact_info("w_state", $w_state, $uuid);
-    save_contact_info("w_postal", $w_postal, $uuid);
-    save_contact_info("w_curr", $workPhone, $uuid);
+    save_contact_info("curr", $workPhone, $uuid);
 
     // staff languages
     save_language_info($lang1, 1, $uuid, $mode);
@@ -251,7 +218,8 @@ function staff_save($uuid = null)
     }
 
     // Check for any failed transactions
-    $error = $global['db']->HasFailedTrans();
+    //$error =
+        $global['db']->HasFailedTrans();
 
     // Close transaction
     $global['db']->CompleteTrans();
@@ -260,7 +228,6 @@ function staff_save($uuid = null)
     if ($error) {
         $uuid = -1;
     } else {
-
         // Request Solr delta-import
         if ($conf['enable_solr_for_search'] == true) {
             $serialized_results = file_get_contents("http://" . $conf['SOLR_host'] . ":" . $conf['SOLR_port'] . "/solr/dataimport?command=delta-import");

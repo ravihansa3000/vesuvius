@@ -204,6 +204,7 @@ function crs_test($name_query, $minAge, $maxAge, $facility_group, $facility){
 //        add_error("<pre>" . $e->getMessage() . "</pre>");
 //    }
 
+    
     $global['xajax_res']->addScript('alert("To do");');
     return $global['xajax_res']->getXML();
 }

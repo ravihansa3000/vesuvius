@@ -46,6 +46,11 @@ function shn_srs_default()
     global $global;
     global $conf;
 
+    echo "<script type=\"text/javascript\" src=\"res/js/jquery-1.6.4.min.js\" ></script>
+        <script type=\"text/javascript\" src=\"res/js/jquery-ui-autocomplete.min.js\" ></script>
+		<script type=\"text/javascript\" src=\"res/js/jquery-ui-datepicker.min.js\" ></script>
+		<script type=\"text/javascript\" >".file_get_contents($global['approot']."/mod/srs/srs.js")."</script>";
+
     $control = "";
 
     shn_tabmenu_open();
@@ -54,7 +59,7 @@ function shn_srs_default()
     shn_tabmenu_item("search", _t("Staff-Menu|Search Staff"), "srs");
     shn_tabmenu_item("default", _t("Staff-Menu|Dashboard"), "srs");
     shn_tabmenu_item("default", _t("Staff-Menu|Reports"), "srs");
-    shn_tabmenu_item("default", _t("Staff-Menu|Settings"), "srs");
+    shn_tabmenu_item("settings", _t("Staff-Menu|Settings"), "srs");
     shn_tabmenu_close();
 
 
@@ -90,13 +95,32 @@ function shn_srs_default()
         $control = "shn_crs_client_save_new";
     } elseif(isset($_GET['search'])) {
         $control = "shn_srs_search";
+    } elseif(isset($_GET['settings'])) {
+        $control = "shn_srs_settings";
+    } elseif(isset($_GET['org_list'])) {
+        $control = "shn_srs_org_list";
+    } elseif(isset($_GET['volstatus_list'])) {
+        $control = "shn_srs_volstatus_list";
+    } elseif(isset($_GET['staff_type_list'])) {
+        $control = "shn_srs_staff_type_list";
     }
 
-    if ($control == "") {
+        if ($control == "") {
         include_once 'templates/default.php';
     }
 
     $control();
+}
+
+/*
+ *  Setting menu for staff
+ */
+function shn_srs_settings(){
+
+    echo "<li><a href=\"srs?org_list&tabid=5"."\"><span>Organization Names</span></a></li>";
+    echo "<li><a href=\"srs?volstatus_list&tabid=5"."\"><span>Volunteer Statuses</span></a></li>";
+    echo "<li><a href=\"srs?staff_type_list&tabid=5"."\"><span>Staff Types</span></a></li>";
+
 }
 
 /**
@@ -831,7 +855,7 @@ function shn_srs_staff_add()
     shn_form_time(_t("Time"), "entryHour", "entryMinute", array('req'=>true));
 
     $opt_status = array();
-    $opt_status["select"] = "- Select -";
+    $opt_status[""] = "- Select -";
 
     foreach ($facilities as $facility) {
         $opt_status[$facility['facility_uuid']] = $facility['facility_name'];
@@ -841,7 +865,7 @@ function shn_srs_staff_add()
     shn_form_fsclose();
 
     $opt_orgs = array();
-    $opt_orgs["select"] = "- Select -";
+    $opt_orgs[""] = "- Select -";
 
     foreach ($orgs as $org) {
         $opt_orgs[$org['id']] = $org['name'];
@@ -864,8 +888,8 @@ function shn_srs_staff_add()
     shn_form_fsopen(_t('Organization Information'));
 
     shn_form_select($opt_orgs, _t('Name'), "org_id", null,  array('value'=>'select', 'req' => true));
-    shn_form_select($opt_status, _t('Volunteer Status'), "volStatus", null,  array('value'=>'select', 'req' => true));
-    shn_form_select($opt_type, _t('Type'), "staffType", null,  array('value'=>'select', 'req' => true));
+    shn_form_select($opt_status, _t('Volunteer Status'), "vol_status", null,  array('value'=>'select', 'req' => true));
+    shn_form_select($opt_type, _t('Type'), "staff_type", null,  array('value'=>'select', 'req' => true));
 
     shn_form_fsclose();
 
@@ -876,7 +900,7 @@ function shn_srs_staff_add()
     shn_form_text(_t("MI"),'middle_initial','size="5"',array('help'=>'Middle Initials'));
     shn_form_date(_t("Date of Birth"), "dob");
     $opt_status = array("" => "- Select -", "Male" => "Male", "Female" => "Female");
-    shn_form_select($opt_status, _t('Gender'), "gender", null,  array('value'=>'select', 'req' => true));
+    shn_form_select($opt_status, _t('Gender'), "gender", null,  array('req' => true));
 
     shn_form_fsclose();
 
@@ -978,18 +1002,18 @@ function shn_srs_staff_save_new()
     $submit = isset($_REQUEST['submit']) ? $_REQUEST['submit'] : null;
     $error = false;
 
+
     $validation = array(
       'given_name' => 'First name not provided.',
       'family_name' => 'Last name not provided.',
       'facility' => "Facility not selected",
-      'entryMonth' => "Please provide a month.",
-      'entryDay' => 'Day not provided.',
-      'entryYear' => 'Year not provided.',
+      'gender' => "Gender not selected",
+      'checkInDate' => "Date not provided.",
       'entryHour' => 'Hour not provided',
-      'entryMinute' => 'Minute missing',
+      'entryMinute' => 'Minute not provided',
       'org_id' => 'Organization not selected.',
       'vol_status' => 'Volunteer status not selected.',
-      'staff_type' => 'You must select a staff type.'
+      'staff_type' => 'Staff Type not selected.'
     );
 
     $test = null;

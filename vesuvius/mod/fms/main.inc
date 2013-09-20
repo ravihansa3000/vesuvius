@@ -26,13 +26,26 @@ include_once 'inc/functions.inc';
  */
 function shn_fms_default()
 {
+    echo "<script type=\"text/javascript\" src=\"res/js/jquery-1.6.4.min.js\" ></script>";
+
     $control = "";
 
     shn_tabmenu_open();
     shn_tabmenu_item("search", _t("Facility-Menu|Registry Search"), "fms");
-    shn_tabmenu_item("default", _t("Facility-Menu|Facilities"), "fms");
-    shn_tabmenu_item("default", _t("Facility-Menu|Import"), "fms");
+    shn_tabmenu_item("add", _t("Facility-Menu|Add Facility"), "fms");
+    shn_tabmenu_item("displaymap", _t("Facility-Menu|Display Map"), "fms");
+    shn_tabmenu_item("import", _t("Facility-Menu|Import"), "fms");
     shn_tabmenu_close();
+
+    if (isset($_GET['search'])) {
+        shn_fms_search();
+    } elseif(isset($_GET['add'])) {
+        $control = "shn_fms_add";
+    } elseif(isset($_GET['displaymap'])) {
+        $control = "shn_fms_displaymap";
+    } elseif(isset($_GET['import'])) {
+        $control = "shn_fms_import";
+    }
 
     if ($control == "") {
         shn_fms_search();
@@ -515,21 +528,26 @@ function shn_fms_save()
     $error = false;
 
     // Manditory data
-    $mandatory = array(
-      "name",
-      "type",
-      "status",
-      "capacity",
-      "street_1",
-      "city",
-      "state",
-      "postal"
+    $requiredFields = array(
+        "name" => "Name",
+        "code" => "Facility Code",
+        "capacity" => "Capacity",
+        "type" => "Resource Abbr",
+        "status"  => "Status Allocation",
+        "group" => "Group Name",
+        "street_1" => "Street Address",
+        "city" => "City",
+        "state" => "State",
+        "postal" => "Zip Code"
     );
 
-    foreach ($mandatory as $required) {
-        if (trim($_POST[$required]) == "") {
+    foreach ($requiredFields as $key => $value) {
+
+        $test = $_REQUEST[$key];
+
+        if (!isset($_REQUEST[$key]) || empty($_REQUEST[$key])) {
+            add_error($value . " not provided.");
             $error = true;
-            add_error("<b>$required</b> may not be empty.");
         }
     }
 
@@ -634,31 +652,35 @@ function shn_fms_saveNew()
     $error = false;
 
     // Manditory data
-    $mandatory = array(
-      "name",
-      "type",
-      "status",
-      "capacity",
-      "street_1",
-      "city",
-      "state",
-      "postal"
+    // Manditory data
+    $requiredFields = array(
+        "name" => "Name",
+        "code" => "Facility Code",
+        "capacity" => "Capacity",
+        "type" => "Resource Abbr",
+        "status"  => "Status Allocation",
+        "group" => "Group Name",
+        "street_1" => "Street Address",
+        "city" => "City",
+        "state" => "State",
+        "postal" => "Zip Code"
     );
 
-    foreach ($mandatory as $required) {
-        if (trim($_POST[$required]) == "") {
+    foreach ($requiredFields as $key => $value) {
+
+        $test = $_REQUEST[$key];
+
+        if (!isset($_REQUEST[$key]) || empty($_REQUEST[$key])) {
+            add_error("<b>$value</b>  not provided.");
             $error = true;
-            add_error("<b>$required</b> may not be empty.");
         }
     }
 
     // Facility Phone
-    isset($_REQUEST['wp1']) ? $wp1 = $_REQUEST['wp1'] : $wp1 = null;
-    isset($_REQUEST['wp2']) ? $wp2 = $_REQUEST['wp2'] : $wp2 = null;
-    isset($_REQUEST['wp3']) ? $wp3 = $_REQUEST['wp3'] : $wp3 = null;
+    isset($_REQUEST['wp']) ? $wp = $_REQUEST['wp'] : $wp = null;
 
-    if ($wp1 && $wp2 && $wp3) {
-        $work_phone = shn_db_clean("($wp1) $wp2-$wp3");
+    if ($wp) {
+        $work_phone = $wp;
     } else {
         $work_phone = null;
     }
@@ -681,8 +703,8 @@ function shn_fms_saveNew()
           $_POST['city'],
           $_POST['state'],
           $_POST['postal'],
-          empty($_POST['longitude']) ? 0.0 : $_POST['longitude'],
-          empty($_POST['latitude']) ? 0.0 : $_POST['latitude']
+          empty($_POST['long']) ? 0.0 : $_POST['long'],
+          empty($_POST['lat']) ? 0.0 : $_POST['lat']
         );
 
         $query = "INSERT INTO fms_facility (
@@ -752,8 +774,8 @@ function shn_fms_saveNew()
           'city' => $_POST['city'],
           'state' => $_POST['state'],
           'postal' => $_POST['postal'],
-          'longitude' => $_POST['longitude'],
-          'latitude' => $_POST['latitude']
+          'longitude' => $_POST['long'],
+          'latitude' => $_POST['lat']
         );
         
         $work_phone = array(

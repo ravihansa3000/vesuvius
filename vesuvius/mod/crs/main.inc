@@ -62,6 +62,12 @@ function shn_crs_default()
         $control = "shn_crs_client_save_new";
     } elseif(isset($_GET['search'])) {
         $control = "shn_crs_search";
+    } elseif(isset($_GET['client_view'])) {
+        $control = "shn_crs_client_view";
+    } elseif(isset($_GET['client_edit'])) {
+        $control = "shn_crs_client_edit";
+    } elseif(isset($_GET['client_addpet'])) {
+        $control = "shn_crs_client_addpet";
     }
 
     if ($control == "") {
@@ -288,4 +294,142 @@ function shn_crs_search()
     $minAge = (isset($_SESSION['minAge'])) ? trim($_SESSION['minAge']) : '';
     $maxAge = (isset($_SESSION['maxAge'])) ? trim($_SESSION['maxAge']) : '';
     include_once 'templates/client_search.php';
+}
+
+/**
+ * View client details function
+ *
+ * @access public
+ * @return void
+ */
+function shn_crs_client_view()
+{
+
+    // Get the UUID
+    $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
+    $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
+    //$uuid = base64_decode($uuid);
+    //$_SESSION['uuid'] = base64_encode($uuid);
+    $_SESSION['uuid'] = $uuid;
+
+    // Get client data
+    $client = get_client($uuid);
+
+    // Get client skills
+    $skillsList = get_client_skills($uuid);
+
+    include_once 'templates/client_view.php';
+}
+
+/**
+ * Edit clients function
+ *
+ * @access public
+ * @return void
+ */
+function shn_crs_client_edit()
+{
+    // Validate group access
+    if (!check_groupAccess(array(1, 2))) {
+        add_error("You do not have permission to add a client to the shelter registry.");
+        return;
+    }
+
+    // Validate group access
+    if (!check_validIncident()) {
+        add_error("You must select an open event before attempting to add a client to the registry.");
+
+        shn_crs_default();
+        return;
+    }
+
+    include_once 'inc/functions.inc';
+
+    global $global;
+
+    // Set form properties
+    $act = 'client_save_edit';
+    $formOpts = array('enctype' => 'enctype="multipart/form-data"');
+    $submitOpts = 'name="submit" class="styleTheButton"';
+
+    // Get facilities
+    $facilities = get_facilities();
+
+    // Get the UUID
+    $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
+    $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
+    $uuid = base64_decode($uuid);
+    $_SESSION['uuid'] = base64_encode($uuid);
+
+    // Get facilities
+    $facilities = get_facilities();
+
+    // Get client data
+    $client = get_client($uuid);
+
+    // Load phone numbers as arrays
+    $homePhone = isset($client["home_phone"]) ? parse_phone($client["home_phone"]) : '';
+    $mobilePhone = isset($client["mobile_phone"]) ? parse_phone($client["mobile_phone"]) : '';
+    $altPhone = isset($client["alt_phone"]) ? parse_phone($client["alt_phone"]) : '';
+    $ecPhone = isset($client["ec_phone"]) ? parse_phone($client["ec_phone"]) : '';
+
+    // Get client's skills
+    $skillsList = get_client_skills($uuid);
+
+    // Set form mode
+    $global['crs_form_mode'] = 'edit';
+    $global['crs_group_menu'] = true;
+
+    include_once 'templates/client_edit_form.php';
+}
+
+function shn_crs_client_addpet()
+{
+
+    // Validate group access
+    if (!check_groupAccess(array(1, 2))) {
+        add_error("You do not have permission to check in a client to the shelter registry.");
+        return;
+    }
+
+    // Validate group access
+    if (!check_validIncident()) {
+        add_error("You must select an open event before attempting to perform this action.");
+
+        shn_crs_default();
+        return;
+    }
+
+    global $global;
+
+    // Get the UUID
+    $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
+    $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
+
+    $petId = isset($_REQUEST['pet_id']) ? $_REQUEST['pet_id'] : null;
+
+    if (isset($petId)) {
+
+        // Get the pet details
+        $query = "SELECT * FROM crs_pets WHERE id = ?";
+        $result = $global['db']->Execute($query, $petId);
+        $pet = $result->FetchRow();
+
+        $act = 'client_petsave_edit';
+    } else {
+        $act = 'client_petsave_new';
+    }
+
+    // Get client data
+    $client = get_client($uuid);
+
+    // Set form properties
+
+    $formOpts = array('enctype' => 'enctype="multipart/form-data"');
+    $submitOpts = 'name="submit" class=""';
+
+    // Load form
+    include_once 'templates/client_addpet.php';
 }
