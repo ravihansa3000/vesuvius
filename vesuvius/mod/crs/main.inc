@@ -68,6 +68,20 @@ function shn_crs_default()
         $control = "shn_crs_client_edit";
     } elseif(isset($_GET['client_addpet'])) {
         $control = "shn_crs_client_addpet";
+    } elseif(isset($_GET['client_petsave_new'])) {
+        $control = "shn_crs_client_addpet";
+    } elseif(isset($_GET['client_listpets'])) {
+        $control = "shn_crs_client_listpets";
+    } elseif(isset($_GET['client_petdelete'])) {
+        $control = "shn_crs_client_petdelete";
+    } elseif(isset($_GET['client_petsave_edit'])) {
+        $control = "shn_crs_client_petdelete";
+    } elseif(isset($_GET['client_timeline'])) {
+        $control = "shn_crs_client_timeline";
+    } elseif(isset($_GET['client_checkout'])) {
+        $control = "shn_crs_client_checkout";
+    } elseif(isset($_GET['client_checkout_save'])) {
+        $control = "shn_crs_client_checkout_save";
     }
 
     if ($control == "") {
@@ -432,4 +446,325 @@ function shn_crs_client_addpet()
 
     // Load form
     include_once 'templates/client_addpet.php';
+}
+
+function shn_crs_client_petsave_new()
+{
+    // Validate group access
+    if (!check_groupAccess(array(1, 2))) {
+        add_error("You do not have permission to check in a client to the shelter registry.");
+        return;
+    }
+
+    global $global;
+
+    // Get the UUID
+    $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
+    $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
+
+    // Get client data
+    $client = get_client($uuid);
+
+    $petName = isset($_REQUEST['pet_name']) ? $_REQUEST['pet_name'] : null;
+    $petType = isset($_REQUEST['pet_type']) ? $_REQUEST['pet_type'] : null;
+    $petGender = isset($_REQUEST['pet_gender']) ? $_REQUEST['pet_gender'] : null;
+    $petAge = isset($_REQUEST['pet_age']) ? $_REQUEST['pet_age'] : null;
+    $petBreed = isset($_REQUEST['pet_breed']) ? $_REQUEST['pet_breed'] : null;
+    $petColor = isset($_REQUEST['pet_color']) ? $_REQUEST['pet_color'] : null;
+
+    // Open a database transaction
+    $global['db']->StartTrans();
+
+    $table = 'crs_pets';
+    $record = array();
+    $record['p_uuid'] = $uuid;
+    $record['pet_name'] = $petName;
+    $record['type_of_pet'] = $petType;
+    $record['sex'] = $petGender;
+    $record['age'] = $petAge;
+    $record['breed'] = $petBreed;
+    $record['color'] = $petColor;
+    $record['created_at'] = date("Y-m-d H:i:s");
+    $global['db']->AutoExecute($table, $record, 'INSERT');
+
+    // Check for any failed transactions
+    $error = $global['db']->HasFailedTrans();
+
+    // Close transaction
+    $global['db']->CompleteTrans();
+
+    if ($error) {
+
+        add_error("There was an error saving the pet to <b>" . $client['full_name'] . "</b>.");
+    } else {
+
+        add_confirmation("You have successfully saved $petName to <b>{$client['given_name']}'s</b> registry informaiton.");
+    }
+}
+
+function shn_crs_client_listpets()
+{
+    // Validate group access
+    if (!check_groupAccess(array(1, 2))) {
+        add_error("You do not have permission to check in a client to the shelter registry.");
+        return;
+    }
+
+    global $global;
+
+    // Get the UUID
+    $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
+    $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
+
+    // Get client data
+    $client = get_client($uuid);
+
+    // Get pets
+    $pets = getPets($uuid);
+
+    // Show list
+    include_once 'templates/client_listpets.php';
+}
+
+
+function shn_crs_client_petdelete()
+{
+    // Validate group access
+    if (!check_groupAccess(array(1, 2))) {
+        add_error("You do not have permission to check in a client to the shelter registry.");
+        return;
+    }
+
+    global $global;
+
+    // Get the UUID
+    $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
+    $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
+
+    $petId = isset($_REQUEST['pet_id']) ? $_REQUEST['pet_id'] : null;
+
+    // Get the pet details
+    $query = "SELECT * FROM crs_pets WHERE id = ?";
+    $result = $global['db']->Execute($query, $petId);
+    $pet = $result->FetchRow();
+
+    // Get client data
+    $client = get_client($uuid);
+
+    // Open a database transaction
+    $global['db']->StartTrans();
+
+    // Setup query
+    $query = "DELETE FROM crs_pets WHERE id = ?";
+    $global['db']->Execute($query, $petId);
+
+    // Check for any failed transactions
+    $error = $global['db']->HasFailedTrans();
+
+    // Close transaction
+    $global['db']->CompleteTrans();
+
+    if ($error) {
+
+        add_error("There was an error deleting the pet.");
+    } else {
+
+        add_confirmation("You have successfully deleted {$pet['pet_name']} from <b>{$client['given_name']}'s</b> registry informaiton.");
+    }
+
+    // list the pets
+    shn_crs_client_listpets();
+}
+
+function shn_crs_client_petsave_edit()
+{
+    // Validate group access
+    if (!check_groupAccess(array(1, 2))) {
+        add_error("You do not have permission to check in a client to the shelter registry.");
+        return;
+    }
+
+    global $global;
+
+    // Get the UUID
+    $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
+    $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
+
+    $petId = isset($_REQUEST['pet_id']) ? shn_db_clean($_REQUEST['pet_id']) : null;
+
+    // Get client data
+    $client = get_client($uuid);
+
+    $petName = isset($_REQUEST['pet_name']) ? $_REQUEST['pet_name'] : null;
+    $petType = isset($_REQUEST['pet_type']) ? $_REQUEST['pet_type'] : null;
+    $petGender = isset($_REQUEST['pet_gender']) ? $_REQUEST['pet_gender'] : null;
+    $petAge = isset($_REQUEST['pet_age']) ? $_REQUEST['pet_age'] : null;
+    $petBreed = isset($_REQUEST['pet_breed']) ? $_REQUEST['pet_breed'] : null;
+    $petColor = isset($_REQUEST['pet_color']) ? $_REQUEST['pet_color'] : null;
+
+    // Open a database transaction
+    $global['db']->StartTrans();
+
+    $table = 'crs_pets';
+    $record = array();
+    $record['pet_name'] = $petName;
+    $record['type_of_pet'] = $petType;
+    $record['sex'] = $petGender;
+    $record['age'] = $petAge;
+    $record['breed'] = $petBreed;
+    $record['color'] = $petColor;
+    $global['db']->AutoExecute($table, $record, 'UPDATE', "id = $petId");
+
+    // Check for any failed transactions
+    $error = $global['db']->HasFailedTrans();
+
+    // Close transaction
+    $global['db']->CompleteTrans();
+
+    if ($error) {
+
+        add_error("There was an error saving the pet to <b>" . $client['full_name'] . "</b>.");
+    } else {
+
+        add_confirmation("You have successfully saved $petName to <b>{$client['full_name']}'s</b> registry informaiton.");
+    }
+
+    shn_crs_client_listpets();
+}
+
+function shn_crs_client_timeline()
+{
+
+    global $global;
+
+    // Get the UUID
+    $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
+    $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
+
+    // Get client data
+    $client = get_client($uuid);
+
+    $sql = "SELECT
+            f1.facility_name,
+            ptf.in_date,
+            ptf.out_date,
+            ptt.dest_facility,
+            f3.facility_name AS dest_name,
+            p.full_name AS user
+        FROM fms_person_to_facility ptf
+        INNER JOIN fms_facility f1 ON f1.facility_uuid = ptf.facility_uuid
+        LEFT JOIN fms_person_to_transfer ptt ON ptt.id = ptf.transfer_id
+        LEFT JOIN person_uuid p ON p.p_uuid = ptt.user
+        LEFT JOIN fms_facility f2 ON f2.facility_uuid = ptt.src_facility
+        LEFT JOIN fms_facility f3 ON f3.facility_uuid = ptt.dest_facility
+        WHERE ptf.p_uuid = ?
+        ORDER BY ptf.in_date ASC";
+
+    // Execute query
+    try {
+        $sql = $global['db']->Prepare($sql);
+        $results = $global['db']->Execute($sql, $uuid);
+    } catch (exception $e) {
+        add_error("<pre>" . $e->getMessage() . "</pre>");
+    }
+
+
+    include_once 'templates/client_timeline.php';
+}
+
+function shn_crs_client_checkout()
+{
+
+    // Get the UUID
+    $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
+    $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
+
+    // Get client data
+    $client = get_client($uuid);
+
+    // Set form properties
+    $act = 'client_checkout_save';
+    $formOpts = array('enctype' => 'enctype="multipart/form-data"');
+    $submitOpts = 'name="submit" class=""';
+
+    include_once 'templates/client_checkout.php';
+}
+
+function shn_crs_client_checkout_save()
+{
+    global $global;
+
+    // Get the UUID
+    $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
+    $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
+
+    // exit date
+    isset($_REQUEST['checkOutDate']) ? $outDate = $_REQUEST['checkOutDate'] : $outDate = null;
+    isset($_REQUEST['exitHour']) ? $exitHour = $_REQUEST['exitHour'] : $exitHour = null;
+    isset($_REQUEST['exitMinute']) ? $exitMinute = $_REQUEST['exitMinute'] : $exitMinute = null;
+
+    // Get client data
+    $client = get_client($uuid);
+
+    // Open a database transaction
+    $global['db']->StartTrans();
+
+    // Format the exit date in a SQL ASNI format
+    $outDate = "$outDate $exitHour:$exitMinute:00";
+
+    // Lookup client facility
+    $query = "SELECT MAX(in_date) AS in_date FROM fms_person_to_facility WHERE p_uuid = ? ";
+    $sql = $global['db']->Prepare($query);
+
+    // get the member's current facility
+    $result = $global['db']->Execute($sql, $uuid);
+    $ptf = $result->FetchRow();
+    $whereStr = "in_date = " . shn_db_clean($ptf['in_date']);
+
+    // Update the table
+    $table = 'fms_person_to_facility';
+    $record = array();
+    $record['out_date'] = $outDate;
+    $global['db']->AutoExecute($table, $record, 'UPDATE', $whereStr);
+
+    // Set person status
+    setPersonStatus('out', $uuid);
+
+    // Check for any failed transactions
+    $error = $global['db']->HasFailedTrans();
+
+    // Close transaction
+    $global['db']->CompleteTrans();
+
+    if ($error) {
+
+        add_error("There was an error processing <strong>" . $client['given_name']. $client['family_name'] . "</strong> checkout.");
+    } else {
+
+        add_confirmation("You have successfully checked out <strong>" .
+        $client['given_name']. $client['family_name'] . "</strong> from the " .
+        $client['facility_name'] . " shelter registry.");
+    }
+
+    // Get client data again
+    $client = get_client($uuid);
+
+    // Get client skills
+    $skillsList = get_client_skills($uuid);
+
+    include_once 'templates/client_view.php';
 }

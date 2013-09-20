@@ -18,6 +18,8 @@ global $shn_tabindex;
 $shn_tabindex = 0;
 $helpid = 0;
 ?>
+<script type="text/javascript" src="res/js/jquery-1.6.4.min.js" ></script>
+<script type="text/javascript" src="res/js/jquery.validate.min.js" ></script>
 <script type="text/javascript">
     $(document).ready(function(){
     
@@ -42,23 +44,25 @@ $helpid = 0;
 
 <?php
 shn_form_fopen($act, null, $formOpts);
-
 if ($act == "client_petsave_edit")
 
     shn_form_hidden(array('uuid' => $uuid, 'pet_id' => $petId));
 
     shn_form_fsopen(_t('Details'));
 
-        shn_form_text(_t("Name"),'pet_name','size="20"', array('req'=>true, 'help' => 'Pet Name'));
-        shn_form_text(_t("Type of Pet"),'pet_type','size="20"', array('req'=>true, 'help' => 'Pet Type'));
-        shn_form_text(_t("Gender"),'pet_gender','size="20"', array('req'=>true, 'help' => 'Pet Gender'));
-        shn_form_text(_t("Age"),'pet_age','size="20"', array('help' => 'Pet Age'));
-        shn_form_text(_t("Breed"),'pet_breed','size="20"', array( 'help' => 'Pet Breed'));
-        shn_form_text(_t("Color"),'pet_color','size="20"', array('help' => 'Pet Color'));
+        shn_form_text(_t("Name"),'pet_name','size="20"', array('req'=>true, 'help' => 'Pet Name', 'value' => $pet['pet_name']));
+        shn_form_text(_t("Type of Pet"),'pet_type','size="20"', array('req'=>true, 'help' => 'Pet Type', 'value' => $pet['type_of_pet']));
+        shn_form_text(_t("Gender"),'pet_gender','size="20"', array('req'=>true, 'help' => 'Pet Gender', 'value' => $pet['sex']));
+        shn_form_text(_t("Age"),'pet_age','size="20"', array('help' => 'Pet Age', 'value' => $pet['age']));
+        shn_form_text(_t("Breed"),'pet_breed','size="20"', array( 'help' => 'Pet Breed', 'value' => $pet['breed']));
+        shn_form_text(_t("Color"),'pet_color','size="20"', array('help' => 'Pet Color', 'value' => $pet['color']));
 
     shn_form_fsclose();
 
     shn_form_submit("Save", "class=\"styleTehButton\"");;
 
-shn_form_fclose();
+if ($act == "client_petsave_edit") { ?>
+    <a href="index.php?mod=crs&amp;act=client_petdelete&amp;pet_id=<?php echo $pet['id'] ?>">Delete</a>
+<?php }
+    shn_form_fclose();
 ?>

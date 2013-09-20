@@ -587,12 +587,12 @@ function shn_rap_commitPerson($saveImage = false) {
 	isset($_SESSION['rap']['entry']['physical'])       ? $physical    = "'".mysql_real_escape_string($_SESSION['rap']['entry']['physical'])."'"       : $physical    = "NULL";
 	isset($_SESSION['rap']['entry']['last_seen'])      ? $seen        = "'".mysql_real_escape_string($_SESSION['rap']['entry']['last_seen'])."'"      : $seen        = "NULL";
 	isset($_SESSION['rap']['entry']['last_clothing'])  ? $clothing    = "'".mysql_real_escape_string($_SESSION['rap']['entry']['last_clothing'])."'"  : $clothing    = "NULL";
-	isset($_SESSION['rap']['entry']['comments'])       ? $comments    = "'".mysql_real_escape_string($_SESSION['rap']['entry']['comments'])."'"       : $comments    = "NULL";
 
-	// NULL values that come in as "select"
-	if($race     == "'select'") { $race     = "NULL"; }
-	if($religion == "'select'") { $religion = "NULL"; }
-	if($gender   == "'select'") { $gender   = "NULL"; }
+    // NULL values that come in as "select"
+    if($race     == "'select'") { $race     = "NULL"; }
+    if($religion == "'select'") { $religion = "NULL"; }
+    if($gender   == "'select'") { $gender   = "NULL"; }
+	isset($_SESSION['rap']['entry']['comments'])       ? $comments    = "'".mysql_real_escape_string($_SESSION['rap']['entry']['comments'])."'"       : $comments    = "NULL";
 	if($hair     == "'select'") { $hair     = "NULL"; }
 	if($eye      == "'select'") { $eye      = "NULL"; }
 	if($skin     == "'select'") { $skin     = "NULL"; }
