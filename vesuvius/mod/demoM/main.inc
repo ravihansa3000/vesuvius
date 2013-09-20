@@ -2,7 +2,7 @@
 /**
  * @name         Demo Manager
  * @version      13
- * @package      pref
+ * @package      Demo instance
  * @author       Sneha Bhattacharya sneha.22.7@gmail.com
  * @about        Developed in whole or part by the U.S. National Library of Medicine
  * @link         https://pl.nlm.nih.gov/about
@@ -118,16 +118,23 @@ function shn_demoM_reqInstance(){
 
 	$user=$_SESSION['user'];
 	
-	$query="select created from flag where user = '$user';";
+	$query="select * from DemoReqStatus where username = '$user';";
 	$res=mysql_query($query);
 	$row=mysql_fetch_array($res);
-	$val=$row['created'];
+	$val=$row['status'];
 	
 	
-	if($val==1){
+	    if($val=="CREATED"){
 		$result="select * from created where username = '$user';";
 		$res=mysql_query($result); 	
+		
 		$row = mysql_fetch_array($res, MYSQL_ASSOC);
+		$temp=$row['exptime'];
+        $date = new DateTime("$temp");
+        $now = new DateTime();
+        $url = "http://$_SERVER[HTTP_HOST]/$row[sname]";
+
+		//echo "difference " . $interval->m." months, ".$interval->d." days ";
 		echo "<br><div id=\"home\">";
 		 echo '
 		<div id="rezMain" class="mainArea" style="opacity: 1; width: 300px;">
@@ -150,31 +157,25 @@ function shn_demoM_reqInstance(){
 				</tr>
 				<tr>
 					<td style="padding-left: 8px; text-align: right;" class="mainRowOdd">URL</td>
-					<td style="padding-left: 8px; text-align: left; font-weight: bold;" class="mainRowOdd"><a href=\"'.$row['url'].'\">'.$row['url'].'</a></td>
+					<td style="padding-left: 8px; text-align: left; font-weight: bold;" class="mainRowOdd"><a href=\"'.$url.'\">'.$url.'</a></td>
+				</tr>
+				<tr>
+					<td style="padding-left: 8px; text-align: right;" class="mainRowEven">Time Left</td>
+					<td style="padding-left: 8px; text-align: left; font-weight: bold;" class="mainRowEven">'. $date->diff($now)->format("%d days, %h hours and %i minutes") .'</td>
 				</tr>
 				</tbody>
 			</table>
-		</div>
-	';
+		</div>';
+		echo "<a href=\"".$url."\">".$url."</a>";
 	echo "</div>";
      		
-
-		while($row = mysql_fetch_array($res, MYSQL_ASSOC)){
 	
-		 $temp=$row['exptime'];
-         $date = new DateTime("$temp");
-         $now = new DateTime();
-        
-	     
-
-    
-		//echo "<tr><td>" . $row['sname'] . "</td><td>" . $row['Db_name'] . "</td><td>" . $left . "</td></tr>";
 
 	}
 
+	else if($val=="REQUESTED"){
+		echo "<br><br><h4>you have already requested for one demo instance. Please have patience till our admin grants processes request</h4>";
 	}
-
-	
 	else{
 	$policy = shn_get_password_policy();
 
@@ -215,18 +216,40 @@ function shn_demoM_reqInstance(){
 
 }
 function shn_demoM_request()
-{
+{	
+
+		global $global;
+
+		$db = $global['db'];
+		
 	if ((isset($_POST['sname'])) && (isset($_POST['org_name']))&& (isset($_POST['username'])) && (isset($_POST['pswrd'])) && (isset($_POST['email'])) )
-{
-	$ret = shn_demoM_addUser($_POST['sname'],($_POST['org_name']),($_POST['username']),($_POST['pswrd']) , ($_POST['email']));
-	if($ret) {
-			$msg = "A new demo instance request has been sent. Please wait till our admin confirms.";
-			add_confirmation($msg);
+	   { 
+	   	$rt=shn_validate_password($_POST['username'],$_POST['pswrd']);
+	   	if($rt==TRUE){
+	if((isset($_POST['sname']) && $_POST['sname'] != null) ){
+		$q = "
+			SELECT *
+			FROM created
+			where sname = '".mysql_real_escape_string(trim($_POST['sname']))."';
+			";
+		$res = mysql_query($q);
+		
+		if((mysql_num_rows($res)==0)) {
+			$uuid = shn_create_uuid($type='person');
+			$ret = shn_demoM_addUser($_POST['sname'],($_POST['org_name']),($_POST['username']),($_POST['pswrd']) , ($_POST['email']), $uuid);
 			
-		}
-}
-}
-function shn_demoM_addUser($sname,$org_name,$username,$pswrd,$email){
+		} else {
+			add_error(SHN_AUTH_ERR_SNAME_EXISTS);
+			$error=true;
+			return false;
+			
+		}}}
+
+	
+}}
+
+
+function shn_demoM_addUser($sname,$org_name,$username,$pswrd,$email,$uuid){
 
 		
 		// Create the encrypted password
@@ -242,17 +265,18 @@ function shn_demoM_addUser($sname,$org_name,$username,$pswrd,$email){
 			INSERT INTO DemoUser(sname,org_name,time,username,pswrd,email)
 			VALUES('".mysql_real_escape_string($sname)."','".mysql_real_escape_string($org_name)."', now(),'".mysql_real_escape_string($username)."','".$stored_password."','".mysql_real_escape_string($email)."');
 		";
-		
+		$s= "
+			INSERT INTO DemoReqStatus(uuid,username,status)
+			VALUES('".$uuid."','".mysql_real_escape_string($username)."','REQUESTED');";
+		mysql_query($s);
+
 		$res = mysql_query($q);
 		if($res==true)
 		{
 			$msg = "Your request will be processed by the admin";
 			add_confirmation($msg);
 		}
-		if($res == false) {
-			add_error($db->ErrorMsg());
-			
-		}
+		
 
 		$p ="INSERT INTO notify(sname,org_name,time,username,pswrd,email)
 			VALUES('".mysql_real_escape_string($sname)."','".mysql_real_escape_string($org_name)."', now(),'".mysql_real_escape_string($username)."','".$stored_password."','".mysql_real_escape_string($email)."');";
@@ -261,26 +285,26 @@ function shn_demoM_addUser($sname,$org_name,$username,$pswrd,$email){
 
 		$r = "INSERT INTO flag (user) VALUES ('".mysql_real_escape_string($username)."');";
 		mysql_query($r);
-}
- function shn_demoM_adminDashboard() {
-
+} 
+ 	function shn_demoM_adminDashboard(){
 	global $global;
 	$q="select * from created;";
 	$res=mysql_query($q);
 	echo "<table class=\"emTable\">
 			<tr>
-				<td style=\"font-size: 120%; padding-left: 8px;\" ><b>Short name</b></td>
-				<td style=\"font-size: 120%; padding-left: 8px;text-align: center;\" ><b>Database</b></td>
-				<td style=\"font-size: 120%; padding-left: 8px;text-align: center;\" ><b>Time</b></td>
+				<td style=\"font-size: 120%; padding-left: 8px;\" ><b>Organisation</b></td>
+				<td style=\"font-size: 120%; padding-left: 8px;text-align: center;\" ><b>Short Name</b></td>
+				<td style=\"font-size: 120%; padding-left: 8px;text-align: center;\" ><b>URL</b></td>
+				<td style=\"font-size: 120%; padding-left: 8px;text-align: center;\" ><b>Email</b></td>
 			</tr>";
+	$users = array();
+	$count = 0;
 	while($row = mysql_fetch_array($res, MYSQL_ASSOC))
 	{
-		echo "<tr><td>" . $row['sname'] . "</td><td>" . $row['Db_name'] . "</td><td>" . $row['ctime'] ."</td></tr>";
+		echo "<tr><td>" . $row['org_name'] . "</td><td>" . $row['sname'] . "</td><td>" . $row['url'] ."</td><td>" . $row['email'] . "</tr>" ;
+		
 
 	}
-	echo "</table>";
-
-	
 }
 
 function shn_demoM_pendingNotifications(){
@@ -343,21 +367,29 @@ function shn_demoM_createInstance($uuid) {
 	echo "</div>";
 }
 
-function shn_demoM_create2() {
+	function shn_demoM_create2() {
 
 	shn_demoM_createInstance();
+		// Create the encrypted password
+		$salt1           = _shn_generateSalt();
+		$salt2           = _shn_generateSalt();
+		$salt            = $salt1.$salt2;
+		$user_password   = substr($pswrd, 0, 4).$salt.substr($user_password, 4);
+		$stored_password = md5(trim($pswrd));
+		//$confirmation    = md5(uniqid(rand(), true)); // code used to activate account
 	if ((isset($_POST['sname'])) && (isset($_POST['db_name']))&& (isset($_POST['db_user'])) && (isset($_POST['pswrd'])) && (isset($_POST['hname'])) && (isset($_POST['exptime'])) && (isset($_POST['email'])) && (isset($_POST['username'])))
 	 {	
-	   	$ret = shn_demoM_create3($_POST['sname'], $_POST['db_name'], $_POST['pswrd'], $_POST['hname'], $_POST['db_user'], $_POST['exptime']);
-	   	$hname=$_POST['hname'];
-	   	$sname=$_POST['sname'];
-		$url="$hname/$sname";
+	   	$ret = shn_demoM_create3($_POST['sname'], $_POST['db_name'], $_POST['pswrd'], $_POST['hname'], $_POST['db_user'], $_POST['exptime'],$salt,$stored_password);
+	   	
+		//$url="$hname/$sname";
+		$url = "http://$_SERVER[HTTP_HOST]/$_POST[sname]";
+		//echo "<a href=\"".$actual_link."\">".$actual_link."</a>";
 	    
 	   	 $p ="INSERT INTO created(sname,db_name,pswrd,ctime,exptime,email,username,hname,url)
 			VALUES('".mysql_real_escape_string($_POST['sname'])."','".mysql_real_escape_string($_POST['db_name'])."','".$_POST['pswrd']."',now(),'".$_POST['exptime']."','".mysql_real_escape_string($_POST['email'])."','".mysql_real_escape_string($_POST['username'])."','".mysql_real_escape_string($_POST['hname'])."','".$url."');";
 		$res=mysql_query($p);
-		$user=$_POST['db_user'];
-		$q="update flag set created = 1 where user = '".$user."';";
+		$user=$_POST['username'];
+		$q="update DemoReqStatus set status = 'CREATED' where username = '".$user."';";
 		mysql_query($q);
 		$sname=$_POST['sname'];
 		$r="delete from notify where sname='$sname';";
@@ -372,9 +404,9 @@ function shn_demoM_create2() {
 
 
 	
-function shn_demoM_create3($sname,$db_name,$pswrd,$hname,$db_user,$exptime)
+function shn_demoM_create3($sname,$db_name,$pswrd,$hname,$db_user,$exptime,$salt,$stored_password)
 {	
-	$output =shell_exec("sh /var/www/project_vesu/vesuvius/vesuvius/mod/demoM/clone1.sh $sname $db_name $pswrd $hname $db_user");
+	$output =shell_exec("sh /var/www/project_vesu/vesuvius/vesuvius/mod/demoM/clone1.sh $sname $db_name $pswrd $hname $db_user $salt $stored_password");
 	
 }	
 		/**	add_confirmation($msg);
@@ -387,7 +419,7 @@ function shn_demoM_sendUserMail($sname){
 	$res=mysql_query($q);
 	$row = mysql_fetch_array($res, MYSQL_ASSOC);
 	$email=$row['email'];
-	$url = makeBaseUrl() .$shortname;
+	//$url = "http://$_SERVER[ho]"
 	
 	$subject  = "Your demo instance details...";
 
@@ -460,6 +492,7 @@ function shn_demoM_deleteInstance()
 	echo "<div id=\"formcontainer\">";
 	shn_form_fopen("delete2", null);
 	shn_form_text("Shortname",    'sname',    'size="30"', $extra_opts);
+	shn_form_text("Database",    'dbname',    'size="30"', $extra_opts);
 	shn_form_fsclose();
 	shn_form_submit(_t("Submit"), "class=\"styleTehButton\"");
 	echo "</br><br/><br/>";
@@ -468,82 +501,14 @@ function shn_demoM_deleteInstance()
 	//shn_demoM_delete($sname);
 }
 function shn_demoM_delete2(){
-	$ret=shn_demoM_delete3($sname);
+	$sname=$_POST['sname'];
+	$dbname=$_POST['dbname'];
+	$ret=shn_demoM_delete3($sname,$dbname);
 }
-function shn_demoM_delete3($sname)
+function shn_demoM_delete3($sname,$dbname)
 {
-	$out =shell_exec("sh /home/sneha/unclone.sh $sname $val");
+	$out =shell_exec("sh /home/sneha/unclone.sh $sname $dbname");
 }
-function demoM_show_notifications($internal = FALSE) {
-
-	global $conf;
-	global $global;
-	$htmlLog = "";
-	$htmlMain = "";
-	$total = 0;
-	$char = "<span style=\"text-shadow: 1px 1px 1px #000;\">▶</span>";
-
-	
-		echo "<table class=\"emTable\">
-			<tr>
-				<td style=\"font-size: 120%; padding-left: 8px;\" ><b>Organisation</b></td>
-				<td style=\"font-size: 120%; padding-left: 8px;text-align: center;\" ><b>Short Name</b></td>
-				<td style=\"font-size: 120%; padding-left: 8px;text-align: center;\" ><b>Requested on</b></td>
-			</tr>";
-
-	// get list of hospitals
-	$q = "
-		SELECT *
-		FROM notify;
-	";
-	$result=mysql_query($q);
-
-	// find out how many hospitals we have and load them into an array
-	$notify = array();
-	$count = 0;
-	while($row=mysql_fetch_assoc($result) ){
-		$notify[$count] = $row;
-		$count++;
-	}
-	$total = $count;
-
-	$i = 1; // we start with the 2nd row of teh table (header?) :)
-	$eo = 0; // 2nd row is odd ~ of course u knew that computers start counting at 0 :P
-	while($i <= $count) {
-		$row           = $notify[$i-1];
-		$type          = "<b><span style=\"color: blue;\">".$char."</span> &nbsp; </b>";
-		$org_name          = "<b>".$row['org_name']."</b>";
-		$sname     = $row['sname'];
-		//$npi           = $row['npi'];
-
-		// find class to color the row...
-		if(($eo % 2) == 0) {
-			$evenOddClass = "mainRowEven";
-		} else {
-			$evenOddClass = "mainRowOdd";
-		}
-
-
-		$i++;
-		$eo++;
-	}
-	// end hospitals
-	////////////////////////////////////////////////////////////////////////////////////////////////..................................
-
-	
-	$htmlMain .= "</table>";
-
-	
-
-	//---- internally, no ajax, just pass back data
-	if ( $internal ) {
-		return $htmlMain;
-	}
-}
-
-
-?>
-
 
 
 

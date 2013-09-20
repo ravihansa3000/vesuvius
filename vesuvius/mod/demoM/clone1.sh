@@ -6,6 +6,8 @@ dbname=${2}
 pswrd=${3}
 host=${4}
 dbuser=${5}
+salt=${6}
+storedPassword=${7}
 #echo "enter db user"
 #read dbUser
 echo $sname
@@ -58,10 +60,14 @@ ln -s /var/www/${sname}/vesuvius/www /var/www/${sname}/www
  #mkdir /var/www/${sname}/vesuvius/www/tmp/rap_cache ;
  #mkdir /var/www/${sname}/vesuvius/www/tmp/mpres_cache ;
  #deletes the root user from database
- #p1="use ${dbname};"
- #p2="DELETE FROM `users` WHERE `users`.`user_id` = 1 ; "
- #del="${p1}${p2}";
- #mysql -u${dbuser} -p${pswrd} -e "$del";
+ p1="use ${2};"
+ p2="DELETE FROM `users` WHERE `user_id` = 1 ; "
+ del="${p1}${p2}";
+ mysql -u${5} -p${3} -e "$del";
+
+ p3="INSERT INTO `users` (user_id,p_uuid,user_name,password,salt) values (1, 1, ${5}, ${7}, ${6});"
+ mysql -u${5} -p${3} -e "$p3";
+
 
 #sudo chown -R sneha:www-data {$sname}
 #sudo chmod -R g+s {$sname}
