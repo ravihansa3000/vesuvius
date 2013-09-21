@@ -928,7 +928,7 @@ function shn_plus_registerAll($namespace) {
     shn_plus_registerOne($server, 'pull',
 		array(
 			'in' => array(
-                'incidentId'    => 'xsd:integer',
+                'presharedKey'    => 'xsd:integer',
                 'lastSyncDate'    => 'xsd:string',
 			),
 			'out' => array(
@@ -949,7 +949,7 @@ function shn_plus_registerAll($namespace) {
                 'new'           => 'xsd:integer',
                 'updates'       => 'xsd:string',
                 'syncDateTime'  => 'xsd:string',
-                'incidentId'    => 'xsd:string', 
+                'presharedKey'    => 'xsd:string', 
                 'master_wsdl'   => 'xsd:string',
 			),
 			'out' => array(
@@ -960,6 +960,47 @@ function shn_plus_registerAll($namespace) {
 		),
 		$namespace,
 		"push person data to get relevant updates for synchronization"
+	);
+    
+    /** sync_request to establish Native Sync between two instances */
+    shn_plus_registerOne($server, 'sync_req',
+		array(
+			'in' => array(
+                'incidentName'  => 'xsd:string',
+                'instanceUUID'  => 'xsd:string',
+                'mode'          => 'xsd:string',
+                'role'          => 'xsd:string',
+                'other_confID'  => 'xsd:string',
+                'status'        => 'xsd:string',
+                'created_time'  => 'xsd:string',
+			),
+			'out' => array(
+                'req_status'    => 'xsd:string',
+				'message'       => 'xsd:string',
+				'errorCode'     => 'xsd:integer',
+				'errorMessage'  => 'xsd:string'
+			)
+		),
+		$namespace,
+		"sync_request to establish Native Sync between two instances..."
+	);
+    
+    /** sync_ack acknowledge for the sync request */
+    shn_plus_registerOne($server, 'sync_ack',
+		array(
+			'in' => array(
+                'preshared_key' => 'xsd:string',
+                'status'        => 'xsd:string',
+                'activated_time'=> 'xsd:string',
+			),
+			'out' => array(
+				'respond'       => 'xsd:string',
+				'errorCode'     => 'xsd:integer',
+				'errorMessage'  => 'xsd:string'
+			)
+		),
+		$namespace,
+		"sync_ack acknowledge for the sync request..."
 	);
 }
 

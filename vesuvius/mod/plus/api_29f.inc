@@ -2708,10 +2708,16 @@ function getNullTokenList($tokenStart, $tokenEnd, $key) {
 }
 
 /** Returns list of newly created records & updates. */
-function pull($incidentId, $lastSyncDate) {
+function pull($presharedKey, $lastSyncDate) {
     
 	shn_plus_logAccess("pull");
 	global $global;
+    
+    $ids = explode("##", $presharedKey);
+    $syncConfDB = new SyncConfDB();
+    $syncConfDB->id = $ids[1];   //latter part is for slave
+    $syncConfDB->load();
+    $incidentId = $syncConfDB->incident_id;
     
     /** Newly created person records from last sync. */
     $q = "
@@ -2761,10 +2767,16 @@ function pull($incidentId, $lastSyncDate) {
 	);
 }
 
-function push($new, $updates, $syncDateTime, $incidentId, $master_wsdl) {
+function push($new, $updates, $syncDateTime, $presharedKey, $master_wsdl) {
     
     shn_plus_logAccess("push");
 	global $global;
+    
+    $ids = explode("##", $presharedKey);
+    $syncConfDB = new SyncConfDB();
+    $syncConfDB->id = $ids[1];   //latter part is for slave
+    $syncConfDB->load();
+    $incidentId = $syncConfDB->incident_id;
     
     $newRecords = json_decode($new);
     foreach ($newRecords as $serP) {
@@ -2772,9 +2784,6 @@ function push($new, $updates, $syncDateTime, $incidentId, $master_wsdl) {
         $per->postSerialize($global['db']);
         $per->init();       // these are new records... 
         $per->insert();
-//        echo 'test: ' . $per->full_name;
-//        echo '<pre>';
-//        print_r($per);
     }
     
     $updateRecords = json_decode($updates);
@@ -2815,6 +2824,119 @@ function push($new, $updates, $syncDateTime, $incidentId, $master_wsdl) {
 		'errorCode'     => (int)0,
 		'errorMessage'  => null
 	);
+}
+
+require_once($global['approot']."/mod/lpf/lib_lpf.inc");
+include_once ($global['approot'].'/mod/sync/SyncConfDB.php');
+
+/** Sync Request implementation */
+function sync_req($incidentName, $instanceUUID, $mode, $role , $other_confID , $status , $created_time) {
+    
+	shn_plus_logAccess("sync_req");
+	global $global;
+    global $conf;
+    
+    $syncConfDB = new SyncConfDB();
+    $resMessage; 
+    $resStatus;
+    if($syncConfDB->isInstanceConfigured($instanceUUID)) {
+        //error
+        $resMessage = "Instance was already configured !";
+        $resStatus = "FAILED";
+    } else {
+        
+        $q = "
+            SELECT `incident_id`
+            FROM `incident`
+            WHERE `name` = '".mysql_real_escape_string($incidentName)."'
+        ";
+        $incident     = $global['db']->Execute($q);
+        $incidentId   = $incident->fields['incident_id'];
+
+        $syncConfDB = new SyncConfDB();
+        $syncConfDB->created_time   = $created_time;
+        $syncConfDB->role           = $role;
+        $syncConfDB->incident_name  = $incidentName;
+        $syncConfDB->incident_id    = $incidentId;
+        $syncConfDB->instance_uuid  = $instanceUUID;
+        $syncConfDB->preshared_key  = $other_confID . "##";
+        $syncConfDB->mode           = $mode;
+        $syncConfDB->status         = $status;
+
+        $confID = $syncConfDB->save();
+        if($confID != NULL) {
+            
+            $p = "
+                SELECT  `contact_value`
+                FROM    `contact`
+                WHERE   `p_uuid` = '".mysql_real_escape_string($_SESSION['user_p_uuid'])."'
+                AND     `opt_contact_type` = email
+                ";
+            $contact  = $global['db']->Execute($q);
+            $toEmail  = $contact->fields['contact_value'];
+            
+            $p = "
+                SELECT  `full_name`
+                FROM    `person_uuid`
+                WHERE   `p_uuid` = '".mysql_real_escape_string($_SESSION['user_p_uuid'])."'
+                ";  
+            $person  = $global['db']->Execute($q);
+            $toName  = $person->fields['full_name'];
+            
+            $p = new pop();
+            $subject = "Please confirm the registration of your new PL user account";
+            $bodyHTML =
+            "Thank you for registering.<br><br>"
+            ."You <b>must</b> click on this link in order for the registration process to be completed:<br><a href=\"".$link."\">".$link."</a><br><br>"
+            ."Once completed, your account will be active allowing you to login the Person Locator web site and other devices which utilize its web services.<br><br><br>"
+            ."<br><img src=\"http://goo.gl/BqfCv\">";
+            $bodyAlt =
+            "Thank you for registering.\n\n"
+            ."You must click on this link in order for the registration process to be completed:\n".$link."\n"
+            ."Once completed, your account will be active allowing you to login the Person Locator web site and other devices which utilize its web services.\n\n\n"
+            ."- ".$conf['site_name'];
+            $p->sendMessage($toEmail, $toName, $subject, $bodyHTML, $bodyAlt);
+            
+            $resMessage = "successfully saved sync request, we will get back to u soon";
+            $resStatus = "SUCCESS";
+        }
+        else {
+            $resMessage = "Failed to save";
+            $resStatus = "FAILED";
+        }
+    }
+    return array(
+        'req_status'    => (string)json_encode($resStatus),
+        'message'       => (string)json_encode($resMessage),
+        'errorCode'     => (int)0,
+        'errorMessage'  => null
+    );
+    
+}
+
+/** Sync Acknoledgement implementation */
+function sync_ack($preshared_key , $status , $activated_time) {
+    
+	shn_plus_logAccess("sync_req");
+	$confIDs = explode('##', $preshared_key);
+    $master_confID = $confIDs[0];
+    
+    $syncConfDB = new SyncConfDB();
+    $syncConfDB->id = $master_confID;
+    $syncConfDB->load();
+    
+    $syncConfDB->preshared_key = $preshared_key;
+    $syncConfDB->status = $status;
+    $syncConfDB->save();
+    
+    //starts the cron-job
+    
+    return array(
+        'respond'    => (string)json_encode("Finish the configuration.."),
+        'errorCode'     => (int)0,
+        'errorMessage'  => null
+    );
+    
 }
 
 

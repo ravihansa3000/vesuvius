@@ -2436,10 +2436,13 @@ DROP TABLE IF EXISTS `sync_conf`;
 CREATE TABLE `sync_conf` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `created_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `role` varchar(10) NOT NULL,
+  `incident_name` varchar(50) NOT NULL,
   `incident_id` bigint(20) NOT NULL,
   `instance_uuid` varchar(64) NOT NULL,
-  `foreign_incident_id` bigint(20) NOT NULL;
+  `preshared_key` varchar(50) ,
   `mode` varchar(10) NOT NULL, 
+  `status` varchar(10) NOT NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `sync_conf_ibfk_1` FOREIGN KEY (`incident_id`) REFERENCES `incident` (`incident_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
