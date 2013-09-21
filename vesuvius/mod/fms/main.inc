@@ -45,6 +45,9 @@ function shn_fms_default()
         $control = "shn_fms_displaymap";
     } elseif(isset($_GET['import'])) {
         $control = "shn_fms_import";
+    } elseif(isset($_GET['facility_geo'])) {
+        $control = "shn_fms_import";
+
     }
 
     if ($control == "") {

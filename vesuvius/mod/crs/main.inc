@@ -9,7 +9,7 @@ require_once 'inc/client_definition.inc';
 require_once($global['approot'].'/inc/lib_xajax.inc');
 require_once($global['approot'].'/mod/crs/xajax.inc');
 
-shn_xajax_registerFunction('crs_test');
+shn_xajax_registerFunction('crs_search');
 
 function shn_crs_default()
 {
@@ -82,6 +82,14 @@ function shn_crs_default()
         $control = "shn_crs_client_checkout";
     } elseif(isset($_GET['client_checkout_save'])) {
         $control = "shn_crs_client_checkout_save";
+    } elseif(isset($_GET['client_checkin'])) {
+        $control = "shn_crs_client_checkin";
+    } elseif(isset($_GET['client_checkin_save'])) {
+        $control = "shn_crs_client_checkin_save";
+    } elseif(isset($_GET['client_transfer'])) {
+        $control = "shn_crs_client_transfer";
+    } elseif(isset($_GET['client_transfer_save'])) {
+        $control = "shn_crs_client_transfer_save";
     }
 
     if ($control == "") {
@@ -757,6 +765,212 @@ function shn_crs_client_checkout_save()
 
         add_confirmation("You have successfully checked out <strong>" .
         $client['given_name']. $client['family_name'] . "</strong> from the " .
+        $client['facility_name'] . " shelter registry.");
+    }
+
+    // Get client data again
+    $client = get_client($uuid);
+
+    // Get client skills
+    $skillsList = get_client_skills($uuid);
+
+    include_once 'templates/client_view.php';
+}
+
+function shn_crs_client_checkin()
+{
+    // Validate group access
+    if (!check_groupAccess(array(1, 2))) {
+        add_error("You do not have permission to check in a client to the shelter registry.");
+        return;
+    }
+
+    // Validate group access
+    if (!check_validIncident()) {
+        add_error("You must select an open event before attempting to perform this action.");
+
+        shn_crs_default();
+        return;
+    }
+
+    // Get the UUID
+    $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
+    $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
+
+    // Get client data
+    $client = get_client($uuid);
+
+    // Get facilities
+    $facilities = get_facilities();
+
+    // Set form properties
+    $act = 'client_checkin_save';
+    $formOpts = array('enctype' => 'enctype="multipart/form-data"');
+    $submitOpts = 'name="submit" class=""';
+
+    include_once 'templates/client_checkin.php';
+}
+
+function shn_crs_client_checkin_save()
+{
+    global $global;
+
+    // Get the UUID
+    $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
+    $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
+
+    // entry date
+    isset($_REQUEST['checkInDate']) ? $inDate = $_REQUEST['checkInDate'] : $inDate = null;
+    isset($_REQUEST['entryHour']) ? $entryHour = $_REQUEST['entryHour'] : $entryHour = null;
+    isset($_REQUEST['entryMinute']) ? $entryMinute = $_REQUEST['entryMinute'] : $entryMinute = null;
+
+    // Facility
+    isset($_REQUEST['facility']) ? $facility = $_REQUEST['facility'] : $facility = null;
+
+    // Get client data
+    $client = get_client($uuid);
+
+    // Open a database transaction
+    $global['db']->StartTrans();
+
+    // Format the entry date in a SQL ASNI format
+    $inDate = "$inDate $entryHour:$entryMinute:00";
+
+    $table = 'fms_person_to_facility';
+    $record = array();
+    $record['p_uuid'] = $uuid;
+    $record['facility_uuid'] = $facility;
+    $record['in_date'] = $inDate;
+    $global['db']->AutoExecute($table, $record, 'INSERT');
+
+    // Set person status
+    setPersonStatus('in', $uuid);
+
+    // Check for any failed transactions
+    $error = $global['db']->HasFailedTrans();
+
+    // Close transaction
+    $global['db']->CompleteTrans();
+
+    if ($error) {
+
+        add_error("There was an error processing <strong>" . $client['given_name']." ".$client['family_name'] . "</strong> checkout.");
+    } else {
+
+        add_confirmation("You have successfully checked in <strong>" .
+        $client['given_name']." ".$client['family_name'] . "</strong> to the " . $client['facility_name']
+        . " shelter facility.");
+    }
+
+    // Get client data
+    $client = get_client($uuid);
+
+    // Get client skills
+    $skillsList = get_client_skills($uuid);
+
+    include_once 'templates/client_view.php';
+}
+
+function shn_crs_client_transfer()
+{
+
+    // Get the UUID
+    $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
+    $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
+
+    // Get client data
+    $client = get_client($uuid);
+
+    // Get facilities
+    $facilities = get_facilities();
+
+    // Set form properties
+    $act = 'client_transfer_save';
+    $formOpts = array('enctype' => 'enctype="multipart/form-data"');
+    $submitOpts = 'name="submit" class=""';
+
+    include_once 'templates/client_transfer.php';
+}
+
+function shn_crs_client_transfer_save()
+{
+    global $global;
+
+    // Get the UUID
+    $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
+    $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
+
+    // exit date
+    isset($_REQUEST['checkOutDate']) ? $outDate = $_REQUEST['checkOutDate'] : $outDate = null;
+    isset($_REQUEST['exitHour']) ? $exitHour = $_REQUEST['exitHour'] : $exitHour = null;
+    isset($_REQUEST['exitMinute']) ? $exitMinute = $_REQUEST['exitMinute'] : $exitMinute = null;
+
+    // Destination Facility
+    isset($_REQUEST['destFacility']) ? $destFacility = $_REQUEST['destFacility'] : $destFacility = null;
+
+    // Get client data
+    $client = get_client($uuid);
+
+    // Open a database transaction
+    $global['db']->StartTrans();
+
+    // Format the exit date in a SQL ASNI format
+    $outDate = "$outDate $exitHour:$exitMinute:00";
+
+    // Create transfer record
+    $query = "INSERT INTO fms_person_to_transfer (user, p_uuid, src_facility, dest_facility, created_at)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)";
+    $values = array(
+        $_SESSION['logged_in'],
+        $uuid,
+        $client['facility_uuid'],
+        $destFacility
+    );
+    $global['db']->Execute($query, $values);
+
+
+    $transferId = $global['db']->Insert_ID();
+
+    // Lookup person's current facility
+    $query = "SELECT MAX(in_date) AS in_date FROM fms_person_to_facility WHERE p_uuid = ? ";
+    $sql = $global['db']->Prepare($query);
+
+    // get the member's current facility
+    $result = $global['db']->Execute($sql, $uuid);
+    $ptf = $result->FetchRow();
+    $whereStr = "in_date = " . shn_db_clean($ptf['in_date']);
+
+    // Checkout and mark the transfer flag
+    $table = 'fms_person_to_facility';
+    $record = array();
+    $record['out_date'] = $outDate;
+    $record['transfer_id'] = $transferId;
+    $global['db']->AutoExecute($table, $record, 'UPDATE', $whereStr);
+
+    // Set person status
+    setPersonStatus('trn', $uuid);
+
+    // Check for any failed transactions
+    $error = $global['db']->HasFailedTrans();
+
+    // Close transaction
+    $global['db']->CompleteTrans();
+
+    if ($error) {
+
+        add_error("There was an error processing <strong>" . $client['given_name']." ".$client['family_name'] . "</strong> checkout.");
+    } else {
+
+        add_confirmation("You have successfully transfered <strong>" .
+        $client['given_name']." ".$client['family_name'] . "</strong> from the " .
         $client['facility_name'] . " shelter registry.");
     }
 

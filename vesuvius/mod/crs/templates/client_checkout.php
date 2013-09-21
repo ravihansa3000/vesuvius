@@ -18,47 +18,7 @@ global $shn_tabindex;
 $shn_tabindex = 0;
 $helpid = 0;
 ?>
-<script type="text/javascript">
 
-    $('#dobDatepicker').datepicker({
-      beforeShow: readBirthday, onSelect: updateBirthday,
-      minDate: new Date(<?php echo date('Y') - 110; ?>, 1 - 1, 1), maxDate: new Date(<?php echo date('Y'); ?>, 12 - 1, 31),
-      showOn: 'both', buttonImageOnly: true, buttonImage: 'theme/<?php echo $conf['theme']; ?>/img/icon-calendar.gif'});
-
-    // Prepare to show a date picker linked to three select controls
-    function readBirthday() {
-      $('#dobDatepicker').val($('#dobMonth').val() + '/' +
-        $('#dobDay').val() + '/' + $('#dobYear').val());
-      return {};
-    }
-
-    // Update three select controls to match a date picker selection
-    function updateBirthday(date) {
-      $('#dobMonth').val(date.substring(0, 2));
-      $('#dobDay').val(date.substring(3, 5));
-      $('#dobYear').val(date.substring(6, 10));
-    }
-
-    $('#exitDatepicker').datepicker({
-      beforeShow: readexitDate, onSelect: updateexitDate,
-      minDate: new Date(<?php echo date('Y') - 110; ?>, 1 - 1, 1), maxDate: new Date(<?php echo date('Y'); ?>, 12 - 1, 31),
-      showOn: 'both', buttonImageOnly: true, buttonImage: 'theme/<?php echo $conf['theme']; ?>/img/icon-calendar.gif'});
-
-    // Prepare to show a date picker linked to three select controls
-    function readexitDate() {
-      $('#exitDatepicker').val($('#exitMonth').val() + '/' +
-        $('#exitDay').val() + '/' + $('#exitYear').val());
-      return {};
-    }
-
-    // Update three select controls to match a date picker selection
-    function updateexitDate(date) {
-      $('#exitMonth').val(date.substring(0, 2));
-      $('#exitDay').val(date.substring(3, 5));
-      $('#exitYear').val(date.substring(6, 10));
-    }
-
-</script>
 <style>
     tr td {
         text-align: center !important;
@@ -113,6 +73,5 @@ echo "<script>initDate();</script>";
 shn_form_fclose();
 
 ?>
-</ul>
 <?php shn_form_fsclose(); ?>
 <?php shn_form_fclose(); ?>
