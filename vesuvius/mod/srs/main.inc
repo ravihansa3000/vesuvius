@@ -28,6 +28,11 @@ require_once 'inc/json_functions.inc';
 require_once 'inc/text_functions.inc';
 require_once 'inc/staff_definition.inc';
 
+require_once($global['approot'].'/inc/lib_xajax.inc');
+require_once($global['approot'].'/mod/srs/xajax.inc');
+
+shn_xajax_registerFunction('srs_search');
+
 $global['srs_group_menu'] = false;
 
 global $conf;
@@ -91,8 +96,8 @@ function shn_srs_default()
 
     if (isset($_GET['staff_add'])) {
         $control = "shn_srs_staff_add";
-    } elseif(isset($_GET['client_save_new'])) {
-        $control = "shn_crs_client_save_new";
+    } elseif(isset($_GET['staff_save_new'])) {
+        $control = "shn_srs_staff_save_new";
     } elseif(isset($_GET['search'])) {
         $control = "shn_srs_search";
     } elseif(isset($_GET['settings'])) {
@@ -861,7 +866,7 @@ function shn_srs_staff_add()
         $opt_status[$facility['facility_uuid']] = $facility['facility_name'];
     }
 
-    shn_form_select($opt_status, _t('Facility Location'), "facility", null,  array('value'=>'select', 'req' => true));
+    shn_form_select($opt_status, _t('Facility Location'), "facility", null,  array('req' => true));
     shn_form_fsclose();
 
     $opt_orgs = array();
@@ -887,9 +892,9 @@ function shn_srs_staff_add()
 
     shn_form_fsopen(_t('Organization Information'));
 
-    shn_form_select($opt_orgs, _t('Name'), "org_id", null,  array('value'=>'select', 'req' => true));
-    shn_form_select($opt_status, _t('Volunteer Status'), "vol_status", null,  array('value'=>'select', 'req' => true));
-    shn_form_select($opt_type, _t('Type'), "staff_type", null,  array('value'=>'select', 'req' => true));
+    shn_form_select($opt_orgs, _t('Name'), "org_id", null,  array('req' => true));
+    shn_form_select($opt_status, _t('Volunteer Status'), "vol_status", null,  array('req' => true));
+    shn_form_select($opt_type, _t('Type'), "staff_type", null,  array( 'req' => true));
 
     shn_form_fsclose();
 
@@ -1037,6 +1042,7 @@ function shn_srs_staff_save_new()
         add_error('There was an error saving the staff recored');
     } else {
         // See if the user is entering group members
+        add_confirmation("You have successfully saved the staff to the registry information.");
         if ($submit == 'Save + Continue') {
 
             // Return to the staff add form for next new staff

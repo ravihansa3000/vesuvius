@@ -83,8 +83,8 @@ function staff_save($uuid = null)
 
     // Org Info
     $orgId = isset($_REQUEST['org_id']) ? $_REQUEST['org_id'] : null;
-    $volStatusId = isset($_REQUEST['volStatus']) ? $_REQUEST['volStatus'] : null;
-    $staffId = isset($_REQUEST['staffType']) ? $_REQUEST['staffType'] : null;
+    $volStatusId = isset($_REQUEST['vol_status']) ? $_REQUEST['vol_status'] : null;
+    $staffId = isset($_REQUEST['staff_type']) ? $_REQUEST['staff_type'] : null;
 
     $incidentId = $_SESSION['incident'];
 
@@ -218,8 +218,7 @@ function staff_save($uuid = null)
     }
 
     // Check for any failed transactions
-    //$error =
-        $global['db']->HasFailedTrans();
+    $error = $global['db']->HasFailedTrans();
 
     // Close transaction
     $global['db']->CompleteTrans();

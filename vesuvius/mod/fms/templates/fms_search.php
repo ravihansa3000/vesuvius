@@ -8,7 +8,7 @@
  * that is available through the world-wide-web at the following URI:
  * http://www.gnu.org/copyleft/lesser.html
  *
- * @author     Clayton Kramer <clayton.kramer@mail.cuny.edu>
+ * @author     kaushika
  * @package    modtablee STS
  * @tdcense    http://www.gnu.org/copyleft/lesser.html GNU Lesser General Pubtdc tdcense (LGPL)
  *
@@ -17,170 +17,6 @@ global $conf;
 global $shn_tabindex;
 $shn_tabindex = 1;
 ?>
-<script type="text/javascript">
-    $(document).ready(function(){
-
-        $.tgrid = {};
-    
-        showresults();
-
-        $("#searchbutton").click(function(){
-            showresults();
-        });
-
-        $("#searchbox").keyup(function(event){
-            if(event.keyCode == "13")
-            {
-                showresults();
-            }
-        });
-
-        $("#maxlimit").change(function(){
-            showresults();
-        });
-
-        $("#pagenum").change(function(){
-            showresults();
-        });
-    
-        $("#first").click(function(){
-            $("#pagenum").val(1);
-            showresults();
-        });
-
-        $("#prev").click(function(){
-            $("#pagenum").val(parseInt($("#pagenum").val())-1);
-            showresults();
-        });
-
-        $("#next").click(function(){
-            $("#pagenum").val(parseInt($("#pagenum").val())+1);
-            showresults();
-        });
-    
-        $("#last").click(function(){
-            $("#pagenum").val(parseInt($("#lastpage").val()));
-            showresults();
-        });
-
-        function addCommas(nStr)
-        {
-            nStr += '';
-            x = nStr.split('.');
-            x1 = x[0];
-            x2 = x.length > 1 ? '.' + x[1] : '';
-            var rgx = /(\d+)(\d{3})/;
-            while (rgx.test(x1)) {
-                x1 = x1.replace(rgx, '$1' + ',' + '$2');
-            }
-            return x1 + x2;
-        };
-
-        function showresults() {
-
-            var url = "index.php";
-            var page = $("#pagenum").val();
-
-            if(page < 1) {
-                page = 1;
-            }
-
-            // Clear table
-            $("#userdata thead").html("");
-            $("#userdata tbody").html("");
-
-            $.getJSON(url, {
-                stream:"json", 
-                mod: "fms",
-                act: "facility_search",
-                query: $("#searchbox").val(),
-                limit: $("#maxlimit").val(),
-                page: page,
-                sidx: $.tgrid.sidx,
-                sord: $.tgrid.sord
-            }, 
-            function(data) {
-
-                // paginator
-                if(!data.page){
-                    $.tgrid.page = 1;
-                } else {
-                    $.tgrid.page = data.page;
-                }
-                $("#pagenum").val($.tgrid.page);
-                $("#lastpage").val(data.total);
-                $("#results").html(addCommas(data.records));
-                $("#totalpages").html(data.total);
-
-                // header
-                var h = 0;
-                var head = "<tr>";
-                head += "<th>#</th>";
-
-                var sortasc;
-                var sortdesc;
-                if(data.records > 0) {
-                    $.each(data.rows[0].cells, function(key, value){
-
-                        if(key == data.sidx && data.sord == 'asc'){
-                            sortasc = 'sortbuttonselected';
-                        } else {
-                            sortasc = 'sortbutton';
-                        }
-
-                        if(key == data.sidx && data.sord == 'desc'){
-                            sortdesc = 'sortbuttonselected';
-                        } else {
-                            sortdesc = 'sortbutton';
-                        }
-
-                        head += '<th id="' + key + '">';
-                        head += '<a href="#">' + data.colnames[h++] + '</a> ';
-                        head += '<span title="ascending" class="'+ sortasc +'">&#x25B2;</span>';
-                        head += '<span title="descending" class="'+ sortdesc +'">&#x25BC;</span>';
-                        head += '</th>';
-                    });
-                } else {
-                    $.each(data.colnames, function(key, value){
-                        head += '<th id="' + key + '">' + value + '</th>';
-                    });
-                }
-        
-                head += "</tr>";
-                $(head).appendTo("#userdata thead");
-
-                // rows
-                var tablerow = '';
-                if(data.records > 0) {
-                    $.each(data.rows, function(i, row) {
-                        tablerow += "<tr>";
-                        var rownum = i+1+(($.tgrid.page-1)*data.limit);
-                        tablerow += "<td>"+rownum+"</td>";
-                        $.each(row.cells, function(key, value){
-                            tablerow += "<td>"+value+"</td>";
-                        });
-                        tablerow += "</tr>";
-                    });
-                } else {
-                    tablerow = '<tr><td colspan="'+(data.colnames.length+1)+'" align="center">No Results Found</td></tr>';
-                }
-        
-                $(tablerow).appendTo("#userdata tbody")
-
-                $('#userdata thead th').click(function(){
-                    $.tgrid.sidx = $(this).attr('id');
-                    if($.tgrid.sord == 'desc'){
-                        $.tgrid.sord = "asc";
-                    } else {
-                        $.tgrid.sord = "desc";
-                    }
-                    showresults();
-                });
-
-            });
-        };
-    });
-</script>
 <style type="text/css">
 
     fieldset {
@@ -210,7 +46,11 @@ $shn_tabindex = 1;
     }
 
 </style>
-
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fms_search(get_search_query());
+    }, false);
+</script>
 <input type="hidden" id="lastpage" value=""/>
 
 <h1>Search Facilities</h1>
@@ -221,7 +61,7 @@ $shn_tabindex = 1;
         <ul>
             <li>
                 <input type="text" id="searchbox" name="searchbox" />
-                <a class="styleTheButton" id="searchbutton" href="#"><span id="buttontext">Search</span></a>
+                <input type="button" id="searchbutton" class="styleTehButton" name="submit" value="Search" onclick="javascript:fms_search(get_search_query());">
             </li>
         </ul>
     </fieldset>
@@ -257,12 +97,7 @@ $shn_tabindex = 1;
             </li>
         </ul>
     </div>
-    <table id="userdata">
-        <thead>
-            <tr>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody><tr><td></td></tr></tbody>
-    </table>
+    <div id="userdata">
+
+    </div>
 </fieldset>

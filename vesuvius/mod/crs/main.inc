@@ -642,7 +642,7 @@ function shn_crs_client_petsave_edit()
         add_error("There was an error saving the pet to <b>" . $client['full_name'] . "</b>.");
     } else {
 
-        add_confirmation("You have successfully saved $petName to <b>{$client['full_name']}'s</b> registry informaiton.");
+        add_confirmation("You have successfully saved $petName to <b>{$client['full_name']}'s</b> registry information.");
     }
 
     shn_crs_client_listpets();

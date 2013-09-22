@@ -18,6 +18,11 @@
 include_once 'inc/security.inc';
 include_once 'inc/functions.inc';
 
+require_once($global['approot'].'/inc/lib_xajax.inc');
+require_once($global['approot'].'/mod/fms/xajax.inc');
+
+shn_xajax_registerFunction('fms_search');
+
 /**
  * Default Admin function
  *

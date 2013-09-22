@@ -1,16 +1,7 @@
-function initDate() {
-    $("#checkInDate").datepicker({ dateFormat: 'yy-mm-dd' });
-    $("#dob").datepicker({ dateFormat: 'yy-mm-dd' });
-}
-
 function get_search_query() {
     $.tgrid = {};
     var r = new Object();
     r.name_query = $("#searchbox").val();
-    r.orgId     = $("#orgId").val();
-    r.volId     = $("#volId").val();
-    r.facility_group = $("#facility_group").val();
-    r.facility = $("#facility").val();
     r.limit = $("#maxlimit").val();
     r.page = $("#pagenum").val();
     r.sidx = $.tgrid.sidx = 'p_uuid';
