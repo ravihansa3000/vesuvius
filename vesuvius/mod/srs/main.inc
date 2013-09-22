@@ -108,6 +108,20 @@ function shn_srs_default()
         $control = "shn_srs_volstatus_list";
     } elseif(isset($_GET['staff_type_list'])) {
         $control = "shn_srs_staff_type_list";
+    } elseif(isset($_GET['staff_view'])) {
+        $control = "shn_srs_staff_view";
+    } elseif(isset($_GET['staff_timeline'])) {
+        $control = "shn_srs_staff_timeline";
+    } elseif(isset($_GET['staff_timeline_edit'])) {
+        $control = "shn_srs_staff_timeline_edit";
+    } elseif(isset($_GET['staff_timeline_del'])) {
+        $control = "shn_srs_staff_timeline_del";
+    } elseif(isset($_GET['staff_checkout'])) {
+        $control = "shn_srs_staff_checkout";
+    } elseif(isset($_GET['staff_checkout_save'])) {
+        $control = "shn_srs_staff_checkout_save";
+    } elseif(isset($_GET['staff_checkin'])) {
+        $control = "shn_srs_staff_checkin";
     }
 
         if ($control == "") {
@@ -200,8 +214,8 @@ function shn_srs_staff_checkin()
     // Get the UUID
     $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
     $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
-    $uuid = base64_decode($uuid);
-    $_SESSION['uuid'] = base64_encode($uuid);
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
 
     // Get staff data
     $staff = get_staff($uuid);
@@ -394,8 +408,8 @@ function shn_srs_staff_checkout()
     // Get the UUID
     $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
     $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
-    $uuid = base64_decode($uuid);
-    $_SESSION['uuid'] = base64_encode($uuid);
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
 
     // Get staff data
     $staff = get_staff($uuid);
@@ -416,13 +430,11 @@ function shn_srs_staff_checkout_save()
     // Get the UUID
     $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
     $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
-    $uuid = base64_decode($uuid);
-    $_SESSION['uuid'] = base64_encode($uuid);
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
 
     // exit date
-    isset($_REQUEST['exitMonth']) ? $exitMonth = $_REQUEST['exitMonth'] : $exitMonth = null;
-    isset($_REQUEST['exitDay']) ? $exitDay = $_REQUEST['exitDay'] : $exitDay = null;
-    isset($_REQUEST['exitYear']) ? $exitYear = $_REQUEST['exitYear'] : $exitYear = null;
+    isset($_REQUEST['checkOutDate']) ? $exitDate = $_REQUEST['checkOutDate'] : $exitDate = null;
     isset($_REQUEST['exitHour']) ? $exitHour = $_REQUEST['exitHour'] : $exitHour = null;
     isset($_REQUEST['exitMinute']) ? $exitMinute = $_REQUEST['exitMinute'] : $exitMinute = null;
 
@@ -433,7 +445,7 @@ function shn_srs_staff_checkout_save()
     $db->StartTrans();
 
     // Format the exit date in a SQL ASNI format
-    $outDate = "$exitYear-$exitMonth-$exitDay $exitHour:$exitMinute:00";
+    $outDate = "$exitDate $exitHour:$exitMinute:00";
 
     // Lookup staff facility
     $query = "SELECT MAX(in_date) AS in_date FROM fms_person_to_facility WHERE p_uuid = ? ";
@@ -485,8 +497,8 @@ function shn_srs_staff_timeline()
     // Get the UUID
     $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
     $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
-    $uuid = base64_decode($uuid);
-    $_SESSION['uuid'] = base64_encode($uuid);
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
 
     // Get staff data
     $staff = get_staff($uuid);
@@ -614,7 +626,7 @@ function shn_srs_staff_timeline_edit()
     }
 
     $uuid = $data['p_uuid'];
-    $_SESSION['uuid'] = base64_encode($uuid);
+    $_SESSION['uuid'] = $uuid;
 
     // Get staff data
     $staff = get_staff($uuid);
@@ -636,9 +648,7 @@ function shn_srs_staff_timeline_save()
     $db = $global['db'];
 
     $requiredFields = array(
-      'entryMonth' => 'Sign in month',
-      'entryDay' => 'Sign in day',
-      'entryYear' => 'Sign in year',
+      'checkInDate' => 'Sign in date',
       'entryHour' => 'Sign in hour',
       'entryMinute' => 'Sign in minute',
       'srcFacility' => 'Assigned facility location'
@@ -657,23 +667,19 @@ function shn_srs_staff_timeline_save()
     }
 
     // Entry date
-    $entryMonth = isset($_REQUEST['entryMonth']) ? $_REQUEST['entryMonth'] : null;
-    $entryDay = isset($_REQUEST['entryDay']) ? $_REQUEST['entryDay'] : null;
-    $entryYear = isset($_REQUEST['entryYear']) ? $_REQUEST['entryYear'] : null;
+    $entryDate = isset($_REQUEST['checkInDate']) ? $_REQUEST['checkInDate'] : null;
     $entryHour = isset($_REQUEST['entryHour']) ? $_REQUEST['entryHour'] : null;
     $entryMinute = isset($_REQUEST['entryMinute']) ? $_REQUEST['entryMinute'] : null;
 
-    $inDate = "$entryYear-$entryMonth-$entryDay $entryHour:$entryMinute:00";
+    $inDate = "$entryDate $entryHour:$entryMinute:00";
 
     // Exit date
-    $exitMonth = isset($_REQUEST['exitMonth']) ? $_REQUEST['exitMonth'] : null;
-    $exitDay = isset($_REQUEST['exitDay']) ? $_REQUEST['exitDay'] : null;
-    $exitYear = isset($_REQUEST['exitYear']) ? $_REQUEST['exitYear'] : null;
+    $exitDate = isset($_REQUEST['checkOutDate']) ? $_REQUEST['checkOutDate'] : null;
     $exitHour = isset($_REQUEST['exitHour']) ? $_REQUEST['exitHour'] : null;
     $exitMinute = isset($_REQUEST['exitMinute']) ? $_REQUEST['exitMinute'] : null;
 
-    $inDate = "$entryYear-$entryMonth-$entryDay $entryHour:$entryMinute:00";
-    $outDate = "$exitYear-$exitMonth-$exitDay $exitHour:$exitMinute:00";
+    $inDate = "$entryDate $entryHour:$entryMinute:00";
+    $outDate = "$exitDate $exitHour:$exitMinute:00";
 
     // Facility
     $facility = isset($_REQUEST['srcFacility']) ? $_REQUEST['srcFacility'] : null;
@@ -688,7 +694,7 @@ function shn_srs_staff_timeline_save()
     $sql = "UPDATE fms_person_to_facility
         SET facility_uuid = ?, in_date = ?";
 
-    if ($outDate != "-- ::00") {
+    if (!empty($exitDate)) {
         $sql .= ", out_date = ?";
         $values[] = $outDate;
     }
@@ -726,7 +732,7 @@ function shn_srs_staff_timeline_save()
                 VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)";
             $vals = array(
               $_SESSION['user_id'],
-              base64_decode($_SESSION['uuid']),
+              $_SESSION['uuid'],
               $facility,
               $destFacility
             );
@@ -794,8 +800,8 @@ function shn_srs_staff_view()
     // Get the UUID
     $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
     $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
-    $uuid = base64_decode($uuid);
-    $_SESSION['uuid'] = base64_encode($uuid);
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
 
     // Get staff data
     $staff = get_staff($uuid);

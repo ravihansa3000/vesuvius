@@ -145,39 +145,42 @@ function srs_search($rj)
         $html .= "</tr>";
 
         $i = 1;
-        foreach( $results as $search_result ) {
-            $base_uuid = "1";
-            //= $search_result['p_uuid'];
-            $class = ($i%2 == 0 ? "mainRowOdd" : "mainRowEven");
-            $html .= '<tr>';
-            $html .= '<td class="' . $class . '">'.$i.'</td>';
-            $html .= '<td class="' . $class . '">'.$search_result['org_name '].'</td>';
-            $html .= '<td class="' . $class . '">'.$search_result['vol_type'].'</td>';
-            $html .= '<td class="' . $class . '">'.$search_result['staff_type'].'</td>';
-            $html .= '<td class="' . $class . '"><a href=index.php?mod=crs&amp;act=client_view&amp;uuid='.$base_uuid.'>'.$search_result['given_name'].'</td>';
-            $html .= '<td class="' . $class . '"><a href=index.php?mod=crs&amp;act=client_view&amp;uuid='.$base_uuid.'>'.$search_result['family_name'].'</td>';
-            $html .= '<td class="' . $class . '">'.$search_result['facility_group'].'</td>';
-            $html .= '<td class="' . $class . '">'.$search_result['facility_name'].'</td>';
 
-            // Status
-            switch ($search_result['opt_status']) {
-                case "in":
-                    $text = "Reported In";
-                    $act = "staff_checkout";
-                    break;
-                case "out":;
-                    $text = "Signed Out";
-                    $act = "staff_checkin";
-                    break;
-                case "trn" :
-                    $text = "Transfered";
-                    $act = "staff_checkin";
-            }
 
-            $html .= '<td class="' . $class . '"><a href=index.php?mod=crs&amp;act='.$act.'&amp;uuid='.$base_uuid.'><span class="'.$class.'">'.$text.'</span></a></td>';
-            $html .= '</tr>';
-            $i++;
-        }
+         foreach( $results as $search_result ) {
+                $base_uuid = $search_result['p_uuid'];
+                $class = ($i%2 == 0 ? "mainRowOdd" : "mainRowEven");
+                $html .= '<tr>';
+                $html .= '<td class="' . $class . '">'.$i.'</td>';
+                $html .= '<td class="' . $class . '">'.$search_result['org_name'].'</td>';
+                $html .= '<td class="' . $class . '">'.$search_result['vol_type'].'</td>';
+                $html .= '<td class="' . $class . '">'.$search_result['staff_type'].'</td>';
+                $html .= '<td class="' . $class . '"><a href=index.php?mod=crs&amp;act=client_view&amp;uuid='.$base_uuid.'>'.$search_result['given_name'].'</td>';
+                $html .= '<td class="' . $class . '"><a href=index.php?mod=crs&amp;act=client_view&amp;uuid='.$base_uuid.'>'.$search_result['family_name'].'</td>';
+                $html .= '<td class="' . $class . '">'.$search_result['facility_group'].'</td>';
+                $html .= '<td class="' . $class . '">'.$search_result['facility_name'].'</td>';
+
+                // Status
+                switch ($search_result['opt_status']) {
+                    case "in":
+                        $text = "Reported In";
+                        $act = "staff_checkout";
+                        break;
+                    case "out":;
+                        $text = "Signed Out";
+                        $act = "staff_checkin";
+                        break;
+                    case "trn" :
+                        $text = "Transfered";
+                        $act = "staff_checkin";
+                }
+
+                $html .= '<td class="' . $class . '"><a href=index.php?mod=crs&amp;act='.$act.'&amp;uuid='.$base_uuid.'><span class="'.$class.'">'.$text.'</span></a></td>';
+                $html .= '</tr>';
+                $i++;
+
+         }
+
         $html .= '</table>';
 
         $global['xajax_res']->addAssign('userdata', 'innerHTML', $html);

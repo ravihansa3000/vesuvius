@@ -76,7 +76,7 @@ global $conf;
                 <span>
                     <label>Organization</label>
                     <select id="orgId">
-                        <option value="all">All</option>
+                        <option value="">All</option>
                         <?php foreach ($orgs as $org): ?>
                             <option value="<?php echo $org['id'] ?>">
                                 <?php echo $org['name'] ?>
@@ -88,7 +88,7 @@ global $conf;
                 <span>
                     <label>Status</label>
                     <select id="volId">
-                        <option value="all">All</option>
+                        <option value="">All</option>
                         <?php foreach ($volStatuses as $vol): ?>
                             <option value="<?php echo $vol['id'] ?>">
                                 <?php echo $vol['description'] ?>

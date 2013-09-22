@@ -31,7 +31,11 @@ shn_xajax_registerFunction('fms_search');
  */
 function shn_fms_default()
 {
-    echo "<script type=\"text/javascript\" src=\"res/js/jquery-1.6.4.min.js\" ></script>";
+    global $global;
+    global $conf;
+
+    echo "<script type=\"text/javascript\" src=\"res/js/jquery-1.6.4.min.js\" ></script>
+		<script type=\"text/javascript\" >".file_get_contents($global['approot']."/mod/fms/fms.js")."</script>";
 
     $control = "";
 
@@ -52,7 +56,6 @@ function shn_fms_default()
         $control = "shn_fms_import";
     } elseif(isset($_GET['facility_geo'])) {
         $control = "shn_fms_import";
-
     }
 
     if ($control == "") {

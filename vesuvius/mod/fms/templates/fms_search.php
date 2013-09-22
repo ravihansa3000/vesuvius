@@ -16,6 +16,7 @@
 global $conf;
 global $shn_tabindex;
 $shn_tabindex = 1;
+
 ?>
 <style type="text/css">
 

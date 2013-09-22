@@ -1048,7 +1048,15 @@ function shn_form_wysiwyg($label, $name, $extra_opts = array())
 function shn_form_time($label, $hourName, $minName, $extra_opts = array())
 {
 
+    $value = (isset($extra_opts['value']) ? $extra_opts['value'] : "");
+    if (get_magic_quotes_gpc()) {
+        $value = stripslashes($value);
+    }
 
+    if(!empty($value)) {
+        $m = date('G', strtotime($value));
+        $i = date('i', strtotime($value));
+    }
 
     echo "<span>
             <label for=\". $hourName . \">". $label . "</label>
@@ -1058,8 +1066,12 @@ function shn_form_time($label, $hourName, $minName, $extra_opts = array())
         $selected = (date('G') == $h) ? " selected" : "";
         $value = str_pad($h, 2, "0", STR_PAD_LEFT);
         $display = $value;
+        if(!empty($m)) {
+            $selected = ($m == $h) ? " selected" : "";
+        }
         echo "<option value =\"" . $value . "\"" . $selected . ">" . $display . "</option>";
     }
+
     echo        "</select>
           </span>";
 
@@ -1073,6 +1085,9 @@ function shn_form_time($label, $hourName, $minName, $extra_opts = array())
         $selected = (date('i') == $m) ? " selected" : "";
         $value = str_pad($m, 2, "0", STR_PAD_LEFT);
         $display = $value;
+        if(!empty($i)) {
+            $selected = ($i == $m) ? " selected" : "";
+        }
         echo "<option value =\"" . $value . "\"" . $selected . ">" . $display . "</option>";
      }
      echo       "</select>
