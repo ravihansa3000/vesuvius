@@ -60,6 +60,10 @@ function shn_crs_default()
         $control = "shn_crs_client_add";
     } elseif(isset($_GET['client_save_new'])) {
         $control = "shn_crs_client_save_new";
+    } elseif(isset($_GET['client_edit'])) {
+        $control = "shn_crs_client_edit";
+    } elseif(isset($_GET['client_save_edit'])) {
+        $control = "shn_crs_client_save_edit";
     } elseif(isset($_GET['search'])) {
         $control = "shn_crs_search";
     } elseif(isset($_GET['client_view'])) {
@@ -90,6 +94,8 @@ function shn_crs_default()
         $control = "shn_crs_client_transfer";
     } elseif(isset($_GET['client_transfer_save'])) {
         $control = "shn_crs_client_transfer_save";
+    } elseif(isset($_GET['client_delete'])) {
+        $control = "shn_crs_client_delete";
     }
 
     if ($control == "") {
@@ -108,8 +114,7 @@ function shn_crs_default()
  */
 function shn_crs_client_add()
 {
-
-    // Validate group access
+    // Validate group accessshn_crs_client_edit
     if (!check_groupAccess(array(1, 2))) {
         add_error("You do not have permission to add a client to the shelter registry.");
         return;
@@ -130,95 +135,13 @@ function shn_crs_client_add()
     $formOpts = array('enctype' => 'enctype="multipart/form-data"');
     $submitOpts = 'name="submit" class="styleTheButton"';
 
-    // Get facilities
-    $facilities = get_facilities();
-
     // Clear session uuid
     $_SESSION['uuid'] = null;
 
-    echo "<h1>New Shelter Client Form</h1>";
+    // Get facilities
+    $facilities = get_facilities();
 
-    shn_form_fopen("client_save_new", null, array('enctype' => 'enctype="multipart/form-data"', 'req_message' => true));
-    shn_form_hidden(array('seq' => 'entry'));
-
-    shn_form_fsopen(_t('Check In Information'));
-    shn_form_date(_t("Date"), "checkInDate", array('req'=>true));
-    shn_form_time(_t("Time"), "entryHour", "entryMinute", array('req'=>true));
-
-    $opt_status = array();
-    $opt_status["select"] = "- Select -";
-
-    foreach ($facilities as $facility) {
-        $opt_status[$facility['facility_uuid']] = $facility['facility_name'];
-    }
-
-    shn_form_select($opt_status, _t('Facility Location'), "facility", null,  array('value'=>'select', 'req' => true));
-    shn_form_fsclose();
-
-    shn_form_fsopen(_t('Group Representative or Individual Information'));
-
-    shn_form_text(_t("First Name"),'given_name','size="20"',array('req'=>true, 'help'=>'Given Name'));
-    shn_form_text(_t("Last Name"),'family_name','size="20"',array('req'=>true, 'help'=>'Family Name'));
-    shn_form_text(_t("MI"),'middle_initial','size="5"',array('help'=>'Middle Initials'));
-    shn_form_text(_t("Age"),'years_old','size="5"',array('help'=>'Age'));
-    shn_form_date(_t("Date of Birth"), "dob");
-    $opt_status = array("" => "- Select -", "Male" => "Male", "Female" => "Female");
-    shn_form_select($opt_status, _t('Gender'), "gender", null,  array('value'=>'select', 'req' => true));
-
-    shn_form_fsclose();
-
-    shn_form_fsopen(_t('Contact Information'));
-
-    shn_form_text(_t("Street Address"),'street_1','size="25"');
-    shn_form_text(_t("Address Line 2"),'street_2','size="25"');
-    shn_form_text(_t("City"),'city','size="10"');
-    shn_form_text(_t("State / Province / Region"),'state','size="10"');
-    shn_form_text(_t("Postal / Zip Code"),'postal','size="10"');
-
-    $q = "SELECT `option_code`, `option_description` FROM `field_options` WHERE `field_name` = 'opt_country' order by `option_description`;";
-    $res = $global['db']->Execute($q);
-    $opt_status = array();
-    while (!$res->EOF) {
-        $opt_status[$res->fields['option_code']] = $res->fields['option_description'];
-        $res->MoveNext();
-    }
-
-    shn_form_select($opt_status, _t('Country'), "opt_country", null,  array('value'=>'USA'));
-    shn_form_text(_t("Home Phone"),'home','size="10"');
-    shn_form_text(_t("Mobile Phone"),'mobile','size="10"');
-    shn_form_text(_t("Alternate Phone"),'alter','size="10"');
-    shn_form_fsclose();
-
-    shn_form_fsopen(_t('Demographic Information'));
-
-    shn_form_text(_t("Occupation"),'occupation','size="20"');
-    shn_form_text(_t("Special Skills"),'skills','size="20"',array('help'=>'Type in comma separated.'));
-    shn_form_text(_t("Languages Spoken"),'altlang1','size="10"',array('help'=>'1st Language'));
-    shn_form_text("",'altlang2','size="10"',array('help'=>'2nd Language'));
-    shn_form_text("",'altlang3','size="10"',array('help'=>'3rd Language'));
-
-    shn_form_fsclose();
-
-    shn_form_fsopen(_t('Emergency Contact'));
-
-    shn_form_text(_t("Name"),'ec_name','size="20"');
-    shn_form_text(_t("Relationship"),'ec_relation','size="20"');
-    shn_form_text(_t("Phone Number"),'ec_phone','size="10"',array('help'=>'In ### - ### - #### format.'));
-
-    shn_form_fsclose();
-
-    shn_form_fsopen(_t('Medical Alerts'));
-
-    shn_form_checkbox(_t("Special Medical Need"),'special_medical','size="20"');
-
-    shn_form_fsclose();
-
-    shn_form_submit("Save", "class=\"styleTehButton\""); echo '&nbsp&nbsp';
-    shn_form_submit("Save + Continue", "class=\"styleTehButton\""); echo '&nbsp&nbsp';
-    shn_form_submit("Save + Add Group Member", "class=\"styleTehButton\"");
-    echo "<script>initDate();</script>";
-    shn_form_fclose();
-    echo "<br><br>";
+    include_once 'templates/client_edit_form.php';
 }
 
 /**
@@ -380,8 +303,8 @@ function shn_crs_client_edit()
     // Get the UUID
     $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
     $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
-    $uuid = base64_decode($uuid);
-    $_SESSION['uuid'] = base64_encode($uuid);
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
 
     // Get facilities
     $facilities = get_facilities();
@@ -981,4 +904,78 @@ function shn_crs_client_transfer_save()
     $skillsList = get_client_skills($uuid);
 
     include_once 'templates/client_view.php';
+}
+
+/**
+ *  Save existing client updates
+ */
+function shn_crs_client_save_edit()
+{
+    include_once 'inc/client_save.inc';
+
+    $mode = isset($_REQUEST['mode']) ? $_REQUEST['mode'] : null;
+    $submit = isset($_REQUEST['submit']) ? $_REQUEST['submit'] : null;
+
+    // Get the client uuid
+    isset($_REQUEST['uuid']) ? $uuid = $_REQUEST['uuid'] : $uuid = null;
+
+    if (isset($uuid)) {
+        client_save($uuid);
+
+        // See if the user is entering group members
+        if ($submit == 'Save + Add Group Member') {
+
+            // Move to the add new client to group form
+            shn_crs_group_new_client($uuid);
+
+            //shn_crs_group_new_client($uuid);
+        } elseif ($submit == 'Save + Continue') {
+
+            // Return to the client add form for next new client
+            shn_crs_client_add();
+        } else {
+            shn_crs_client_edit();
+        }
+    }
+}
+
+/**
+ * Delete a client
+ *
+ * @global array $global
+ */
+function shn_crs_client_delete()
+{
+
+    global $global;
+
+    $uuid = $_REQUEST['uuid'];
+
+    // Set the deleted bit
+    $sql[] = "UPDATE person_status SET isdeleted = 1 WHERE p_uuid = ?;";
+
+    // Remove anyone from this person's group
+    $sql[] = "UPDATE crs_person_to_group SET p_uuid_2 = NULL WHERE p_uuid_2 = ? ";
+
+    // Delete any pets associated with this person
+    $sql[] = "DELETE FROM crs_pets WHERE p_uuid = ?";
+
+    // Open transaction
+    $global['db']->StartTrans();
+
+    foreach ($sql as $q) {
+        // Delete person
+        try {
+            $q = $global['db']->Prepare($q);
+            $results = $global['db']->Execute($q, $uuid);
+        } catch (exception $e) {
+            add_error("<pre>" . $e->getMessage() . "</pre>");
+        }
+    }
+
+    // Close transaction
+    $global['db']->CompleteTrans();
+
+    // Return to the default STS page
+    shn_crs_search();
 }

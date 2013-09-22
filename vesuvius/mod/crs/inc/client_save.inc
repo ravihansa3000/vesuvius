@@ -155,7 +155,7 @@ function client_save($uuid = null)
     $record['full_name'] = "$given_name $family_name";
     $record['family_name'] = $family_name;
     $record['given_name'] = $given_name;
-    $record['custom_name'] = $middle_initial;
+//    $record['custom_name'] = $middle_initial;
     $record['incident_id'] = $_SESSION['incident'];
 
     if ($mode == "UPDATE") {
@@ -203,8 +203,8 @@ function client_save($uuid = null)
     $record = array();
     $record['p_uuid'] = $uuid;
     $record['birth_date'] = $dob;
-    $record['opt_country'] = $opt_country;
-    $record['occuptaion'] = $occupation;
+//    $record['opt_country'] = $opt_country;
+ //   $record['occuptaion'] = $occupation;
     $record['years_old'] = $age;
     $record['opt_gender'] = $gender;
 
@@ -271,7 +271,7 @@ function client_save($uuid = null)
     setPersonStatus('in', $uuid);
 
     // Check for any failed transactions
-    //$error = $global['db']->HasFailedTrans();
+    $error = $global['db']->HasFailedTrans();
 
     // Close transaction
     $global['db']->CompleteTrans();

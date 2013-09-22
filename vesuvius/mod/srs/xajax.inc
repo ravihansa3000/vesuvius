@@ -155,8 +155,8 @@ function srs_search($rj)
                 $html .= '<td class="' . $class . '">'.$search_result['org_name'].'</td>';
                 $html .= '<td class="' . $class . '">'.$search_result['vol_type'].'</td>';
                 $html .= '<td class="' . $class . '">'.$search_result['staff_type'].'</td>';
-                $html .= '<td class="' . $class . '"><a href=index.php?mod=crs&amp;act=client_view&amp;uuid='.$base_uuid.'>'.$search_result['given_name'].'</td>';
-                $html .= '<td class="' . $class . '"><a href=index.php?mod=crs&amp;act=client_view&amp;uuid='.$base_uuid.'>'.$search_result['family_name'].'</td>';
+                $html .= '<td class="' . $class . '"><a href=index.php?mod=srs&amp;act=staff_view&amp;uuid='.$base_uuid.'>'.$search_result['given_name'].'</td>';
+                $html .= '<td class="' . $class . '"><a href=index.php?mod=srs&amp;act=staff_view&amp;uuid='.$base_uuid.'>'.$search_result['family_name'].'</td>';
                 $html .= '<td class="' . $class . '">'.$search_result['facility_group'].'</td>';
                 $html .= '<td class="' . $class . '">'.$search_result['facility_name'].'</td>';
 
@@ -175,7 +175,7 @@ function srs_search($rj)
                         $act = "staff_checkin";
                 }
 
-                $html .= '<td class="' . $class . '"><a href=index.php?mod=crs&amp;act='.$act.'&amp;uuid='.$base_uuid.'><span class="'.$class.'">'.$text.'</span></a></td>';
+                $html .= '<td class="' . $class . '"><a href=index.php?mod=srs&amp;act='.$act.'&amp;uuid='.$base_uuid.'&tabid=3><span class="'.$class.'">'.$text.'</span></a></td>';
                 $html .= '</tr>';
                 $i++;
 

@@ -122,6 +122,18 @@ function shn_srs_default()
         $control = "shn_srs_staff_checkout_save";
     } elseif(isset($_GET['staff_checkin'])) {
         $control = "shn_srs_staff_checkin";
+    } elseif(isset($_GET['staff_checkin_save'])) {
+        $control = "shn_srs_staff_checkin_save";
+    } elseif(isset($_GET['staff_transfer'])) {
+        $control = "shn_srs_staff_transfer";
+    } elseif(isset($_GET['staff_transfer_save'])) {
+        $control = "shn_srs_staff_transfer_save";
+    } elseif(isset($_GET['staff_edit'])) {
+        $control = "shn_srs_staff_edit";
+    } elseif(isset($_GET['staff_save_edit'])) {
+        $control = "shn_srs_staff_save_edit";
+    } elseif(isset($_GET['staff_delete'])) {
+        $control = "shn_srs_staff_delete";
     }
 
         if ($control == "") {
@@ -238,13 +250,11 @@ function shn_srs_staff_checkin_save()
     // Get the UUID
     $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
     $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
-    $uuid = base64_decode($uuid);
-    $_SESSION['uuid'] = base64_encode($uuid);
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
 
     // entry date
-    isset($_REQUEST['entryMonth']) ? $entryMonth = $_REQUEST['entryMonth'] : $entryMonth = null;
-    isset($_REQUEST['entryDay']) ? $entryDay = $_REQUEST['entryDay'] : $entryDay = null;
-    isset($_REQUEST['entryYear']) ? $entryYear = $_REQUEST['entryYear'] : $entryYear = null;
+    isset($_REQUEST['checkInDate']) ? $entryDate = $_REQUEST['checkInDate'] : $entryDate = null;
     isset($_REQUEST['entryHour']) ? $entryHour = $_REQUEST['entryHour'] : $entryHour = null;
     isset($_REQUEST['entryMinute']) ? $entryMinute = $_REQUEST['entryMinute'] : $entryMinute = null;
 
@@ -257,7 +267,7 @@ function shn_srs_staff_checkin_save()
     $global['db']->StartTrans();
 
     // Format the entry date in a SQL ASNI format
-    $inDate = "$entryYear-$entryMonth-$entryDay $entryHour:$entryMinute:00";
+    $inDate = "$entryDate $entryHour:$entryMinute:00";
 
     $table = 'fms_person_to_facility';
     $record = array();
@@ -303,8 +313,8 @@ function shn_srs_staff_transfer()
     // Get the UUID
     $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
     $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
-    $uuid = base64_decode($uuid);
-    $_SESSION['uuid'] = base64_encode($uuid);
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
 
     // Get staff data
     $staff = get_staff($uuid);
@@ -327,13 +337,11 @@ function shn_srs_staff_transfer_save()
     // Get the UUID
     $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
     $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
-    $uuid = base64_decode($uuid);
-    $_SESSION['uuid'] = base64_encode($uuid);
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
 
     // exit date
-    isset($_REQUEST['exitMonth']) ? $exitMonth = $_REQUEST['exitMonth'] : $exitMonth = null;
-    isset($_REQUEST['exitDay']) ? $exitDay = $_REQUEST['exitDay'] : $exitDay = null;
-    isset($_REQUEST['exitYear']) ? $exitYear = $_REQUEST['exitYear'] : $exitYear = null;
+    isset($_REQUEST['checkOutDate']) ? $exitDate = $_REQUEST['checkOutDate'] : $exitDate = null;
     isset($_REQUEST['exitHour']) ? $exitHour = $_REQUEST['exitHour'] : $exitHour = null;
     isset($_REQUEST['exitMinute']) ? $exitMinute = $_REQUEST['exitMinute'] : $exitMinute = null;
 
@@ -347,7 +355,7 @@ function shn_srs_staff_transfer_save()
     $global['db']->StartTrans();
 
     // Format the exit date in a SQL ASNI format
-    $outDate = "$exitYear-$exitMonth-$exitDay $exitHour:$exitMinute:00";
+    $outDate = "$exitDate $exitHour:$exitMinute:00";
 
     // Create transfer record
     $query = "INSERT INTO fms_person_to_transfer (user, p_uuid, src_facility, dest_facility, created_at)
@@ -856,102 +864,7 @@ function shn_srs_staff_add()
     // Get facilities
     $facilities = get_facilities();
 
-    echo "<h1>New Shelter Client Form</h1>";
-
-    shn_form_fopen("staff_save_new", null, array('enctype' => 'enctype="multipart/form-data"', 'req_message' => true));
-    shn_form_hidden(array('seq' => 'entry'));
-
-    shn_form_fsopen(_t('New Report In Details'));
-    shn_form_date(_t("Date"), "checkInDate", array('req'=>true));
-    shn_form_time(_t("Time"), "entryHour", "entryMinute", array('req'=>true));
-
-    $opt_status = array();
-    $opt_status[""] = "- Select -";
-
-    foreach ($facilities as $facility) {
-        $opt_status[$facility['facility_uuid']] = $facility['facility_name'];
-    }
-
-    shn_form_select($opt_status, _t('Facility Location'), "facility", null,  array('req' => true));
-    shn_form_fsclose();
-
-    $opt_orgs = array();
-    $opt_orgs[""] = "- Select -";
-
-    foreach ($orgs as $org) {
-        $opt_orgs[$org['id']] = $org['name'];
-    }
-
-    $opt_status = array();
-    $opt_status["select"] = "- Select -";
-
-    foreach ($volStatuses as $volStatus) {
-        $opt_status[$volStatus['id']] = $volStatus['description'];
-    }
-
-    $opt_type = array();
-    $opt_type["select"] = "- Select -";
-
-    foreach ($staffTypes as $staffType) {
-        $opt_type[$staffType['id']] = $staffType['description'];
-    }
-
-    shn_form_fsopen(_t('Organization Information'));
-
-    shn_form_select($opt_orgs, _t('Name'), "org_id", null,  array('req' => true));
-    shn_form_select($opt_status, _t('Volunteer Status'), "vol_status", null,  array('req' => true));
-    shn_form_select($opt_type, _t('Type'), "staff_type", null,  array( 'req' => true));
-
-    shn_form_fsclose();
-
-    shn_form_fsopen(_t('Staff Details'));
-
-    shn_form_text(_t("First Name"),'given_name','size="20"',array('req'=>true, 'help'=>'Given Name'));
-    shn_form_text(_t("Last Name"),'family_name','size="20"',array('req'=>true, 'help'=>'Family Name'));
-    shn_form_text(_t("MI"),'middle_initial','size="5"',array('help'=>'Middle Initials'));
-    shn_form_date(_t("Date of Birth"), "dob");
-    $opt_status = array("" => "- Select -", "Male" => "Male", "Female" => "Female");
-    shn_form_select($opt_status, _t('Gender'), "gender", null,  array('req' => true));
-
-    shn_form_fsclose();
-
-    shn_form_fsopen(_t('Contact Information'));
-
-    shn_form_text(_t("Street Address"),'street_1','size="25"');
-    shn_form_text(_t("Address Line 2"),'street_2','size="25"');
-    shn_form_text(_t("City"),'city','size="10"');
-    shn_form_text(_t("State / Province / Region"),'state','size="10"');
-    shn_form_text(_t("Postal / Zip Code"),'postal','size="10"');
-
-    $q = "SELECT `option_code`, `option_description` FROM `field_options` WHERE `field_name` = 'opt_country' order by `option_description`;";
-    $res = $global['db']->Execute($q);
-    $opt_status = array();
-    while (!$res->EOF) {
-        $opt_status[$res->fields['option_code']] = $res->fields['option_description'];
-        $res->MoveNext();
-    }
-
-    shn_form_select($opt_status, _t('Country'), "opt_country", null,  array('value'=>'USA'));
-    shn_form_text(_t("Work Phone"),'home','size="10"');
-    shn_form_fsclose();
-
-    shn_form_fsopen(_t('Demographic Information'));
-
-    shn_form_text(_t("Occupation"),'occupation','size="20"');
-    shn_form_text(_t("Special Skills"),'skills','size="20"',array('help'=>'Type in comma separated.'));
-    shn_form_text(_t("Languages Spoken"),'altlang1','size="10"',array('help'=>'1st Language'));
-    shn_form_text("",'altlang2','size="10"',array('help'=>'2nd Language'));
-    shn_form_text("",'altlang3','size="10"',array('help'=>'3rd Language'));
-
-    shn_form_fsclose();
-
-
-    shn_form_submit("Save", "class=\"styleTehButton\""); echo '&nbsp&nbsp';
-    shn_form_submit("Save + Continue", "class=\"styleTehButton\""); echo '&nbsp&nbsp';
-    echo "<script>initDate();</script>";
-    shn_form_fclose();
-    echo "<br><br>";
-
+    include_once 'templates/staff_edit_form.php';
 }
 
 /**
@@ -965,7 +878,7 @@ function shn_srs_staff_save_edit()
     $submit = isset($_REQUEST['submit']) ? $_REQUEST['submit'] : null;
 
     // Get the staff uuid
-    isset($_REQUEST['uuid']) ? $uuid = base64_decode($_REQUEST['uuid']) : $uuid = null;
+    isset($_REQUEST['uuid']) ? $uuid = $_REQUEST['uuid'] : $uuid = null;
     $error = false;
 
     $validation = array(
@@ -1069,7 +982,7 @@ function shn_srs_staff_delete()
 
     global $global;
 
-    $uuid = base64_decode($_REQUEST['uuid']);
+    $uuid = $_REQUEST['uuid'];
 
     // Set the deleted bit
     $sql[] = "UPDATE person_status SET isdeleted = 1 WHERE p_uuid = ?;";
@@ -1140,8 +1053,8 @@ function shn_srs_staff_edit()
     // Get the UUID
     $uuid = (isset($_SESSION['uuid'])) ? $_SESSION['uuid'] : null;
     $uuid = (isset($_REQUEST['uuid'])) ? $_REQUEST['uuid'] : $uuid;
-    $uuid = base64_decode($uuid);
-    $_SESSION['uuid'] = base64_encode($uuid);
+    $uuid = $uuid;
+    $_SESSION['uuid'] = $uuid;
 
     // Get facilities
     $facilities = get_facilities();

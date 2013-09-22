@@ -430,7 +430,7 @@ function get_group_list($uuid)
         facility_uuid,
         opt_gender,
         years_old,
-        occupation,
+/*        occupation, */
         altlang1 AS lang1,
         altlang2 AS lang2,
         altlang3 AS lang3

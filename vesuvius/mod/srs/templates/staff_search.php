@@ -107,7 +107,6 @@ global $conf;
                             </option>
                         <?php endforeach; ?>
                     </select>
-
                 </span> 
                 <span>
                     <label for="facility">Facility Name</label>
@@ -119,7 +118,6 @@ global $conf;
                             </option>
                         <?php endforeach; ?>
                     </select>
-
                 </span>
             </li>
         </ul>

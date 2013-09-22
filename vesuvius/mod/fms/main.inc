@@ -40,14 +40,14 @@ function shn_fms_default()
     $control = "";
 
     shn_tabmenu_open();
-    shn_tabmenu_item("search", _t("Facility-Menu|Registry Search"), "fms");
     shn_tabmenu_item("add", _t("Facility-Menu|Add Facility"), "fms");
+    shn_tabmenu_item("search", _t("Facility-Menu|Registry Search"), "fms");
     shn_tabmenu_item("displaymap", _t("Facility-Menu|Display Map"), "fms");
     shn_tabmenu_item("import", _t("Facility-Menu|Import"), "fms");
     shn_tabmenu_close();
 
     if (isset($_GET['search'])) {
-        shn_fms_search();
+        $control = "shn_fms_search";
     } elseif(isset($_GET['add'])) {
         $control = "shn_fms_add";
     } elseif(isset($_GET['displaymap'])) {
@@ -59,7 +59,7 @@ function shn_fms_default()
     }
 
     if ($control == "") {
-        shn_fms_search();
+        shn_fms_add();
     }
 
     $control();
