@@ -32,6 +32,7 @@ function shn_pref_default() {
 	shn_tabmenu_open();
 	shn_tabmenu_item("session",  _t("Pref-TableHeader|Session Information"), "pref");
 	shn_tabmenu_item("password", _t("Pref-TableHeader|Change My Password"),  "pref");
+	shn_tabmenu_item("timeLeft", _t("Pref-TableHeader|View instance time left"),  "pref");
 	shn_tabmenu_close();
 
 	$control = "";
@@ -50,7 +51,11 @@ function shn_pref_default() {
 
 	} elseif(isset($_GET['login'])) {
 		$control = "shn_pref_loginForm";
+	
+	}elseif(isset($_GET['timeLeft'])) {
+		$control = "shn_pref_timeLeft";
 	}
+
 
 	if($control == "") {
 		$control = "shn_pref_session";
@@ -1046,7 +1051,26 @@ function shn_pref_tracking() {
 	echo "</fieldset>";
 	echo "</form></div>";
 }
+function shn_pref_timeLeft() {
 
+	global $global;
+
+	$db = $global["db"];
+	$user=$_SESSION['user'];
+	$q="select * from timeLeft where user_name='".$user."';";
+	$r  = mysql_query($q);
+	while($row = mysql_fetch_array($r, MYSQL_ASSOC))
+	{$temp=$row['exptime'];
+    $date = new DateTime("$temp");
+    $now = new DateTime();
+    echo "<head><meta http-equiv='refresh' content='3000'>
+    	<h4>Time left till deletion</h4><br/><br/>
+    	</head>";
+    echo $now->diff($date)->format("%d days, %h hours and %i minutes") ;
+    
+    
+}
+}
 
 
 

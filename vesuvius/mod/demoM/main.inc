@@ -53,9 +53,7 @@ require_once($global['approot']."/inc/lib_security/lib_acl.inc");
 	
 	shn_tabmenu_item("adminDashboard", _t("Demo-TableHeader|Admin Dashboard"),  "demoM");
 	shn_tabmenu_item("createInstance", _t("Demo-TableHeader|Create Instance"),  "demoM");
-	shn_tabmenu_item("testInstance", _t("Demo-TableHeader|Test Instance"),  "demoM");
 	shn_tabmenu_item("pendingNotifications", _t("Demo-TableHeader|View pending notifications"),  "demoM");
-	shn_tabmenu_item("show_notifications", _t("Demo-TableHeader|Show notifications"),  "demoM");
 	shn_tabmenu_item("deleteInstance", _t("Demo-TableHeader|Delete instance"),  "demoM");
 
 	shn_tabmenu_close();
@@ -105,9 +103,7 @@ require_once($global['approot']."/inc/lib_security/lib_acl.inc");
 		$control="shn_demoM_show_notifications";
 	}
 
-	if($control == "") {
-		$control = "shn_demo_session";
-	}
+	
 	
 
 	$control();
@@ -157,7 +153,7 @@ function shn_demoM_reqInstance(){
 				</tr>
 				<tr>
 					<td style="padding-left: 8px; text-align: right;" class="mainRowOdd">URL</td>
-					<td style="padding-left: 8px; text-align: left; font-weight: bold;" class="mainRowOdd"><a href=\"'.$url.'\">'.$url.'</a></td>
+					<td style="padding-left: 8px; text-align: left; font-weight: bold;" class="mainRowOdd"><a href='.$url.'>'.$url.'</a></td>
 				</tr>
 				<tr>
 					<td style="padding-left: 8px; text-align: right;" class="mainRowEven">Time Left</td>
@@ -165,8 +161,9 @@ function shn_demoM_reqInstance(){
 				</tr>
 				</tbody>
 			</table>
+			<meta http-equiv="refresh" content="3000">
 		</div>';
-		echo "<a href=\"".$url."\">".$url."</a>";
+		//echo "<a href=\"".$url."\">".$url."</a>";
 	echo "</div>";
      		
 	
@@ -290,19 +287,36 @@ function shn_demoM_addUser($sname,$org_name,$username,$pswrd,$email,$uuid){
 	global $global;
 	$q="select * from created;";
 	$res=mysql_query($q);
-	echo "<table class=\"emTable\">
+	echo "
+		<table class=\"emTable\">
 			<tr>
 				<td style=\"font-size: 120%; padding-left: 8px;\" ><b>Organisation</b></td>
 				<td style=\"font-size: 120%; padding-left: 8px;text-align: center;\" ><b>Short Name</b></td>
 				<td style=\"font-size: 120%; padding-left: 8px;text-align: center;\" ><b>URL</b></td>
-				<td style=\"font-size: 120%; padding-left: 8px;text-align: center;\" ><b>Email</b></td>
-			</tr>";
-	$users = array();
+				<td style=\"font-size: 120%; padding-left: 8px;text-align: center;\" ><b>Timelimit</b></td>
+			</tr>
+	";
 	$count = 0;
+	$eo = 0;
 	while($row = mysql_fetch_array($res, MYSQL_ASSOC))
-	{
-		echo "<tr><td>" . $row['org_name'] . "</td><td>" . $row['sname'] . "</td><td>" . $row['url'] ."</td><td>" . $row['email'] . "</tr>" ;
-		
+	{	
+		if(($eo % 2) == 0) {
+			$evenOddClass = "mainRowEven";
+		} else {
+			$evenOddClass = "mainRowOdd";
+		}
+		$url = "http://$_SERVER[HTTP_HOST]/$row[sname]";
+		echo "
+			<tr>
+
+				
+				<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".$row['org_name']."</td>
+				<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".$row['sname']."</td>
+				<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\"><a href=".$url.">".$url."</a></td>
+				<td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".$row['exptime']."</td>
+			</tr>
+		"; 
+		$eo++;
 
 	}
 }
@@ -354,7 +368,8 @@ function shn_demoM_createInstance($uuid) {
 	shn_form_text("Hostname", 'hname', 'size="30"', $extra_opts);
 	shn_form_text("Timelimit", 'exptime', 'size="30"', $extra_opts);
 	shn_form_text("Email", 'email', 'size="30"', $extra_opts);
-	
+	shn_form_text("Organisation name", 'org_name', 'size="30"', $extra_opts);
+	shn_form_date("Expiry date", 'expdate', $extra_opts=null);
 
 
 	shn_form_fsclose();
@@ -377,16 +392,16 @@ function shn_demoM_createInstance($uuid) {
 		$user_password   = substr($pswrd, 0, 4).$salt.substr($user_password, 4);
 		$stored_password = md5(trim($pswrd));
 		//$confirmation    = md5(uniqid(rand(), true)); // code used to activate account
-	if ((isset($_POST['sname'])) && (isset($_POST['db_name']))&& (isset($_POST['db_user'])) && (isset($_POST['pswrd'])) && (isset($_POST['hname'])) && (isset($_POST['exptime'])) && (isset($_POST['email'])) && (isset($_POST['username'])))
+	if ((isset($_POST['sname'])) && (isset($_POST['db_name']))&& (isset($_POST['db_user'])) && (isset($_POST['pswrd'])) && (isset($_POST['hname'])) && (isset($_POST['exptime'])) && (isset($_POST['email'])) && (isset($_POST['username'])) && (isset($_POST['org_name'])))
 	 {	
-	   	$ret = shn_demoM_create3($_POST['sname'], $_POST['db_name'], $_POST['pswrd'], $_POST['hname'], $_POST['db_user'], $_POST['exptime'],$salt,$stored_password);
+	   	$ret = shn_demoM_create3($_POST['sname'], $_POST['db_name'], $_POST['pswrd'], $_POST['hname'], $_POST['db_user'], $_POST['exptime'],$salt,$stored_password,$_POST['org_name']);
 	   	
 		//$url="$hname/$sname";
 		$url = "http://$_SERVER[HTTP_HOST]/$_POST[sname]";
 		//echo "<a href=\"".$actual_link."\">".$actual_link."</a>";
 	    
-	   	 $p ="INSERT INTO created(sname,db_name,pswrd,ctime,exptime,email,username,hname,url)
-			VALUES('".mysql_real_escape_string($_POST['sname'])."','".mysql_real_escape_string($_POST['db_name'])."','".$_POST['pswrd']."',now(),'".$_POST['exptime']."','".mysql_real_escape_string($_POST['email'])."','".mysql_real_escape_string($_POST['username'])."','".mysql_real_escape_string($_POST['hname'])."','".$url."');";
+	   	 $p ="INSERT INTO created(sname,db_name,pswrd,ctime,exptime,email,username,hname,url,org_name)
+			VALUES('".mysql_real_escape_string($_POST['sname'])."','".mysql_real_escape_string($_POST['db_name'])."','".$_POST['pswrd']."',now(),'".$_POST['exptime']."','".mysql_real_escape_string($_POST['email'])."','".mysql_real_escape_string($_POST['username'])."','".mysql_real_escape_string($_POST['hname'])."','".$url."','".mysql_real_escape_string($_POST['org_name'])."');";
 		$res=mysql_query($p);
 		$user=$_POST['username'];
 		$q="update DemoReqStatus set status = 'CREATED' where username = '".$user."';";
@@ -404,9 +419,9 @@ function shn_demoM_createInstance($uuid) {
 
 
 	
-function shn_demoM_create3($sname,$db_name,$pswrd,$hname,$db_user,$exptime,$salt,$stored_password)
+function shn_demoM_create3($sname,$db_name,$pswrd,$hname,$db_user,$exptime,$salt,$stored_password,$org_name)
 {	
-	$output =shell_exec("sh /var/www/project_vesu/vesuvius/vesuvius/mod/demoM/clone1.sh $sname $db_name $pswrd $hname $db_user $salt $stored_password");
+	$output =shell_exec("sh /var/www/project_vesu/vesuvius/vesuvius/mod/demoM/clone1.sh $sname $db_name $pswrd $hname $db_user $salt $stored_password $exptime $org_name");
 	
 }	
 		/**	add_confirmation($msg);

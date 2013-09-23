@@ -8,9 +8,11 @@ host=${4}
 dbuser=${5}
 salt=${6}
 storedPassword=${7}
+exptime=${8}
+org_name=${9}
 #echo "enter db user"
 #read dbUser
-echo $sname
+ echo $sname
  mkdir /var/www/${sname}
  #mysql -u root -psneha227 -e "create user '$2'@'localhost' indentified by '$3';";
  #copy recursively into newInstancessname
@@ -42,17 +44,33 @@ r1='$conf['db_name'] = "${dbname}"'
 r2='$conf['db_host'] = "${host}"'
 r3='$conf['db_user'] = "${dbuser}"' 
 r4='$conf['db_pass'] = "${pswrd}"'
-sed -i 's/project/'${dbname}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
-sed -i 's/project/'${dbuser}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
+sed -i 's/testdb/'${dbname}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
+sed -i 's/testuser/'${dbuser}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
 sed -i 's/123456/'${pswrd}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
-sed -i 's/Sahana Vesuvius/'${sname}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
+sed -i 's/Sahana Vesuvius/'${org_name}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
+sed -i 's/project/'${sname}'/' /var/www/${sname}/vesuvius/conf/sahana.conf
 #copies the .htaccess file
 #cp /var/www/${sname}/vesuvius/www/htaccess.example /var/www/${sname}/vesuvius/www/.htaccess
 
 sed -i 's:project/vesuvius/:'${sname}'/vesuvius/:' /var/www/${sname}/vesuvius/www/.htaccess
 #creates a symlink
 ln -s /var/www/${sname}/vesuvius/www /var/www/${sname}/www
+p1="use ${2};"
+p2="UPDATE users
+  	SET ctime=now()
+  	WHERE user_id=1; "
+query="${p1}${p2}";
+mysql -u${5} -p${3} -e "$query";
 
+r1="use ${2};"
+r2="CREATE TABLE timeLeft(user_name VARCHAR(30),user_id INT, ctime DATETIME, exptime VARCHAR(30))";
+sql="${r1}${r2}";
+mysql -u${5} -p${3} -e "$sql";
+
+r1="use ${2};"
+r2="INSERT INTO timeLeft(user_name, user_id,  ctime, exptime) values ('root', 1, now(), '${8}')";
+query="${r1}${r2}";
+mysql -u${5} -p${3} -e "$query";
  #mkdir /var/www/${sname}/vesuvius/www/tmp ;
  #mkdir /var/www/${sname}/vesuvius/www/tmp/pfif_logs ;
  #mkdir /var/www/${sname}/vesuvius/www/tmp/pfif_cache ;
@@ -60,13 +78,15 @@ ln -s /var/www/${sname}/vesuvius/www /var/www/${sname}/www
  #mkdir /var/www/${sname}/vesuvius/www/tmp/rap_cache ;
  #mkdir /var/www/${sname}/vesuvius/www/tmp/mpres_cache ;
  #deletes the root user from database
- p1="use ${2};"
- p2="DELETE FROM `users` WHERE `user_id` = 1 ; "
- del="${p1}${p2}";
- mysql -u${5} -p${3} -e "$del";
+ #p1="use ${2};"
+ #p2="DELETE FROM users WHERE user_id = 1 ; "
+ #del="${p1}${p2}";
+ #mysql -u${5} -p${3} -e "$del";
 
- p3="INSERT INTO `users` (user_id,p_uuid,user_name,password,salt) values (1, 1, ${5}, ${7}, ${6});"
- mysql -u${5} -p${3} -e "$p3";
+ #p4="use ${2};"
+ #p3="INSERT INTO users (user_id,p_uuid,user_name,password,salt) values (1, 1, '${5}', '${7}', '${6}');"
+ #ch="${p4}${p3}"
+ #mysql -u${5} -p${3} -e "$ch";
 
 
 #sudo chown -R sneha:www-data {$sname}
