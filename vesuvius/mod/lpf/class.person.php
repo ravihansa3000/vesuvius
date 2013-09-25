@@ -1026,7 +1026,7 @@ class person {
 			$this->insertVoiceNotes();
       $this->insertPersonNotes();
       
-      /*
+            /*
             // -------- HACK person_physical and contact updates ---------------
             $q = "
 				INSERT INTO `person_physical` (
@@ -1054,9 +1054,10 @@ class person {
             if ($result === false) {
                 daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "person person_details update ((" . $q . "))");
             }
-        */
+            
             // to-do contact array updates later
-
+            */
+            
 			$this->saved = true;
 			$this->modified = false;
 
@@ -1366,13 +1367,13 @@ class person {
 			$result = $this->db->Execute($q);
 			if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "person person_to_report update ((".$q."))"); }
 
-      $this->updatePersonNotes();
+            $this->updatePersonNotes();
 			$this->updateImages();
 			$this->updateEdxl();
 			$this->updatePfif();
 			$this->updateVoiceNotes();
 
-        /*
+            /*
             // -------- HACK person_physical and contact updates ---------------
             $q = "
 				UPDATE person_physical
@@ -1391,7 +1392,7 @@ class person {
 			if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "person person_details update ((".$q."))"); }
             
             // to-do contact array updates later
-        */
+            */
             
 			$this->modified = false;
 		}
@@ -1517,11 +1518,12 @@ class person {
 		if($this->years_old       != $this->Oyears_old)       { $this->saveRevision($this->sql_years_old,       $this->sql_Oyears_old,       'person_details',   'years_old'     ); }
 		if($this->minAge          != $this->OminAge)          { $this->saveRevision($this->sql_minAge,          $this->sql_OminAge,          'person_details',   'minAge'        ); }
 		if($this->maxAge          != $this->OmaxAge)          { $this->saveRevision($this->sql_maxAge,          $this->sql_OmaxAge,          'person_details',   'maxAge'        ); }
-		if($this->last_seen       != $this->Olast_seen)       { $this->saveRevision($this->sql_last_seen,       $this->sql_Olast_seen,       'person_details',   'last_seen'     ); makeStaticPfifNote(); }
+		if($this->last_seen       != $this->Olast_seen)       { $this->saveRevision($this->sql_last_seen,       $this->sql_Olast_seen,       'person_details',   'last_seen'     ); $this->makeStaticPfifNote(); }
 		if($this->last_clothing   != $this->Olast_clothing)   { $this->saveRevision($this->sql_last_clothing,   $this->sql_Olast_clothing,   'person_details',   'last_clothing' ); }
 		if($this->other_comments  != $this->Oother_comments)  { $this->saveRevision($this->sql_other_comments,  $this->sql_Oother_comments,  'person_details',   'other_comments'); }
 		if($this->rep_uuid        != $this->Orep_uuid)        { $this->saveRevision($this->sql_rep_uuid,        $this->sql_Orep_uuid,        'person_to_report', 'rep_uuid'      ); }
 		
+        /*
         // -------------- HACK person_physical data updates --------------------
         if($this->opt_blood_type  != $this->Oopt_blood_type)  { $this->saveRevision($this->opt_blood_type,      $this->Oopt_blood_type,      'person_physical',  'opt_blood_type'); }
         if($this->height          != $this->Oheight)          { $this->saveRevision($this->height,              $this->Oheight,              'person_physical',  'height'        ); }
@@ -1531,6 +1533,7 @@ class person {
         if($this->opt_hair_color  != $this->Oopt_hair_color)  { $this->saveRevision($this->opt_hair_color,      $this->Oopt_hair_color,      'person_physical',  'opt_hair_color'); }
         if($this->injuries        != $this->Oinjuries)        { $this->saveRevision($this->injuries,            $this->Oinjuries,            'person_physical',  'injuries'      ); }
         if($this->comments        != $this->Ocomments)        { $this->saveRevision($this->comments,            $this->Ocomments,            'person_physical',  'comments'      ); }
+         */
 	}
 
 

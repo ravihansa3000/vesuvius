@@ -97,7 +97,6 @@ class SyncConfDB {
     }
     
     public function insert() {
-        echo 'insert '.'<br />';
         $this->setSQLparams();
         if(!$this->isInstanceConfigured($this->instance_uuid)) {
             $q = "

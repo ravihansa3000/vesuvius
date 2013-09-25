@@ -2748,6 +2748,7 @@ function pull($presharedKey, $lastSyncDate) {
             AND     s.`last_updated` > '".mysql_real_escape_string($lastSyncDate)."'
             AND     s.`creation_time` < '".mysql_real_escape_string($lastSyncDate)."'
         ";
+    $pulledTime = date('Y-m-d H:i:s');
     $result = $global['db']->Execute($q); 
     $updateRecords = array();
 	while (!$result == NULL && !$result->EOF) {
@@ -2758,25 +2759,39 @@ function pull($presharedKey, $lastSyncDate) {
         $updateRecords[] = serialize($syncP);            
         $result->MoveNext();
 	}
-        
+    
+    $lastSyncDate = '2012-01-01 00:00:00';
+    $q = "
+            SELECT  MAX(`update_time`) AS uTime
+            FROM    `sync_updates`
+            WHERE   `conf_id` = '" . mysql_real_escape_string($syncConfDB->id) . "'
+        ";
+    $res = $global['db']->Execute($q);
+    if ($res->fields['uTime'] != NULL) {
+        $lastSyncDate = $res->fields['uTime'];
+    }
+    
 	return array(
 		'new'           => (string)json_encode($newRecordList),
 		'updates'       => (string)json_encode($updateRecords),
+        'pulledTime'    => (string)json_encode($pulledTime),
+        'lastPushed'    => (string)json_encode($lastSyncDate),
 		'errorCode'     => (int)0,
 		'errorMessage'  => null
 	);
 }
 
-function push($new, $updates, $syncDateTime, $presharedKey, $master_wsdl) {
+function push($new, $updates, $pushedTime, $presharedKey) {
     
     shn_plus_logAccess("push");
 	global $global;
     
     $ids = explode("##", $presharedKey);
     $syncConfDB = new SyncConfDB();
-    $syncConfDB->id = $ids[1];   //latter part is for slave
+    $syncConfDB->id = $ids[1];              //latter part is for slave
     $syncConfDB->load();
     $incidentId = $syncConfDB->incident_id;
+    $master_wsdl = $syncConfDB->instance_uuid;
     
     $newRecords = json_decode($new);
     foreach ($newRecords as $serP) {
@@ -2806,16 +2821,8 @@ function push($new, $updates, $syncDateTime, $presharedKey, $master_wsdl) {
     /**
      * update to the sync into sync_updates table.
      */
-    $q = "
-        INSERT INTO sync_updates (
-            update_time,
-			incident_id,
-			instance_uuid )
-        VALUES (
-            ". $syncDateTime .",
-            ". $incidentId .",
-            ". $master_wsdl .",
-    ";
+    $q = "INSERT INTO `sync_updates` (`id`, `conf_id`, `update_time`)
+                VALUES (NULL , '".$syncConfDB->id."', '".$pushedTime."');";    
     $result = $global['db']->Execute($q);
     if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "synchronizatoin update sync_updates insert ((".$q."))"); }
    
@@ -2866,41 +2873,36 @@ function sync_req($incidentName, $instanceUUID, $mode, $role , $other_confID , $
         $confID = $syncConfDB->save();
         if($confID != NULL) {
             
-            $p = "
-                SELECT  `contact_value`
-                FROM    `contact`
-                WHERE   `p_uuid` = '".mysql_real_escape_string($_SESSION['user_p_uuid'])."'
-                AND     `opt_contact_type` = email
-                ";
-            $contact  = $global['db']->Execute($q);
-            $toEmail  = $contact->fields['contact_value'];
-            
-            $p = "
-                SELECT  `full_name`
-                FROM    `person_uuid`
-                WHERE   `p_uuid` = '".mysql_real_escape_string($_SESSION['user_p_uuid'])."'
-                ";  
-            $person  = $global['db']->Execute($q);
-            $toName  = $person->fields['full_name'];
+            $q = "
+                SELECT  p.p_uuid, p.full_name, c.contact_value
+                FROM    sys_user_to_group s, person_uuid p, contact c
+                WHERE   p.p_uuid = s.p_uuid
+                AND     s.p_uuid = c.p_uuid
+                AND     s.group_id = 1
+                AND     c.opt_contact_type = 'email'
+                ";                                                      // GROUP_ID - 1: admin contact details
+            $result = $global['db']->Execute($q);
+            $toEmail= $result->fields['contact_value'];
+            $toName = $result->fields['full_name'];
             
             $p = new pop();
-            $subject = "Please confirm the registration of your new PL user account";
+            $link = $conf['base_uuid']."test/index.php?mod=sync&act=show&id=".$syncConfDB->id;
+            $subject = "Native synchronization request.";
             $bodyHTML =
-            "Thank you for registering.<br><br>"
+            "Please complete the registration of new Native synchronization request between vesuvius instances. <br><br>"
             ."You <b>must</b> click on this link in order for the registration process to be completed:<br><a href=\"".$link."\">".$link."</a><br><br>"
-            ."Once completed, your account will be active allowing you to login the Person Locator web site and other devices which utilize its web services.<br><br><br>"
+            ."Once accepted, your instance missing/found person data may change randomly by the masters sync web service calls.<br><br><br>"
             ."<br><img src=\"http://goo.gl/BqfCv\">";
             $bodyAlt =
-            "Thank you for registering.\n\n"
+            "Please complete the registration of new Native synchronization request between vesuvius instances.\n\n"
             ."You must click on this link in order for the registration process to be completed:\n".$link."\n"
-            ."Once completed, your account will be active allowing you to login the Person Locator web site and other devices which utilize its web services.\n\n\n"
+            ."Once accepted, your instance missing/found person data may change randomly by the masters sync web service calls.\n\n\n"
             ."- ".$conf['site_name'];
             $p->sendMessage($toEmail, $toName, $subject, $bodyHTML, $bodyAlt);
             
             $resMessage = "successfully saved sync request, we will get back to u soon";
-            $resStatus = "SUCCESS";
-        }
-        else {
+            $resStatus  = "SUCCESS";
+        } else {
             $resMessage = "Failed to save";
             $resStatus = "FAILED";
         }

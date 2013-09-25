@@ -2453,8 +2453,8 @@ CREATE TABLE `sync_conf` (
 --
 
 LOCK TABLES `sync_conf` WRITE;
-/*!40000 ALTER TABLE `sync_updates` DISABLE KEYS */;
-/*!40000 ALTER TABLE `sync_updates` ENABLE KEYS */;
+/*!40000 ALTER TABLE `sync_conf` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sync_conf` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --

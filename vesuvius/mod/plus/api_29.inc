@@ -934,6 +934,8 @@ function shn_plus_registerAll($namespace) {
 			'out' => array(
 				'new'           => 'xsd:string',
                 'updates'       => 'xsd:string',
+                'pulledTime'    => 'xsd:string',
+                'lastPushed'    => 'xsd:string',
 				'errorCode'     => 'xsd:integer',
 				'errorMessage'  => 'xsd:string'
 			)
@@ -948,9 +950,8 @@ function shn_plus_registerAll($namespace) {
 			'in' => array(
                 'new'           => 'xsd:integer',
                 'updates'       => 'xsd:string',
-                'syncDateTime'  => 'xsd:string',
-                'presharedKey'    => 'xsd:string', 
-                'master_wsdl'   => 'xsd:string',
+                'pushedTime'    => 'xsd:string',
+                'presharedKey'  => 'xsd:string',
 			),
 			'out' => array(
 				'message'       => 'xsd:string',

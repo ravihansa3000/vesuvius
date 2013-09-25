@@ -74,12 +74,13 @@ class syncPerson extends person {
     
     // Updates due to synchronizatoin with other instance... 
 	function saveRevision($newValue, $oldValue, $table, $column) {
-
 		$this->modified = true;
 		// note the revision
+        
+        $sql_p_uuid = ($this->p_uuid === null) ? "NULL" : "'".mysql_real_escape_string((string)$this->p_uuid)."'";
 		$q = "
 			INSERT into person_updates (`p_uuid`, `updated_table`, `updated_column`, `old_value`, `new_value`, `updated_by_p_uuid`)
-			VALUES (".$this->sql_p_uuid.", '".$table."', '".$column."', ".$oldValue.", ".$newValue.", '".$this->synced_instance."');
+			VALUES (".$sql_p_uuid.", '".$table."', '".$column."', ".$oldValue.", ".$newValue.", '".$this->synced_instance."');
 		";
 		$result = $this->db->Execute($q);
 		if($result === false) { daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $this->db->ErrorMsg(), "person saveRevision ((".$q."))"); }

@@ -46,9 +46,9 @@ function shn_sync_checkCredz() {
 
 function shn_sync_default() {
     if(shn_sync_checkCredz()) {
-        __synchronize(32);
-//		echo '<a href="index.php?mod=sync&act=new"><span class="styleTehButton">Create new synchronization</span></a> <br /> <br />';
-//        shn_sync_view();
+//        __synchronize(32);
+		echo '<a href="index.php?mod=sync&act=new"><span class="styleTehButton">Create new synchronization</span></a> <br /> <br />';
+        shn_sync_view();
 	}
 }
 
@@ -81,6 +81,10 @@ function shn_sync_controller() {
         
         case 'sync_update' :
             shn_sync_update();
+        break;
+        
+        case 'sync_start' :
+            __synchronize($_REQUEST['confID']);
         break;
         
 		default :
@@ -188,7 +192,7 @@ function shn_sync_view() {
         echo "
 			<tr>
 			<td style=\"width: 150px;\" class=\"noBorderLeft " . $class . "\" >
-                <a href=\""."index.php?mod=sync&act=show&id=".$row['id']."\" target=\"_blank\">" //".$row['id']."
+                <a href=\""."index.php?mod=sync&act=show&id=".$row['id']."\" >" //".$row['id']."
                 . $row['incident_name'] . "</a></td>
 			<td class=\"noBorderLeft " . $class . "\" >" 
                 . $row['instance_uuid'] . "</td>
@@ -203,7 +207,7 @@ function shn_sync_view() {
         $count++;
     }
     if ($count == 0) {
-        echo "<tr><td class=\"noBorderLeft\" colspan=3>No persons reported.</td></tr>";
+        echo "<tr><td class=\"noBorderLeft\" colspan=3>No Synchronization configured</td></tr>";
     }
     echo "</table>";
     echo "</fieldset>";
@@ -220,12 +224,15 @@ function shn_sync_show() {
     
     $action = FALSE;
     shn_form_fopen("controller", null, array('enctype'=>'enctype="multipart/form-data"', 'req_message' => true));
-        shn_form_hidden(array('seq'=>'sync_update'));
+        
         shn_form_hidden(array('confID'=>$syncConfDB->id));
         shn_form_fsopen(_t('Edit Native sync configurations'));
             ?>
             <p><?php echo _t('First slave instance can only able to accept the sync request:'); ?></p>    
-            <p><?php echo _t('Once sync established master/slave can able to change status:'); ?></p>    
+            <p><?php echo _t('Once sync established master/slave can able to change status:'); ?></p>  
+            <?php if(($syncConfDB->role == "master") && ($syncConfDB->status == "reg")) { ?>
+                <p><b class="red"> * </b> <?php echo _t("Waiting for slave's response.."); ?></p>
+            <?php } ?>
             <?php
 //            shn_form_hidden(array('incident_short'=> $incident_shortName));
             shn_form_text(_t('Instance UUID '), 'instance_uuid', 'size="50"; disabled=disabled;', array('value' => $syncConfDB->instance_uuid));
@@ -239,8 +246,13 @@ function shn_sync_show() {
             else 
                 shn_form_text(_t('Status'), "status", 'size="50"; disabled=disabled', array('value' => $syncConfDB->status));
         shn_form_fsclose();        
-        if($action) 
+        if($action) {
+            shn_form_hidden(array('seq'=>'sync_update'));
             shn_form_submit("Next", "class=\"styleTehButton\"");
+        } elseif (($syncConfDB->role == "master") && ($syncConfDB->status == "ack")) {
+            shn_form_hidden(array('seq'=>'sync_start'));
+            shn_form_submit("Start Sync", "class=\"styleTehButton\"");
+        }
     shn_form_fclose();
     
 }
@@ -254,6 +266,7 @@ function shn_sync_update() {
     $syncConfDB = new SyncConfDB();
     $syncConfDB->id = $_REQUEST['confID'];
     $syncConfDB->load();
+    $res_stat;
     if (($syncConfDB->role == "slave") && ($syncConfDB->status == "reg")) {
         if ($_REQUEST['status'] == "ack") {
             $syncConfDB->status = $_REQUEST['status'];
@@ -269,10 +282,15 @@ function shn_sync_update() {
                 'activated_time'=> date('Y-m-d H:i:s'))
             );
             $res_stat = json_decode($syncReq['respond']);
-
-            echo $res_stat;
         }
     }
+    
+    if($res_stat != NULL) {
+        add_confirmation($res_stat);
+    } else {
+        add_error("Failed from master response..");
+    }
+    shn_sync_default();
 }
 
 /**
@@ -382,10 +400,14 @@ function shn_conf_establish($incident_short, $instanceUUID, $mode) {
         'created_time'  => $syncConfDB->created_time)
         );
     $res_stat = json_decode($syncReq['req_status']);
-    $res_msg = json_decode($syncReq['message']);
+    $res_msg  = json_decode($syncReq['message']);
     
-    echo $res_stat . "<br />" . $res_msg;
-    
+//    if($res_stat == "SUCCESS") {
+//        add_confirmation($res_msg);
+//    } else {
+//        add_error("Failed from slave ". $res_msg);
+//    }    
+    shn_sync_default();
 }
 
 /**
@@ -409,26 +431,27 @@ function __synchronize($sync_conf_id) {
         /** Last sync date-time. */
         $lastSyncDate = '2012-01-01 00:00:00';
         $q = "
-            SELECT  MAX(`update_time`)
+            SELECT  MAX(`update_time`) AS uTime
             FROM    `sync_updates`
             WHERE   `conf_id` = '" . mysql_real_escape_string($sync_conf_id) . "'
         ";
         $res = $global['db']->Execute($q);
-        if (!$res == NULL)
-            $lastSyncDate = $res->fields['update_time'];
+        if ($res->fields['uTime'] != NULL){
+            $lastSyncDate = $res->fields['uTime'];
+        }            
 
         $currentSyncDateTime = date('Y-m-d H:i:s');
-//    $slave_wsdl = "http://localhost/vesuvius_dev/vesuvius/www/?wsdl&api=29";
         $client = new nusoap_client($slave_wsdl);
         $x = file_get_contents($global['approot'] . "mod/plus/reference_REUNITE4.xml");
         $pullResult = $client->call('pull', array('presharedKey' => $preshared_key, 'lastSyncDate' => $lastSyncDate));
-
+        
+        $pulledTime = json_decode($pullResult['pulledTime']);
+        $lastPushed = json_decode($pullResult['lastPushed']);
+        
         echo "
             <h2>wsdl: " . $slave_wsdl . "</h2>
             <pre>" . var_export($pullResult, true) . "</pre> 
         ";
-
-        __addNewRecords(json_decode($pullResult['new']));
 
         $skipForPush = "";
         $updatesForPush = array();
@@ -441,6 +464,7 @@ function __synchronize($sync_conf_id) {
             $slave_person->removeUpdateRedundancy();
             $local = new syncPerson();
             $local->p_uuid = $slave_person->p_uuid;
+            $local->synced_instance = $syncConfDB->preshared_key;
             $local->last_sync = $lastSyncDate;
             $local->loadWithUpdates();
             $local->removeUpdateRedundancy();
@@ -474,7 +498,7 @@ function __synchronize($sync_conf_id) {
                 }
                 //set slave value if there is no matched
                 if (!$matched)
-                    $local->setAttr($l_up['updated_column'], $s_up['new_value']);
+                    $local->setAttr($s_up['updated_column'], $s_up['new_value']);
             }
 
             // Add relavent local objects to push data...
@@ -490,13 +514,16 @@ function __synchronize($sync_conf_id) {
         }
 
         if ($syncMode == "two_way") {
-            /** For push Newly created person records from last sync. */
+            /** 
+            * For push Newly created person records from last sync. 
+            * This record taken before save from slave to avoid similar data gathering.
+            */            
             $q = "
             SELECT  p.`p_uuid`
             FROM    `person_uuid` p, `person_status` s
             WHERE   p.`incident_id`='" . mysql_real_escape_string($localIncidentId) . "'
             AND     p.`p_uuid` = s.`p_uuid`
-            AND     s.`creation_time` > '" . mysql_real_escape_string($lastSyncDate) . "'
+            AND     s.`creation_time` > '" . mysql_real_escape_string($lastPushed) . "'
             ";
             //    $sql = "SELECT * from person_uuid where incident_id='".mysql_real_escape_string($localIncidentId)."'";
             $result = $global['db']->Execute($q);
@@ -509,10 +536,9 @@ function __synchronize($sync_conf_id) {
                 $newRecordList[] = serialize($syncP);
                 $result->MoveNext();
             }
-
+            
             /**
-             * Fetch other (other than conflicts) local updates to send push request. 
-             * 
+             * Fetch other (other than conflicts) local updates to send push request.
              * query with exception from already resolved p_uuid 
              */
             $q = "
@@ -520,11 +546,13 @@ function __synchronize($sync_conf_id) {
                 FROM    `person_uuid` p, `person_status` s
                 WHERE   p.`incident_id`='" . mysql_real_escape_string($localIncidentId) . "'
                 AND     p.`p_uuid` = s.`p_uuid`
-                AND     s.`last_updated` > '" . mysql_real_escape_string($lastSyncDate) . "'
-                AND     s.`creation_time` < '" . mysql_real_escape_string($lastSyncDate) . "'
-                NOT IN  ('" . $skipForPush . "')
-                ORDER BY last_updated DESC
-            ";
+                AND     s.`last_updated` > '" . mysql_real_escape_string($lastPushed) . "'
+                AND     s.`creation_time` < '" . mysql_real_escape_string($lastPushed) . "'
+                ";
+            if($skipForPush != NULL) 
+                $q .= "NOT IN  ('" . $skipForPush . "')";
+            $q .= "ORDER BY last_updated DESC";
+            
             $result = $global['db']->Execute($q);
             while (!$result == NULL && !$result->EOF) {
                 $syncP = new syncPerson();
@@ -535,30 +563,30 @@ function __synchronize($sync_conf_id) {
                 $result->MoveNext();
             }
 
+            echo "
+                <h2> Push dataset </h2>
+                 New: "     ."<pre>" . var_export($newRecordList, true) . "</pre> 
+                 Updates: " ."<pre>" . var_export($updatesForPush, true)."</pre> 
+            ";
+            
             /** push request to slave... */
-            $this_wsdl = "localhost/vesuvius_dev/vesuvius/29";      // TO-DO fetch from conf file.
-            $pushResult = $client->call('push', array('new' => (string) json_encode($newRecordList),
-                'updates' => (string) json_encode($updatesForPush),
-                'syncDateTime' => (string) json_encode($currentSyncDateTime),
-                'presharedKey' => (string) json_encode($preshared_key),
-                'master_wsdl' => (string) json_encode($this_wsdl),
+            $pushResult = $client->call('push', array(
+                'new'           => (string) json_encode($newRecordList),
+                'updates'       => (string) json_encode($updatesForPush),
+                'pushedTime'  => (string) json_encode($currentSyncDateTime),
+                'presharedKey'  => (string) json_encode($preshared_key),
             ));
             $msg = json_decode($pushResult['message']);
         }
+                
+        // Add new records from slave
+        __addNewRecords(json_decode($pullResult['new']));
 
         /**
          * update to the sync into sync_updates table.
          */
-        $qr = "
-            INSERT INTO sync_updates (
-                conf_id,
-                update_time,)
-            VALUES (
-                " . $sync_conf_id . ",
-                " . $currentSyncDateTime . ",
-        ";
         $q = "INSERT INTO `sync_updates` (`id`, `conf_id`, `update_time`)
-                VALUES (NULL , '".$sync_conf_id."', '".$currentSyncDateTime."');";
+                VALUES (NULL , '".$sync_conf_id."', '".$pulledTime."');";
         $result = $global['db']->Execute($q);
         if ($result === false) {
             daoErrorLog(__FILE__, __LINE__, __METHOD__, __CLASS__, __FUNCTION__, $global['db']->ErrorMsg(), "synchronizatoin update sync_updates insert ((" . $q . "))");
