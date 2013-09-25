@@ -448,10 +448,10 @@ function __synchronize($sync_conf_id) {
         $pulledTime = json_decode($pullResult['pulledTime']);
         $lastPushed = json_decode($pullResult['lastPushed']);
         
-        echo "
-            <h2>wsdl: " . $slave_wsdl . "</h2>
-            <pre>" . var_export($pullResult, true) . "</pre> 
-        ";
+//        echo "
+//            <h2>wsdl: " . $slave_wsdl . "</h2>
+//            <pre>" . var_export($pullResult, true) . "</pre> 
+//        ";
 
         $skipForPush = "";
         $updatesForPush = array();
@@ -563,11 +563,11 @@ function __synchronize($sync_conf_id) {
                 $result->MoveNext();
             }
 
-            echo "
-                <h2> Push dataset </h2>
-                 New: "     ."<pre>" . var_export($newRecordList, true) . "</pre> 
-                 Updates: " ."<pre>" . var_export($updatesForPush, true)."</pre> 
-            ";
+//            echo "
+//                <h2> Push dataset </h2>
+//                 New: "     ."<pre>" . var_export($newRecordList, true) . "</pre> 
+//                 Updates: " ."<pre>" . var_export($updatesForPush, true)."</pre> 
+//            ";
             
             /** push request to slave... */
             $pushResult = $client->call('push', array(
