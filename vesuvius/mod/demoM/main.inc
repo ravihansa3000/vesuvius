@@ -23,7 +23,8 @@ require_once($global['approot']."/inc/lib_security/lib_auth.inc");
 require_once($global['approot']."/inc/lib_security/constants.inc");
 require_once($global['approot']."/inc/lib_security/errors.inc");
 require_once($global['approot']."/inc/lib_security/lib_acl.inc");
- 
+ /** Main controller for demo manager interface. Depending on the type of current user the page is rendered
+ */
  function shn_demoM_default()
  {	
  	$control = "";
@@ -109,6 +110,7 @@ require_once($global['approot']."/inc/lib_security/lib_acl.inc");
 	$control();
 }
  }
+ // User requests for an isntance from here. Depending on the status of the request, the view is //rendered
 function shn_demoM_reqInstance(){
 	global $global;
 
@@ -245,7 +247,7 @@ function shn_demoM_request()
 	
 }}
 
-
+//user added to the tables
 function shn_demoM_addUser($sname,$org_name,$username,$pswrd,$email,$uuid){
 
 		
@@ -282,7 +284,8 @@ function shn_demoM_addUser($sname,$org_name,$username,$pswrd,$email,$uuid){
 
 		$r = "INSERT INTO flag (user) VALUES ('".mysql_real_escape_string($username)."');";
 		mysql_query($r);
-} 
+}	
+	//admin dashboard showing details of created instances 
  	function shn_demoM_adminDashboard(){
 	global $global;
 	$q="select * from created;";
@@ -320,7 +323,7 @@ function shn_demoM_addUser($sname,$org_name,$username,$pswrd,$email,$uuid){
 
 	}
 }
-
+//shows notifications
 function shn_demoM_pendingNotifications(){
 	global $global;
 	$q="select * from notify;";
@@ -349,9 +352,8 @@ function shn_demoM_pendingNotifications(){
 
 }
 
-function shn_demoM_incTime(){
-//$url = makeBaseUrl() ."localhost/".$sname.;
-}
+
+//form for creating instances
 function shn_demoM_createInstance($uuid) {
 
 	global $global;
@@ -428,13 +430,14 @@ function shn_demoM_create3($sname,$db_name,$pswrd,$hname,$db_user,$exptime,$salt
 			//shn_demoM_adminDashboard();
 	$del="delete from notify where sname = '$sname';";
 	mysql_query($del);*/
-	
+	//sends notification mail to user
 function shn_demoM_sendUserMail($sname){
 	$q="select * from created where sname= '".$sname."';";
 	$res=mysql_query($q);
 	$row = mysql_fetch_array($res, MYSQL_ASSOC);
 	$email=$row['email'];
-	//$url = "http://$_SERVER[ho]"
+	$username=$row['username'];
+	$url = "http://$_SERVER[HTTP_HOST]/$row[sname]";
 	
 	$subject  = "Your demo instance details...";
 
@@ -502,6 +505,7 @@ function shn_demoM_test3($sname)
 {
 	header('Location: ' . $sname );
 }
+//deletes instances.
 function shn_demoM_deleteInstance()
 {
 	echo "<div id=\"formcontainer\">";
@@ -519,6 +523,9 @@ function shn_demoM_delete2(){
 	$sname=$_POST['sname'];
 	$dbname=$_POST['dbname'];
 	$ret=shn_demoM_delete3($sname,$dbname);
+	$r="delete from created where sname='$sname';";
+		mysql_query($r);
+
 }
 function shn_demoM_delete3($sname,$dbname)
 {
