@@ -214,21 +214,22 @@ function rez_show_pages($internal = FALSE) {
 	}
 
 	$pages = array();
-	$count = 0;
+	$syscount = 0;
 
 	// find out how many pages we have so we can later build our pages table
 	while($row = $result->FetchRow() ){
-		$pages[$count] = $row;
-		$count++;
+		$pages[$syscount] = $row;
+		$syscount++;
 	}
 
 	// build system pages Table
 	$burl = "<img src=\"theme/".$conf['theme']."/img/"; // base URL for images, (it chooses the /www/theme/THEME_NAME/img/ folder)
 	$i = 1;
 	$eo = 0;
-	while($i <= $count) {
+	while($i <= $syscount) {
 		$row = $pages[$i-1];
 		$page_id    = $row['rez_page_id'];
+		$page_num    = $i;
 		$menu_title = $row['rez_menu_title'];
 		$menu_order = $row['rez_menu_order'];
 		$visibility = $row['rez_visibility'];
@@ -238,7 +239,7 @@ function rez_show_pages($internal = FALSE) {
 		} else {
 			$evenOddClass = "mainRowOdd";
 		}
-		$htmlMain .= "<tr><td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".abs($page_id)."</td><td style=\"padding-left: 8px;\" class=\"".$evenOddClass."\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"#\" onclick=\"rez_perform_edit('system',".$page_id.",'');\">".$menu_title."</a></td>";
+		$htmlMain .= "<tr><td style=\"padding-left: 8px; text-align: center;\" class=\"".$evenOddClass."\">".abs($page_num)."</td><td style=\"padding-left: 8px;\" class=\"".$evenOddClass."\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"#\" onclick=\"rez_perform_edit('system',".$page_id.",'');\">".$menu_title."</a></td>";
 
 		$htmlMain .= "<td style=\"text-align: center;\" class=\"".$evenOddClass."\"><input class=\"styleTehButton\" type=\"button\" onclick=\"rez_perform_edit('system',".$page_id.",'');\" value=\""._t("ResourcePages-Button|Edit")."\"></td>";
 
@@ -246,7 +247,7 @@ function rez_show_pages($internal = FALSE) {
 		$eo++;
 		$eo %= 2;
 	}
-	if ($count == 0) {
+	if ($syscount == 0) {
 		$htmlMain .= "<tr><td colspan=7 class=\"mainRowEven\" style=\"text-align: center;\">"._t("ResourcePages-Message|No Pages have been created.")."</td></tr>";
 	}
 	$htmlMain .= "</table>";
@@ -268,7 +269,7 @@ function rez_show_pages($internal = FALSE) {
 		$global['xajax_res']->addAssign('rezMain','style.opacity','1.0');
 		$global['xajax_res']->addAssign('rezMain','innerHTML',$htmlMain);
 		$count-=1;
-		$htmlLog .= "Found ".$count ." Resource page(s).<br>";
+		$htmlLog .= "Found ".($count+1) ." Resource page(s) and ".$syscount." System page(s)<br>";
 		$global['xajax_res']->addAppend('rezLog','innerHTML',$htmlLog);
 		$global['xajax_res']->addScript("setTimeout('e = document.getElementById(\'rezLog\'); e.scrollTop = e.scrollHeight+1000;', 500);");
 		return $global['xajax_res']->getXML();
@@ -858,6 +859,7 @@ function rez_template_save($old_locale,$template_id, $r) {
 // presents a gui to edit a page and its corresponding fields
 function rez_perform_edit($rez_type,$page_id, $locale) {
 	global $global;
+	$global['xajax_res']->addAppend('rezLog','innerHTML','Opening Editor...<br>');
 	$type ='resource';
 	// if locale is not set .. Switch to default value - en_Us
 	if (!$locale){
@@ -1296,10 +1298,10 @@ function rez_perform_translate($type,$page_id, $locale) {
 		."<td width=\"50%\" style=\"vertical-align:top;\"><textarea name=\"pageContent\" onchange=\"window.rezPageSaved = false;\" id=\"pageContent\" style=\"height: 300px; width: 90%;\">".$new_content."</textarea></td></tr>"
 		."</table></div>
 		</form>";
-	if ($type !== 'template'){
+	if ($type != 'template'){
 		$pageControlHtml = '
 			<input class="styleTehButton" type="button" onclick="javascript:  window.rezPageSaved = true; if(nicEditors.editors.length>0){nicEditors.findEditor(\'pageContent\').saveContent();} rez_perform_save(\'translated\','.$page_id.', xajax.getFormValues(\'editPageForm\'));" value="'._t("ResourcePages-EditForm-Button|Save and Publish Changes").'"> 
-			<input class="styleTehButton" type="button" onclick="checkSaved(\'template\')" value="Close Editor">';}
+			<input class="styleTehButton" type="button" onclick="checkSaved(\'Template\')" value="Close Editor">';}
 	else{
 		$pageControlHtml = '
 			<input class="styleTehButton" type="button" onclick="javascript:  window.rezPageSaved = true; if(nicEditors.editors.length>0){nicEditors.findEditor(\'pageContent\').saveContent();} rez_template_save(\'translated\','.$page_id.', xajax.getFormValues(\'editPageForm\'));" value="'._t("ResourcePages-EditForm-Button|Save and Publish Changes").'">
@@ -1320,7 +1322,6 @@ function rez_perform_translate($type,$page_id, $locale) {
 		else $pageControlHtml .= "<option value=\"".$key."\">".$value."</option>";
 	}
 	$pageControlHtml .= "</select>";
-
 	$global['xajax_res']->addAssign('rezMain','style.opacity','1.0');
 		$global['xajax_res']->addAssign('rezMain','innerHTML',$editMainHtml);
 	$global['xajax_res']->addAssign('rezControl','style.opacity','1.0');
