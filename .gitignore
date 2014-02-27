@@ -7,3 +7,6 @@ vesuvius/www/.htaccess
 vesuvius/time
 vesuvius/version
 vesuvius/.externalToolBuilders
+
+# Keep empty directories:
+!*/.git*
