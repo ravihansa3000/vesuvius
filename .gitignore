@@ -9,3 +9,6 @@ vesuvius/version
 vesuvius/.externalToolBuilders
 vesuvius/res/translation_log.txt
 nbproject
+
+# Keep empty directories:
+!*/.git*
