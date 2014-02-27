@@ -1,0 +1,11 @@
+vesuvius/conf/sahana.conf
+vesuvius/www/tmp
+vesuvius/www/.htaccess
+.project
+.settings
+.buildpath
+vesuvius/time
+vesuvius/version
+
+# Keep empty directories:
+!*/.git*
