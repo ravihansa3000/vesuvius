@@ -9,3 +9,6 @@ vesuvius/version
 vesuvius/.externalToolBuilders
 vesuvius/mod/dpa/bin/*
 .idea
+
+# Keep empty directories:
+!*/.git*
